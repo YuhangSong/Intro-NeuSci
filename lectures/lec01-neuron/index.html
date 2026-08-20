@@ -36,7 +36,6 @@
   --rig-v:  #BFA3EF;
   --rig-na: #E07A50;
   --rig-k:  #5F9FD8;
-  --rig-i:  #C9A43F;
   --rig-grid: #1E2531;
   --shadow: 0 1px 2px rgba(15,20,30,.05), 0 8px 28px rgba(15,20,30,.07);
   --sans: "IBM Plex Sans", -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
@@ -393,6 +392,7 @@ textarea.code-free {
   border: 1px solid var(--rig-line); border-radius: 8px; padding: 12px;
 }
 .run-row { display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+.run-row[hidden] { display: none; }
 .run-msg { font-family: var(--mono); font-size: .76rem; color: var(--rig-muted); }
 .run-msg.err { color: #E08A8A; }
 
@@ -522,7 +522,7 @@ footer.colophon {
 }
 .predict .opts button:hover { border-color: var(--accent); }
 .predict .opts button.chosen { border-color: var(--accent); background: var(--accent-soft); }
-.predict.revealed .opts button.right { border-color: var(--good); background: color-mix(in srgb, var(--good) 12%, var(--surface)); }
+.predict.revealed .opts button.right { border-color: var(--good); background: var(--surface); background: color-mix(in srgb, var(--good) 12%, var(--surface)); }
 .predict.revealed .opts button.chosen:not(.right) { border-color: var(--bad); }
 .predict .p-reveal { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); color: var(--ink-2); font-size: .92rem; line-height: 1.7; }
 .predict.revealed .p-reveal { display: block; }
@@ -602,6 +602,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
   margin: 1.6em 0 0; padding: 8px 16px;
   border: 1.5px solid var(--good); border-radius: 999px;
   color: var(--good); font-size: .86rem; font-weight: 650;
+  background: var(--surface);
   background: color-mix(in srgb, var(--good) 8%, var(--surface));
 }
 .gained .g-eq { font-family: var(--mono); font-size: .82rem; }
@@ -676,7 +677,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
 <!-- ============ 封面 ============ -->
 <section class="scene cover" id="s0" data-title="开场 · 二十瓦的机器">
   <div class="wrap">
-    <div class="c-course">神经科学导论 · 南京大学人工智能学院 · 第一讲</div>
+    <div class="c-course">神经科学导论 · 南京大学人工智能学院 · 第一讲 · 开场约 10 分钟</div>
     <h1>神经元如何计算</h1>
     <p class="c-sub">从离子到脉冲，再到人工神经元</p>
     <div class="cover-spark" aria-hidden="true"><canvas id="cover-canvas" height="120"></canvas></div>
@@ -716,10 +717,10 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
       <div class="chart-title">开场悬念 · 一条曲线的两个身份</div>
       <canvas id="mystery-fi" height="300"></canvas>
       <div class="legend">
-        <span class="li"><span class="sw" style="background:var(--c-v)"></span>某个真实神经元的「输入电流 → 输出频率」实测点</span>
+        <span class="li"><span class="sw" style="background:var(--c-v)"></span>一个皮层神经元的「输入电流 → 输出频率」（由本页的神经元模型生成，加了点噪声）</span>
         <span class="li"><span class="sw" style="background:var(--c-ref)"></span>你天天在用的 ReLU</span>
       </div>
-      <p class="note" style="margin-bottom:0">左边的点来自电生理实验，右边的折线来自深度学习。它们为什么长得像？——先记下这个问题。<strong>100 分钟后，这张图上的每一个数据点，都会由你亲手测出来。</strong></p>
+      <p class="note" style="margin-bottom:0">紫色的点来自神经元模型——形状与电生理学家在真实细胞上反复测到的一致；灰色的折线来自深度学习。它们为什么长得像？——先记下这个问题。<strong>100 分钟后，这张图上的每一个数据点，都会由你亲手测出来。</strong></p>
     </div>
 
     <p style="max-width:60ch">最后说清楚这门课和高中生物的关系：你在高中见过「静息电位」「动作电位」「Na⁺ 内流」——<strong>那些是现象的名字</strong>。今天你会得到高中没给过的东西：<strong>机制、方程，和一段 15 行、你可以亲手改坏再改好的代码</strong>。</p>
@@ -737,13 +738,13 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
     <div class="lanes-scroll">
       <div class="lanes" id="timeline">
         <div class="lane-col">
-          <div class="lane-evt neu" tabindex="0"><span class="y">1906</span><span class="t">Cajal：神经元学说</span><span class="d">大脑不是一张连续的网，而是由离散的细胞——神经元——构成。计算单元由此有了定义。</span></div>
+          <div class="lane-evt neu" tabindex="0"><span class="y">1888–1891</span><span class="t">Cajal：神经元学说</span><span class="d">大脑不是一张连续的网，而是由离散的细胞——神经元——构成。计算单元由此有了定义。1906 年 Cajal 与持相反「网状学说」的 Golgi 同台领诺贝尔奖——领奖台上两人观点依然对立。</span></div>
           <div class="lane-axis"><svg viewBox="0 0 100 46" aria-hidden="true"><circle cx="50" cy="23" r="3" fill="var(--accent)"/></svg></div>
           <div></div>
         </div>
         <div class="lane-col">
-          <div class="lane-evt neu" tabindex="0"><span class="y">1949</span><span class="t">Hebb：一起放电，一起相连</span><span class="d">「细胞 A 反复参与激发细胞 B，两者间的连接就会增强。」——日后几乎所有学习规则的种子，也是我们下一讲的主角。</span></div>
-          <div class="lane-axis"><svg viewBox="0 0 100 46" aria-hidden="true"><line x1="50" y1="2" x2="50" y2="38" stroke="var(--accent)" stroke-width="1.6"/><polygon points="45,36 55,36 50,45" fill="var(--accent)"/></svg></div>
+          <div class="lane-evt neu" tabindex="0"><span class="y">1949</span><span class="t">Hebb：一起放电，一起相连</span><span class="d">「细胞 A 反复参与激发细胞 B，两者间的连接就会增强。」——日后几乎所有学习规则的种子（九年后被感知机直接引用），也是我们下一讲的主角。</span></div>
+          <div class="lane-axis"><svg viewBox="0 0 100 46" aria-hidden="true"><circle cx="50" cy="23" r="3" fill="var(--accent)"/></svg></div>
           <div class="lane-evt ai" tabindex="0"><span class="y">1943</span><span class="t">McCulloch &amp; Pitts：数学神经元</span><span class="d">受神经元「全或无」放电启发，把神经元抽象为阈值逻辑单元——今天所有人工神经网络的公共祖先。</span></div>
         </div>
         <div class="lane-col">
@@ -757,7 +758,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
           <div class="lane-evt ai" tabindex="0"><span class="y">1980 / 1989</span><span class="t">Neocognitron → CNN</span><span class="d">福岛邦彦按 Hubel &amp; Wiesel 的简单/复杂细胞设计了 Neocognitron；LeCun 加上反向传播，成为卷积神经网络。</span></div>
         </div>
         <div class="lane-col">
-          <div class="lane-evt neu" tabindex="0"><span class="y">1997</span><span class="t">Schultz：多巴胺 = 预测误差</span><span class="d">猴子中脑多巴胺神经元的放电，精确等于「实际奖励 − 预期奖励」。</span></div>
+          <div class="lane-evt neu" tabindex="0"><span class="y">1997</span><span class="t">Schultz：多巴胺 = 预测误差</span><span class="d">猴子中脑多巴胺神经元的放电，近似编码着「实际奖励 − 预期奖励」。</span></div>
           <div class="lane-axis"><svg viewBox="0 0 100 46" aria-hidden="true"><line x1="50" y1="8" x2="50" y2="38" stroke="var(--accent)" stroke-width="1.6"/><polygon points="45,10 55,10 50,1" fill="var(--accent)"/><polygon points="45,36 55,36 50,45" fill="var(--accent)"/></svg></div>
           <div class="lane-evt ai" tabindex="0"><span class="y">1988</span><span class="t">Sutton：TD 学习</span><span class="d">时序差分学习先于实验提出了同样的误差信号——理论与生物学在这里对上了暗号，成为强化学习的基石。</span></div>
         </div>
@@ -770,7 +771,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
     </div>
     <p class="note">点击任意事件卡片可展开细节。箭头表示思想的流向：神经科学 → AI，或反向。</p>
 
-    <p style="margin-top:2em">课堂上只讲两个故事就够了：<strong>Hubel &amp; Wiesel 的猫 → 卷积网络</strong>；<strong>多巴胺神经元 ⇄ TD 误差</strong>（理论先于实验八年，然后被生物学证实——两个学科对上了暗号）。其余节点留给你课后点开。</p>
+    <p style="margin-top:2em">课堂上只讲两个故事就够了：<strong>Hubel &amp; Wiesel 的猫 → 卷积网络</strong>；<strong>多巴胺神经元 ⇄ TD 误差</strong>（理论先行了九年，然后被生物学证实——两个学科对上了暗号）。其余节点留给你课后点开。</p>
     <p>注意反复出现的模式：<strong>神经科学提供「原理性发现」，AI 把它变成「可扩展的算法」</strong>；而最近十年，箭头第一次掉头向上。这门课接下来的每一讲，都对应地图上的一个节点。今天，回到一切的起点——<strong>单个神经元</strong>。</p>
   </div>
 </section>
@@ -863,7 +864,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
   <div class="wrap">
     <div class="kicker">第 3 节 <span class="k-time">第一课时 · 约 10 分钟</span></div>
     <h2>电从哪里来：一场拔河</h2>
-    <p class="lede">神经元是一颗被「浓度差」充上电的电池。先用一张表看电池怎么充，再用一个你认识的公式看电压落在哪里。</p>
+    <p class="lede">神经元是一块被「浓度差」充上电的电池。先用一张表看电池怎么充，再用一个你认识的公式看电压落在哪里。</p>
 
     <h3>充电：浓度差就是电池</h3>
     <div class="ion-grid">
@@ -886,29 +887,29 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
       </div>
     </div>
 
-    <h3>放电位置：两块电池的拔河</h3>
+    <h3>电压落点：两块电池的拔河</h3>
     <p>膜上有 K⁺ 通道和 Na⁺ 通道。两种通道各自把膜电位往自己的平衡电位拽，<strong>谁的门开得大（电导 g 高），谁的话语权就大</strong>。膜电位就停在：</p>
     <div class="eq"><i>V</i><sub>m</sub> = <span class="frac"><span class="num"><span class="hl-k">g</span><sub class="hl-k">K</sub><span class="hl-k">·E</span><sub class="hl-k">K</sub> + <span class="hl-na">g</span><sub class="hl-na">Na</sub><span class="hl-na">·E</span><sub class="hl-na">Na</sub></span><span class="den"><span class="hl-k">g</span><sub class="hl-k">K</sub> + <span class="hl-na">g</span><sub class="hl-na">Na</sub></span></span></div>
-    <p>看清楚这个公式——<strong>你认识它</strong>。它就是<span class="mlb"><span class="b">电导加权</span><span class="arr">⇄</span><span class="m">加权平均 / 归一化加权和</span></span>：电导是权重，平衡电位是被加权的值。你的第一行神经网络代码，生物膜早写了五亿年。</p>
+    <p>看清楚这个公式——<strong>你认识它</strong>。它就是<span class="mlb"><span class="b">电导加权</span><span class="arr">⇄</span><span class="m">加权平均 / 归一化加权和</span></span>：电导是权重，平衡电位是被加权的值。你的第一行神经网络代码，生物膜五亿年前就写好了。</p>
 
     <div class="panel" style="margin:1.6em 0">
       <div class="p-title">拔河现场 · 拖动滑杆，改变两队的力量对比</div>
       <svg id="tug-svg" viewBox="0 0 640 190" role="img" aria-label="电导拔河：膜电位停在EK与ENa之间由电导加权的位置" style="width:100%;height:auto;display:block"></svg>
       <div class="ctl-row light-ctl">
         <div class="ctl" style="flex:1;max-width:340px">
-          <span class="ctl-label"><span>电导比 g<sub>Na</sub> : g<sub>K</sub></span><span class="ctl-val" id="tug-ratio">0.06 : 1</span></span>
-          <input type="range" id="tug-slider" min="-2" max="1.5" step="0.01" value="-1.22" style="accent-color:var(--accent)">
+          <span class="ctl-label"><span>电导比 g<sub>Na</sub> : g<sub>K</sub></span><span class="ctl-val" id="tug-ratio">0.14 : 1</span></span>
+          <input type="range" id="tug-slider" min="-2" max="1.5" step="0.01" value="-0.84" style="accent-color:var(--accent)">
         </div>
         <div class="presets">
-          <button class="mini" data-tug="-1.22">静息状态（K⁺ 掌权）</button>
+          <button class="mini" data-tug="-0.84">静息状态（K⁺ 掌权）</button>
           <button class="mini" data-tug="1.3">Na⁺ 门全开</button>
         </div>
       </div>
-      <p class="note" style="margin-bottom:0">静息时 Na⁺ 的门几乎全关，K⁺ 单方面掌权，所以静息电位 ≈ −70 mV，贴着 E<sub>K</sub>。<span class="small">（真实值还受 Cl⁻ 和泵的少量直接贡献影响，骨架不变。）</span></p>
+      <p class="note" style="margin-bottom:0">静息时 Na⁺ 的门几乎全关，K⁺ 单方面掌权，所以静息电位 ≈ −70 mV，贴着 E<sub>K</sub>。<span class="small">（这个双电导模型里还缺 Cl⁻ 通透性和泵的少量直接贡献，它们让真实数值略有出入，骨架不变。）</span></p>
     </div>
 
     <div class="predict" data-predict="p-na" data-answer="1">
-      <div class="pq"><span class="p-tag">先投票</span>假如膜对 Na⁺ 的通透性突然暴增 20 倍（K⁺ 不变），膜电位会怎样？</div>
+      <div class="pq"><span class="p-tag">先投票</span>假如 Na⁺ 通道的门瞬间全部打开——通透性暴增几百倍，g<sub>Na</sub> 冲到 g<sub>K</sub> 的 20 倍（K⁺ 不变）。膜电位会怎样？</div>
       <div class="opts">
         <button data-i="0">基本不变——离子太小，改不了什么</button>
         <button data-i="1">猛冲向 E<sub>Na</sub> ≈ +61 mV</button>
@@ -943,13 +944,13 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
   <div class="wrap wide">
     <div class="kicker">第 4 节 <span class="k-time">第一课时 · 约 15 分钟</span></div>
     <h2>动作电位：把电极插进去，亲手找阈值</h2>
-    <p class="lede">下面是一台虚拟膜片钳。它背后跑的不是动画，而是 Hodgkin 与 Huxley 1952 年写下的那组方程，实时数值求解——和拿了诺贝尔奖的是同一套数学。</p>
-    <p class="note">体内的神经元接收的是上万路突触的脉冲轰击；实验室里我们用微电极直接注入电流方波——这是电生理学一百年来的标准抽象，本讲全程沿用。</p>
+    <p class="lede">下面是一台虚拟电流钳<span class="term">current clamp</span>：注入电流，记录电压。它背后跑的不是动画，而是 Hodgkin 与 Huxley 1952 年写下的那组方程，实时数值求解——和拿了诺贝尔奖的是同一套数学。</p>
+    <p class="note">两点交代：① 体内的神经元接收的是上万路突触的脉冲轰击；实验室里我们用微电极直接注入电流方波——这是电生理学一百年来的标准抽象，本讲全程沿用。② 从这里起换了动物：仪器跑的是 6.3 ℃ 枪乌贼（鱿鱼）巨轴突的经典参数——静息约 −65 mV、E<sub>Na</sub>=+50、E<sub>K</sub>=−77，和上一节 37 ℃ 哺乳动物的数字不同。浓度和温度一变，电池电压就变——这正是 Nernst 方程的用途。</p>
 
     <div class="rig" id="rig-hh">
       <div class="rig-head">
         <span class="led on" id="hh-led"></span>
-        <span class="rig-name">VIRTUAL PATCH-CLAMP · 实时求解 HH 方程</span>
+        <span class="rig-name">VIRTUAL CURRENT-CLAMP · 实时求解 HH 方程</span>
         <span class="rig-spacer"></span>
         <div class="presets" role="group" aria-label="仿真速度">
           <button class="mini" data-speed="0.3">慢放</button>
@@ -980,7 +981,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
       </div>
     </div>
 
-    <div class="task"><span class="task-tag">目标任务</span><span><strong>阈值狩猎：</strong>用尽量少的尝试，找出能触发脉冲的<strong>最小</strong>电流幅度，精确到 0.5 µA/cm²。提示：像调超参数一样做二分搜索。找到后把这个数字记在纸上——第 6 节它有个名字。</span></div>
+    <div class="task"><span class="task-tag">目标任务</span><span><strong>阈值狩猎：</strong>用尽量少的尝试，找出能触发脉冲的<strong>最小</strong>电流幅度，精确到 0.5 µA/cm²。提示：像调超参数一样做二分搜索。找到后把这个数字记在纸上——第 6 节它会以「死区边界」的身份重新登场。</span></div>
 
     <div class="predict" data-predict="p-allornone" data-answer="1">
       <div class="pq"><span class="p-tag">先投票</span>你已经找到了「刚好能触发」的电流。现在把电流<strong>加倍</strong>——脉冲的<strong>高度</strong>会怎样？</div>
@@ -994,7 +995,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
     </div>
 
     <div class="rig">
-      <div class="rig-head"><span class="led" id="ov-led"></span><span class="rig-name">SPIKE ALIGNER · 脉冲对齐叠放</span></div>
+      <div class="rig-head"><span class="led" id="ov-led"></span><span class="rig-name">SPIKE ALIGNER · 波形对齐仪</span></div>
       <div class="rig-body">
         <div class="scope-frame"><canvas id="hh-overlay" height="180"></canvas></div>
         <p class="chip-note" style="margin:10px 0 0" id="ov-note">还没有捕获到脉冲。去上面触发几个（用不同幅度的电流），它们会叠放在这里。</p>
@@ -1002,7 +1003,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
     </div>
     <p>不同强度的输入，产出<strong>同一个波形</strong>。这意味着一件对做 AI 的你极其重要的事：<strong>脉冲的形状不携带信息。信息只藏在「发不发」和「何时发」里。</strong>神经元的输出不是模拟量，是事件。<span class="mlb"><span class="b">脉冲</span><span class="arr">⇄</span><span class="m">事件驱动的 1-bit 输出</span></span></p>
 
-    <p class="note">诚实脚注：如果你把滑杆拧得足够细，会发现阈值附近有一个极窄的窗口，响应介于「有」和「无」之间——阈值其实是一个动力学现象，不是硬件开关。发现了这一点？你已经比大多数教科书插图更懂它了。</p>
+    <p class="note">诚实脚注：如果你把滑杆调得足够细，会发现阈值附近有一个极窄的窗口，响应介于「有」和「无」之间——阈值其实是一个动力学现象，不是硬件开关。发现了这一点？你已经比大多数教科书插图更懂它了。另外，严格说你测到的是<strong>电流</strong>阈值；它是<strong>电压</strong>阈值 θ 透过膜电阻的投影（I<sub>min</sub> ≈ (θ−V<sub>rest</sub>)/R）——第 6 节装配方程时用的是电压版。</p>
 
     <div class="gained">✓ 已测得论点零件 <span class="g-eq">θ（阈值）</span>：低于它，没动静；高于它，满额脉冲</div>
   </div>
@@ -1019,7 +1020,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
 <!-- ============ 5 · 引擎盖之下 · 实验室 ============ -->
 <section class="scene" id="s5" data-title="5 · 引擎盖之下 · 实验室">
   <div class="wrap wide">
-    <div class="kicker">第 5 节 <span class="k-time">第二课时 · 约 22 分钟</span></div>
+    <div class="kicker">第 5 节 <span class="k-time">第二课时 · 约 20 分钟</span></div>
     <h2>掀开引擎盖，然后做实验</h2>
     <p class="lede">课间悬着的问题：细胞里藏着什么开关？答案是两种带「门」的蛋白质通道。掀开引擎盖之前，先认一个数学上的老朋友——你会发现门的方程你早就写过。</p>
 
@@ -1070,7 +1071,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
 
     <p>看明白开关了吗？<strong>全或无的秘密是一个正反馈：</strong>电压升 → m 门开 → Na⁺ 涌入 → 电压更高 → m 门开得更大……一旦点火就刹不住车，必然冲到顶。<strong>而收尾靠两个慢动作</strong>：h 闸落下（Na⁺ 断流）、n 门打开（K⁺ 拔河队增援）——把电位拽回去，甚至矫枉过正（超极化）。快门点火、慢门灭火，<strong>时间尺度分离</strong>是整台发动机的设计原理。</p>
 
-    <h3>三个实验（其中一个课后做）</h3>
+    <h3>四个实验（课上三个，最后一个课后做）</h3>
 
     <!-- 实验 A · 不应期 -->
     <div class="rig" id="rig-refract">
@@ -1099,7 +1100,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
           </div>
           <span class="outcome idle" id="refract-outcome">—</span>
         </div>
-        <div class="chip-note" style="margin-top:10px">目标：找出第二针能成功的<strong>最小间隔</strong>，精确到 0.5 ms，把它记下来。<br>通关判据：你应该观察到——间隔大时两个满额脉冲；间隔小时第二针只激起一个小水花（相对不应期里加大电流才行；绝对不应期里给多大都没用）。</div>
+        <div class="chip-note" style="margin-top:10px">目标：找出第二针能成功的<strong>最小间隔</strong>，精确到 0.5 ms，把它记下来。<br>通关判据：你应该观察到——间隔大时两个满额脉冲；间隔太小时第二针只激起一个小水花。（本仪器两针幅度固定为阈值的 1.8 倍。想验证「相对不应期里加大电流能提前成功、绝对不应期里给多大都没用」？回到第 4 节的电流钳自己试。）</div>
       </div>
     </div>
     <p>不应期给了脉冲三样东西：<strong>离散性</strong>（两个脉冲永远不会糊在一起）、<strong>频率上限</strong>（间隔 ≳ 几毫秒 → 最高几百 Hz）、<strong>单向传播</strong>（脉冲身后是一片不应之地，回不了头）。<span class="mlb"><span class="b">不应期</span><span class="arr">⇄</span><span class="m">发放后的强制静默 / 重置</span></span></p>
@@ -1110,11 +1111,11 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
       <div class="rig-head"><span class="exp-badge">EXP B</span><span class="rig-name">时间求和 · 泄漏与积分的对抗</span></div>
       <div class="rig-body">
         <div class="predict" data-predict="p-sum" data-answer="1">
-          <div class="pq"><span class="p-tag">先投票</span>两针刺激，每针都只有阈值的七成，<strong>单独谁也触发不了脉冲</strong>。两针一起上，能触发吗？</div>
+          <div class="pq"><span class="p-tag">先投票</span>两针刺激，每针都只有阈值的四分之三，<strong>单独谁也触发不了脉冲</strong>。两针一起上，能触发吗？</div>
           <div class="opts">
-            <button data-i="0">不能——0.7 永远小于 1，加几针都没用</button>
+            <button data-i="0">不能——0.75 永远小于 1，加几针都没用</button>
             <button data-i="1">能，但两针必须靠得够近</button>
-            <button data-i="2">能，间隔无所谓——反正 0.7 + 0.7 &gt; 1</button>
+            <button data-i="2">能，间隔无所谓——反正 0.75 + 0.75 &gt; 1</button>
           </div>
           <div class="p-reveal">关键在<b>泄漏</b>：第一针充上的电，一直在往外漏。第二针来得晚，电已漏光，各自为战；来得早，就能踩着第一针的余温过阈值。<b>这是「带泄漏的积分器」第一次在你面前露出全形。</b></div>
         </div>
@@ -1132,7 +1133,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
           </div>
           <span class="outcome idle" id="sum-outcome">—</span>
         </div>
-        <div class="chip-note" style="margin-top:10px">目标：找出还能触发脉冲的<strong>最大间隔</strong>。这个毫秒数就是神经元「记得住上一个输入」的时间窗——膜时间常数 τ 的量级。<br>通关判据：间隔小 → 第二针踩着第一针的肩膀过阈；间隔大 → 两个孤零零的小鼓包，谁也过不了线。<br>你会发现这只鱿鱼轴突的记性短得惊人（τ ≈ 2 ms）——皮层神经元的 τ 通常有 10–30 ms，第 6 节的 LIF 用的就是 20 ms。</div>
+        <div class="chip-note" style="margin-top:10px">目标：找出还能触发脉冲的<strong>最大间隔</strong>。这个毫秒数就是神经元「记得住上一个输入」的时间窗——膜时间常数 τ 的量级。<br>通关判据：间隔小 → 第二针踩着第一针的肩膀过阈；间隔大 → 两个孤零零的小鼓包，谁也过不了线。<br>你会发现这条枪乌贼轴突的记性短得惊人（τ ≈ 2 ms）——皮层神经元的 τ 通常有 10–30 ms，第 6 节的 LIF 用的就是 20 ms。</div>
       </div>
     </div>
     <p>泄漏不是缺陷，是<strong>遗忘的机制</strong>：它让神经元只对「短时间窗内凑齐的证据」发言，天然过滤掉稀稀拉拉的噪声。<span class="mlb"><span class="b">泄漏</span><span class="arr">⇄</span><span class="m">EMA 的衰减因子 / 遗忘门</span></span></p>
@@ -1166,20 +1167,20 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
         </div>
         <div class="scope-frame" style="margin-top:14px"><canvas id="fi-canvas" height="260"></canvas></div>
         <div class="surprise-cards">
-          <div class="s-card"><b>惊喜一：起步就是全速。</b>这个神经元不会慢悠悠地从 1 Hz 开始——一过临界电流，直接跳到约 50 Hz。这类「跳变起步」叫 Type II 神经元，鱿鱼巨轴突就是。你皮层里的多数兴奋性神经元是 Type I：频率从 0 连续爬升。<b>模型要匹配对象</b>——下一节的 LIF 模拟的是后者的骨架，所以它的 f–I 是连续的。</div>
+          <div class="s-card"><b>惊喜一：起步就是全速。</b>这个神经元不会慢悠悠地从 1 Hz 开始——一过临界电流，直接跳到约 50 Hz。这类「跳变起步」叫 Type II 神经元，枪乌贼巨轴突就是。你皮层里的多数兴奋性神经元是 Type I：频率从 0 连续爬升。<b>模型要匹配对象</b>——下一节的 LIF 模拟的是后者的骨架，所以它的 f–I 是连续的。</div>
           <div class="s-card"><b>惊喜二：电流太大反而哑火。</b>扫到最右边看看——脉冲消失了。持续的强去极化让 h 闸抬不起来，发动机熄火，这叫去极化阻滞<span style="color:var(--rig-muted);font-style:italic"> depolarization block</span>。真实系统在超出设计范围时会露出模型没有的行为——做仿真的人要一辈子记住这件事。</div>
         </div>
       </div>
     </div>
-    <div class="gained">✓ 已测得论点零件 <span class="g-eq">f–I（输入 → 输出频率关系）</span>：封面悬念的左半边，你刚亲手测完</div>
+    <div class="gained">✓ 已测得论点零件 <span class="g-eq">f–I（输入 → 输出频率关系）</span>：封面悬念里「点」的那一半，你刚亲手测完</div>
 
     <!-- 实验 D · 药理（课后） -->
     <div class="rig homework" id="rig-pharma">
       <div class="rig-head"><span class="exp-badge">EXP D · 课后自助</span><span class="rig-name">虚拟药理实验 · 拆掉一种通道</span></div>
       <div class="rig-body">
-        <p class="chip-note" style="margin-top:0">工程师理解系统的方式：拆掉一个零件，看哪里坏。药理学家早就在这么干了。下面的示波器每 60 ms 自动打一针足量刺激。</p>
+        <p class="chip-note" style="margin-top:0">工程师理解系统的方式：拆掉一个零件，看哪里坏。药理学家早就在这么干了。下面的示波器每 80 ms 自动打一针足量刺激。</p>
         <div class="predict" data-predict="p-ttx" data-answer="0">
-          <div class="pq"><span class="p-tag">先预测</span>河豚毒素 TTX 会堵死全部 Na⁺ 通道。投毒之后，示波器上会看到什么？</div>
+          <div class="pq"><span class="p-tag">先预测</span>河豚毒素 TTX 会堵死神经元膜上的电压门控 Na⁺ 通道。投毒之后，示波器上会看到什么？</div>
           <div class="opts">
             <button data-i="0">脉冲彻底消失，只剩小小的被动鼓包</button>
             <button data-i="1">脉冲还在，但变矮一半</button>
@@ -1195,7 +1196,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
         </div>
         <details class="think" style="margin-bottom:0;border-color:var(--rig-line)">
           <summary style="color:var(--rig-ink)"><span class="q-tag">课后思考</span>河豚的 TTX 存在自己体内，为什么毒不死河豚自己？</summary>
-          <div class="a" style="color:var(--rig-muted)">河豚的 Na⁺ 通道基因带有几个点突变，改变了 TTX 结合位点的构象——毒素塞不进去。一次通道蛋白层面的军备竞赛：抗毒性突变 → 毒素浓度升级 → 更强的突变。答案藏在分子结构里，而不是玄学里。</div>
+          <div class="a" style="color:var(--rig-muted)">河豚的 Na⁺ 通道基因带有几个点突变，改变了 TTX 结合位点的构象——毒素塞不进去。一次通道蛋白层面的军备竞赛：抗毒性突变 → 毒素浓度升级 → 更强的突变。答案藏在分子结构里，而不是玄学里。（顺带：人类心肌的 Nav1.5 亚型天然对 TTX 相对抗性——这也是中毒者死于呼吸肌麻痹、而非心脏骤停的原因之一。）</div>
         </details>
       </div>
     </div>
@@ -1213,7 +1214,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
       <li><strong>证据一（你亲眼看过）：</strong>第 4 节的「波形对齐仪」——所有脉冲一个模样。波形不携带信息，就没必要逐毫秒模拟它，<strong>记一个事件、做一次重置</strong>就够了。</li>
       <li><strong>证据二（你亲手测过）：</strong>门有快慢——m 快到瞬间跟随，h、n 慢到只在脉冲后留下「静默期」。快的取极限、慢的归纳成一条规则，中间只剩膜电位自己的方程。<span class="mlb"><span class="b">机制约减</span><span class="arr">⇄</span><span class="m">蒸馏 / 查表替换子网络</span></span></li>
     </ul>
-    <p>扔完之后，剩下的每一项，都是你已经<strong>亲手测量过</strong>的东西：</p>
+    <p>扔完之后，剩下的每一项，要么你<strong>亲手测量过</strong>，要么是第 4 节交代过的标准实验抽象：</p>
 
     <figure style="margin:1.8em 0">
       <div class="panel" style="overflow-x:auto">
@@ -1253,8 +1254,8 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
             <polygon points="428,136 437,140 430,148 " fill="var(--accent)"/>
 
             <rect x="150" y="272" width="185" height="44" rx="9" fill="none" stroke="var(--accent)" stroke-width="1.4"/>
-            <text x="164" y="290" fill="currentColor" font-weight="600">θ = 你狩猎到的阈值</text>
-            <text x="164" y="308" fill="var(--accent)">第 4 节 · 阈值狩猎 测得</text>
+            <text x="164" y="290" fill="currentColor" font-weight="600">θ = 阈值（电压版）</text>
+            <text x="164" y="308" fill="var(--accent)">第 4 节狩猎的是它的电流投影</text>
             <line x1="255" y1="272" x2="262" y2="238" stroke="var(--accent)" stroke-width="1.4"/>
             <polygon points="257,240 267,242 262,230" fill="var(--accent)"/>
 
@@ -1266,7 +1267,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
           </g>
         </svg>
       </div>
-      <figcaption class="small" style="padding:8px 4px 0">带泄漏的整合-发放模型 <span class="term">Leaky Integrate-and-Fire, LIF</span>（Lapicque, 1907——比 HH 还早 45 年）。方程里没有一项是天上掉下来的：全部由你在前 90 分钟里亲手测出。</figcaption>
+      <figcaption class="small" style="padding:8px 4px 0">带泄漏的整合-发放模型 <span class="term">Leaky Integrate-and-Fire, LIF</span>——思想可上溯到 Lapicque 1907 年的「RC 电路 + 阈值」（比 HH 还早 45 年），今天的方程形式在 1960 年代定型。方程里没有一项是天上掉下来的：全部来自这两节课你亲手做过的测量。另外，你在第 4 节狩猎到的电流阈值，正是电压阈值 θ 经膜电阻的投影：I<sub>min</sub> = (θ−E<sub>L</sub>)/R——也就是代码任务①的「死区边界」。</figcaption>
     </figure>
 
     <h3>15 行代码，跑起来</h3>
@@ -1307,7 +1308,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
               <button class="mini" data-inp="sine">正弦</button>
             </div>
             <div class="ctl" style="max-width:220px;flex:1">
-              <span class="ctl-label"><span>输入幅度</span><span class="ctl-val" id="code-i-val">2.5</span></span>
+              <span class="ctl-label"><span>输入幅度 (nA)</span><span class="ctl-val" id="code-i-val">2.5</span></span>
               <input type="range" id="code-i" min="0" max="6" step="0.1" value="2.5">
             </div>
           </div>
@@ -1327,22 +1328,24 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
       </div>
     </div>
 
-    <div class="task"><span class="task-tag">代码任务 ①</span><span><strong>逼近死区边缘：</strong>输入选「恒定」，幅度调到 1.9——V 爬到 −51 mV 就停住了：<strong>泄漏把输入完全吃掉，差 1 mV 就是不发放</strong>。改成 2.1，立即发放。死区边界 = (θ−E_L)/R = 2.0。<strong>领悟：泄漏创造了最小电流死区（rheobase）——f–I 曲线的那段「平地」，就是 ReLU 拐点的生物起源。</strong>（想彻底杀死泄漏？自由编辑模式里删掉泄漏项 −(V−E_L)，任何正电流都会被慢慢积到发放。）</span></div>
+    <div class="task"><span class="task-tag">代码任务 ①</span><span><strong>逼近死区边缘：</strong>输入选「恒定」，幅度调到 1.9——V 爬到 −51 mV 就停住了：<strong>泄漏把输入完全吃掉，差 1 mV 就是不发放</strong>。改成 2.1，立即发放。死区边界 = (θ−E_L)/R = 2.0 nA。<strong>领悟：泄漏创造了最小电流死区（rheobase）——f–I 曲线的那段「平地」，就是 ReLU 拐点的生物起源。</strong>（想彻底杀死泄漏？自由编辑模式里删掉泄漏项 −(V−E_L)，任何正电流都会被慢慢积到发放。）</span></div>
     <div class="task"><span class="task-tag">代码任务 ②</span><span><strong>挪动拐点：</strong>把 θ 从 −50 改成 −55，然后在下面的图上重新扫描 f–I。判据：整条曲线左移（幅度 1.6 现在也能发放了）。你刚刚拧的东西，在你的网络里叫「偏置 b」。</span></div>
-    <div class="task"><span class="task-tag">代码任务 ③</span><span><strong>拉长记忆：</strong>输入切到「双亚阈值脉冲」（两针间隔固定 12 ms），确认求和失败；然后把 τ 改成 40、<strong>同时</strong>把 R 改成 20，重跑。判据：同样的两针，求和成功。为什么要同时改 R？因为电容 C = τ/R——只改 τ 等于偷偷换了细胞的电容，两针各自的冲高也会变矮。保持 C 不变，τ 的含义才纯粹：<strong>记忆窗口的长度</strong>，正是实验 B 里你测到的那个毫秒数。</span></div>
+    <p class="note">单位说明：LIF 是「点模型」，输入电流的单位是 nA——与 HH 仪器的膜面电流密度（µA/cm²）不能直接比数值。另外这里的 R、I 取了便于读数的玩具量纲；真实皮层神经元的输入电阻约再大一个数量级（100–300 MΩ）、阈值电流约再小一个数量级（0.05–0.3 nA）。</p>
+    <div class="task"><span class="task-tag">代码任务 ③</span><span><strong>拉长记忆：</strong>输入切到「双亚阈值脉冲」（两针间隔固定 12 ms），确认求和失败；然后把 τ 改成 40，<strong>同时</strong>把 R 改成 20，重跑。判据：同样的两针，求和成功。为什么要同时改 R？因为电容 C = τ/R——只改 τ 等于偷偷换了细胞的电容，两针各自的冲高也会变矮。保持 C 不变，τ 的含义才纯粹：<strong>记忆窗口的长度</strong>，正是实验 B 里你测到的那个毫秒数。</span></div>
 
     <h3>收官：把封面的悬念亲手做完</h3>
-    <p>点「扫描」，用你当前的 LIF 参数逐点测出 f–I 曲线——和你在实验 C 里对真实模型做的事一模一样。然后<strong>拖动图上的两个白色手柄</strong>（拐点、斜率），把一条 ReLU 拟合到你自己的数据上。</p>
+    <p>点「扫描」，用你当前的 LIF 参数逐点测出 f–I 曲线——和你在实验 C 里对真实模型做的事一模一样。然后<strong>拖动图上的两个圆形手柄</strong>（拐点、斜率），把一条 ReLU 拟合到你自己的数据上。</p>
 
     <div class="chart-card">
       <div class="chart-title">f–I 曲线 × ReLU · 亲手拟合</div>
       <canvas id="fit-canvas" height="320"></canvas>
       <div class="ctl-row light-ctl" style="margin-top:12px">
         <button class="btn" id="fit-sweep">扫描：用当前 LIF 参数测 f–I</button>
+        <label class="snd-toggle" style="color:var(--muted)"><input type="checkbox" id="fit-noise" style="accent-color:var(--accent)">输入带噪声（重新扫描生效）</label>
         <label class="snd-toggle" style="color:var(--muted)"><input type="checkbox" id="fit-softplus" style="accent-color:var(--accent)">叠加 softplus 对照</label>
         <span class="outcome idle" id="fit-rmse" style="background:var(--surface-2);color:var(--ink-2)">拟合误差 — Hz</span>
       </div>
-      <p class="note" style="margin-bottom:0">目标：把拟合误差压到 5 Hz 以内。会发现 LIF 的曲线在拐点附近微微内凹——所以 softplus 贴得更服帖，ReLU 是它的折线速写。</p>
+      <p class="note" style="margin-bottom:0">目标：把拟合误差压到 7 Hz 以内。两个值得玩的现象：① 无噪声时，LIF 的拐点其实比 ReLU 还「硬」（起步斜率陡得发散）；② 勾选「输入带噪声」再扫一次——涨落让神经元在死区边缘也偶尔发放，硬拐点被抹圆成 softplus 的模样。<strong>真实神经元的 f–I 之所以圆滑，正是因为大脑里从来没有干净的输入。</strong></p>
     </div>
 
     <div class="thesis">
@@ -1472,10 +1475,11 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
 
     <div class="tiles">
       <div class="tile"><div class="t-label">皮层信号能耗占比</div><div class="t-num">~75%</div><div class="t-sub">大部分花在钠钾泵上——把每个脉冲、每次突触传递搬进来的离子再搬回去</div></div>
-      <div class="tile"><div class="t-label">单个脉冲的价格</div><div class="t-num">~10⁹ ATP</div><div class="t-sub">发放很贵，静默近乎免费</div></div>
+      <div class="tile"><div class="t-label">单个脉冲的价格</div><div class="t-num">~10⁹ ATP</div><div class="t-sub">发放很贵，静默便宜一个数量级——但泵仍在烧钱</div></div>
       <div class="tile"><div class="t-label">皮层平均发放率</div><div class="t-num">&lt; 1 Hz</div><div class="t-sub">你的神经元绝大多数时间保持沉默</div></div>
       <div class="tile"><div class="t-label">同时活跃的神经元</div><div class="t-num">~1%</div><div class="t-sub">而 GPU 上每次前向，几乎所有单元全额参与</div></div>
     </div>
+    <p class="note">数字口径：信号能耗占比出自 Attwell &amp; Laughlin (2001) 的皮层灰质能量预算；「&lt;1 Hz」是按全体神经元（含大量近乎沉默的细胞）平均的能量学估计（Lennie 2003）——单看被电极记到的活跃细胞，通常报 1–5 Hz。</p>
 
     <p>把这一讲的零件串起来：<strong>脉冲很贵</strong>（泵要把离子搬回去）→ 所以进化把发放率压到极低 → 所以编码必须<strong>稀疏、事件驱动</strong>——泄漏负责遗忘噪声，阈值负责把关，只有凑齐证据才值得说一次话。<strong>「只在有事时开口」，就是 20 瓦的秘密。</strong>这也是脉冲神经网络和神经形态芯片真正的野心：不是模仿生物的情怀，是抄袭它的电费单。</p>
 
@@ -1485,11 +1489,11 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
     </div>
 
     <div class="recap-row">
-      <span class="gained">✓ E_L · 电导拔河</span>
-      <span class="gained">✓ θ · 阈值狩猎</span>
-      <span class="gained">✓ 重置与静默 · 不应期</span>
-      <span class="gained">✓ τ · 时间求和</span>
-      <span class="gained">✓ f–I ≈ ReLU · 亲手拟合</span>
+      <span class="gained">✓ E_L · 第 3 节 电导拔河</span>
+      <span class="gained">✓ θ · 第 4 节 阈值狩猎</span>
+      <span class="gained">✓ 重置 + 静默 · 实验 A 不应期</span>
+      <span class="gained">✓ τ · 实验 B 时间求和</span>
+      <span class="gained">✓ f–I · 实验 C 测得，第 6 节拟成 ReLU</span>
     </div>
 
     <p class="note"><strong>诚实的边界：</strong>今天回答的是「神经元如何计算」的最粗粒度版本。树突的非线性计算、放电的适应与随机性、毫秒级的时机编码——都被我们有意扔掉了，并将在后面的讲次里逐一捡回。抽象不是终点，是可控的起点。</p>
@@ -1518,7 +1522,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
 
 </main>
 <footer class="colophon">
-  《神经科学导论》第一讲 · 南京大学人工智能学院 · 自包含交互网页讲义（无外部依赖，可离线打开）· 键盘 ← → 切换小节
+  《神经科学导论》第一讲 · 南京大学人工智能学院 · 自包含交互网页讲义（除网络字体外无外部依赖，离线打开自动回退系统字体，功能不受影响）· 键盘 ← → 切换小节
 </footer>
 <script>
 'use strict';
@@ -1923,7 +1927,7 @@ function hhThresh1ms() {                               // 1ms 脉冲的阈值电
   draw(); redraws.add(draw);
 })();
 
-/* ================= 第4节 · 实时膜片钳 ================= */
+/* ================= 第4节 · 实时电流钳 ================= */
 const spikeOverlays = [];                              // 供「对齐仪」使用
 (function patchClamp() {
   const cv = $('#hh-scope'); if (!cv) return;
@@ -1968,8 +1972,11 @@ const spikeOverlays = [];                              // 供「对齐仪」使�
     if (!vis.visible) { lastNow = now; return; }
     const dtReal = clamp((now - lastNow) / 1000, 0, 0.06);
     lastNow = now;
-    const advance = dtReal * 1000 * 0.028 * speed;      // 1 真实秒 ≈ 28 模拟 ms（1×）
+    // 减少动态偏好：平时静止，仅在用户注入刺激后快速完成一次扫描
+    const speedEff = REDUCED ? (pending ? 12 : 0) : speed;
+    const advance = dtReal * 1000 * 0.028 * speedEff;   // 1 真实秒 ≈ 28 模拟 ms（1×）
     acc += advance;
+    if (REDUCED && !pending && buf.t.length === 0) { buf.t.push(simT); buf.V.push(s.V); buf.I.push(0); }
     let prevV = s.V;
     while (acc >= HH_DT) {
       acc -= HH_DT;
@@ -2067,8 +2074,8 @@ const spikeOverlays = [];                              // 供「对齐仪」使�
   let b3 = iPeak; while (b3 < N - 1 && rec.V[b3] > -65) b3++;
   const phaseOf = i => i < b1 ? 0 : i < iPeak ? 1 : i < b3 ? 2 : 3;
   const STORY = [
-    '<b>① 静息。</b>拔河里 K⁺ 掌权：n 门温开、m 门紧闭、h 闸抬起待命，V 安静地趴在 −65 mV。绿色游标处即将注入 1 ms 电流。',
-    '<b>② 雪崩去极化。</b>电流把 V 推过临界点 → m 门（快手）唰地全开 → g<b>Na</b> 暴涨、Na⁺ 涌入 → V 更高 → m 开得更大。<b>正反馈失控</b>，V 直冲 E_Na。留意 h 闸此刻已在缓缓下落。',
+    '<b>① 静息。</b>拔河里 K⁺ 掌权：n 门温开、m 门紧闭、h 闸抬起待命，V 安静地趴在 −65 mV（枪乌贼参数）。图上 t=2 ms 处的黄色小块标记即将注入 1 ms 电流。',
+    '<b>② 雪崩去极化。</b>电流把 V 推过临界点 → m 门（快手）唰地全开 → g_Na 暴涨、Na⁺ 涌入 → V 更高 → m 开得更大。<b>正反馈失控</b>，V 直冲 E_Na。留意 h 闸此刻已在缓缓下落。',
     '<b>③ 反转复极化。</b>两个慢动作到位：h 闸落下掐断 Na⁺（g_Na 崩塌）；n 门全开，K⁺ 拔河队大举增援（g_K 达峰）——V 被迅速拽回。',
     '<b>④ 超极化恢复。</b>n 门迟迟不关，K⁺ 矫枉过正，V 一度跌破静息线；随后各门复位。这段「发动机冷却时间」，就是下一个实验的主角：不应期。'
   ];
@@ -2363,14 +2370,36 @@ function clicksPlay(times01, dur) {
   }));
   let lastNow = 0, acc = 0;
   function Inow(t) { return (t >= nextStim - 1 && t < nextStim) ? 1.8 * hhThresh1ms() : 0; }
+  const blocked = () => ({
+    bNa: ttx.getAttribute('aria-pressed') === 'true',
+    bK: tea.getAttribute('aria-pressed') === 'true'
+  });
+  function staticDraw() {                                // 减少动态偏好：按需算一窗，静态呈现
+    const { bNa, bK } = blocked();
+    const rec = hhRun(180, t => (t % 80 >= 29 && t % 80 < 30) ? 1.8 * hhThresh1ms() : 0, { every: 10, blockNa: bNa, blockK: bK });
+    const { ctx, w, h } = fitCanvas(cv);
+    const { X, Y } = rigAxes(ctx, w, h, { l: 44, r: 10, t: 10, b: 28 }, [0, 180], [-95, 55],
+      'ms', 'V (mV)', [], [-80, -40, 0, 40]);
+    ctx.fillStyle = RIG.i;
+    [29, 109].forEach(t0 => { ctx.beginPath(); ctx.moveTo(X(t0) - 4, h - 28); ctx.lineTo(X(t0) + 4, h - 28); ctx.lineTo(X(t0), h - 36); ctx.fill(); });
+    drawTrace(ctx, X, Y, rec.t, rec.V, RIG.v, 2);
+    ctx.font = '11px "IBM Plex Mono", monospace'; ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+    if (bNa) { ctx.fillStyle = '#F0A08C'; ctx.fillText('TTX 生效中：无 Na⁺，点不了火', w - 14, 14); }
+    if (bK) { ctx.fillStyle = '#8FBCE8'; ctx.fillText('TEA 生效中：无 K⁺，灭不了火', w - 14, bNa ? 30 : 14); }
+  }
+  if (REDUCED) {
+    staticDraw();
+    [ttx, tea].forEach(b => b.addEventListener('click', () => setTimeout(staticDraw, 0)));
+    redraws.add(staticDraw);
+  }
   (function frame(now) {
+    if (REDUCED) return;
     requestAnimationFrame(frame);
     if (!vis.visible) { lastNow = now; return; }
     const dtReal = clamp((now - lastNow) / 1000, 0, 0.06);
     lastNow = now;
     acc += dtReal * 1000 * 0.05;                        // 1 真实秒 ≈ 50 模拟 ms
-    const bNa = ttx.getAttribute('aria-pressed') === 'true';
-    const bK = tea.getAttribute('aria-pressed') === 'true';
+    const { bNa, bK } = blocked();
     while (acc >= HH_DT) {
       acc -= HH_DT;
       hhStep(s, Inow(simT), HH_DT, bNa, bK);
@@ -2397,10 +2426,8 @@ function clicksPlay(times01, dur) {
     drawTrace(ctx, X, Y, ts, vs, RIG.v, 2);
     ctx.restore();
     ctx.font = '11px "IBM Plex Mono", monospace'; ctx.textAlign = 'right'; ctx.textBaseline = 'top';
-    ctx.fillStyle = bNa ? '#F0A08C' : RIG.text;
-    if (bNa) ctx.fillText('TTX 生效中：无 Na⁺，点不了火', w - 14, 14);
-    ctx.fillStyle = bK ? '#8FBCE8' : RIG.text;
-    if (bK && !bNa) ctx.fillText('TEA 生效中：无 K⁺，灭不了火', w - 14, bNa ? 30 : 14);
+    if (bNa) { ctx.fillStyle = '#F0A08C'; ctx.fillText('TTX 生效中：无 Na⁺，点不了火', w - 14, 14); }
+    if (bK) { ctx.fillStyle = '#8FBCE8'; ctx.fillText('TEA 生效中：无 K⁺，灭不了火', w - 14, bNa ? 30 : 14); }
   })(0);
 })();
 
@@ -2420,13 +2447,17 @@ function lifRun(P, Ifn, T, dt) {
   }
   return { ts, Vs, Is, sp };
 }
+const numOr = (sel, def) => {
+  const v = parseFloat($(sel).value);
+  return Number.isFinite(v) ? v : def;
+};
 const lifParams = () => ({
-  tau: clamp(+$('#p-tau').value || 20, 0.5, 10000),
-  EL: clamp(+$('#p-el').value || -70, -100, -40),
-  R: clamp(+$('#p-r').value || 10, 0.1, 1000),
-  th: clamp(+$('#p-theta').value || -50, -80, 20),
-  Vr: clamp(+$('#p-vreset').value || -65, -100, -40),
-  tref: clamp(+$('#p-tref').value || 4, 0, 100)
+  tau: clamp(numOr('#p-tau', 20), 0.5, 10000),
+  EL: clamp(numOr('#p-el', -70), -100, -40),
+  R: clamp(numOr('#p-r', 10), 0.1, 1000),
+  th: clamp(numOr('#p-theta', -50), -80, 20),
+  Vr: clamp(numOr('#p-vreset', -65), -100, -40),
+  tref: clamp(numOr('#p-tref', 4), 0, 100)
 });
 (function lifLab() {
   const cv = $('#lif-canvas'); if (!cv) return;
@@ -2448,7 +2479,8 @@ const lifParams = () => ({
     const X = t => pad.l + t / T * (w - pad.l - pad.r);
     const hRaster = 26, hI = 44, hV = h - hRaster - hI - 30;
     const Yv = v => hRaster + 6 + (1 - (v + 90) / 55) * (hV - 10);
-    const maxI = Math.max(4, ...Is);
+    let maxI = 4;
+    for (const v of Is) if (v > maxI) maxI = v;
     const Yi = v => h - 24 - (v / maxI) * (hI - 10);
     ctx.strokeStyle = RIG.grid; ctx.lineWidth = 1; ctx.beginPath();
     [-80, -70, -60, -50].forEach(v => { ctx.moveTo(pad.l, Yv(v)); ctx.lineTo(w - pad.r, Yv(v)); });
@@ -2570,7 +2602,7 @@ const lifParams = () => ({
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     [0, 1, 2, 3, 4, 5, 6].forEach(i => ctx.fillText(i, X(i), h - pad.b + 6));
     ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
-    ctx.fillText('输入电流 I →', w - pad.r, h - 4);
+    ctx.fillText('输入电流 I (nA) →', w - pad.r, h - 4);
     ctx.textAlign = 'left'; ctx.textBaseline = 'top';
     ctx.fillText('f (Hz)', 6, 2);
     if (!pts.length) {
@@ -2607,22 +2639,42 @@ const lifParams = () => ({
     // RMSE
     const el = $('#fit-rmse');
     if (pts.length) {
-      const rmse = Math.sqrt(pts.reduce((a, p) => a + (relu(p.I) - p.f) ** 2, 0) / pts.length);
-      el.textContent = '拟合误差 ' + rmse.toFixed(1) + ' Hz' + (rmse < 5 ? ' ✓ 达标' : '');
-      el.style.color = rmse < 5 ? cssVar('--good') : '';
+      const rmseOf = f => Math.sqrt(pts.reduce((a, p) => a + (f(p.I) - p.f) ** 2, 0) / pts.length);
+      const rmse = rmseOf(relu);
+      let txt = 'ReLU 误差 ' + rmse.toFixed(1) + ' Hz' + (rmse < 7 ? ' ✓ 达标' : '');
+      if ($('#fit-softplus').checked) {
+        const sSm = 0.4;
+        txt += ' · softplus ' + rmseOf(I => k * sSm * Math.log(1 + Math.exp((I - x0) / sSm))).toFixed(1) + ' Hz';
+      }
+      el.textContent = txt;
+      el.style.color = rmse < 7 ? cssVar('--good') : '';
     }
     return { X, Y };
   }
   let axes = draw();
   const sweepBtn = $('#fit-sweep');
+  function noiseBlocks(I) {                              // 每 5ms 重采样的分段常数噪声（σ=1.2 nA）
+    let seed = 987 + Math.round(I * 400);
+    const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+    const blocks = [];
+    for (let b = 0; b < 240; b++) {
+      blocks.push(1.2 * Math.sqrt(-2 * Math.log(1 - rnd())) * Math.cos(2 * Math.PI * rnd()));
+    }
+    return blocks;
+  }
   sweepBtn.addEventListener('click', () => {
     sweepBtn.disabled = true; sweepBtn.textContent = '扫描中…';
     const P = lifParams();
+    const noisy = $('#fit-noise').checked;
     pts = [];
     let I = 0;
     (function chunk() {
       for (let c = 0; c < 5 && I <= 6.001; c++, I += 0.25) {
-        const r = lifRun(P, () => I, 1100, 0.1);
+        const blocks = noisy ? noiseBlocks(I) : null;
+        const Ifn = noisy
+          ? (t => Math.max(0, I + blocks[Math.min(239, Math.floor(t / 5))]))
+          : (() => I);
+        const r = lifRun(P, Ifn, 1100, 0.1);
         pts.push({ I, f: r.sp.filter(t => t > 100).length / 1.0 });
       }
       axes = draw();
@@ -2630,6 +2682,7 @@ const lifParams = () => ({
       else { sweepBtn.disabled = false; sweepBtn.textContent = '扫描：用当前 LIF 参数测 f–I'; }
     })();
   });
+  $('#fit-noise').addEventListener('change', () => { if (pts.length && !sweepBtn.disabled) sweepBtn.click(); });
   $('#fit-softplus').addEventListener('change', () => { axes = draw(); });
   let dragging = null;
   const pos = e => {
