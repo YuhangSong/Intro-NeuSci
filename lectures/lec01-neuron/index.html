@@ -1,0 +1,2664 @@
+<title>神经元如何计算</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* ============================================================
+   《神经科学导论》第一讲 · 神经元如何计算
+   设计语言：电生理实验室 —— 纸面讲义 + 深色仪器面板
+   ============================================================ */
+
+:root {
+  /* 浅色主题（完整定义） */
+  --bg: #F5F6F8;
+  --surface: #FFFFFF;
+  --surface-2: #EDEFF3;
+  --ink: #1C222E;
+  --ink-2: #465062;
+  --muted: #7C8598;
+  --line: #D9DEE7;
+  --line-soft: #E6EAF0;
+  --accent: #6B4FA8;          /* 尼氏染色紫 cresyl violet */
+  --accent-soft: #EEE9F7;
+  --on-accent: #FFFFFF;
+  /* 数据色（浅色主题，已通过色觉安全验证） */
+  --c-v:  #5B3D99;   /* 膜电位 */
+  --c-na: #C94F2B;   /* Na+ */
+  --c-k:  #2E6FB0;   /* K+ */
+  --c-i:  #A0761F;   /* 刺激电流 */
+  --c-ref: #8A94A6;  /* 参考/理论曲线 */
+  --good: #2E7D4F;
+  --bad:  #C43D3D;
+  /* 仪器面板：两种主题下都保持深色（示波器传统） */
+  --rig-bg: #10141C;
+  --rig-panel: #171C27;
+  --rig-line: #2A3140;
+  --rig-ink: #C9D1E0;
+  --rig-muted: #7C8598;
+  --rig-v:  #BFA3EF;
+  --rig-na: #E07A50;
+  --rig-k:  #5F9FD8;
+  --rig-i:  #C9A43F;
+  --rig-grid: #1E2531;
+  --shadow: 0 1px 2px rgba(15,20,30,.05), 0 8px 28px rgba(15,20,30,.07);
+  --sans: "IBM Plex Sans", -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+  --serif: "IBM Plex Serif", Georgia, "Songti SC", "Noto Serif CJK SC", serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151B;
+    --surface: #1A1E27;
+    --surface-2: #222835;
+    --ink: #E7EAF2;
+    --ink-2: #AEB7C9;
+    --muted: #8791A3;
+    --line: #2E3546;
+    --line-soft: #262D3C;
+    --accent: #A78BDA;
+    --accent-soft: #2A2440;
+    --on-accent: #14101F;
+    --c-v:  #8F6CCB;
+    --c-na: #D06336;
+    --c-k:  #3E86C7;
+    --c-i:  #A8842B;
+    --c-ref: #77839A;
+    --good: #4CAF79;
+    --bad:  #E06A6A;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 28px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12151B;
+  --surface: #1A1E27;
+  --surface-2: #222835;
+  --ink: #E7EAF2;
+  --ink-2: #AEB7C9;
+  --muted: #8791A3;
+  --line: #2E3546;
+  --line-soft: #262D3C;
+  --accent: #A78BDA;
+  --accent-soft: #2A2440;
+  --on-accent: #14101F;
+  --c-v:  #8F6CCB;
+  --c-na: #D06336;
+  --c-k:  #3E86C7;
+  --c-i:  #A8842B;
+  --c-ref: #77839A;
+  --good: #4CAF79;
+  --bad:  #E06A6A;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 28px rgba(0,0,0,.35);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .001s !important; transition-duration: .001s !important; }
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16.5px;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- 左侧导航栏 ---------- */
+#rail {
+  position: fixed; inset: 0 auto 0 0; width: 236px;
+  padding: 28px 18px 28px 26px;
+  border-right: 1px solid var(--line-soft);
+  background: var(--bg);
+  overflow-y: auto;
+  z-index: 40;
+  font-size: .85rem;
+}
+#rail .rail-course { font-size: .72rem; letter-spacing: .16em; color: var(--muted); margin-bottom: 4px; }
+#rail .rail-lec { font-weight: 700; font-size: .95rem; margin-bottom: 18px; line-height: 1.4; }
+#rail .rail-group { font-size: .7rem; letter-spacing: .14em; color: var(--muted); margin: 16px 0 6px; }
+#rail a {
+  display: block; padding: 5px 10px; margin: 1px 0;
+  color: var(--ink-2); text-decoration: none; border-radius: 7px;
+  line-height: 1.45;
+}
+#rail a:hover { background: var(--surface-2); color: var(--ink); }
+#rail a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+#rail .rail-hint { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--line-soft); color: var(--muted); font-size: .74rem; line-height: 1.7; }
+#rail kbd {
+  font-family: var(--mono); font-size: .72rem;
+  border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px;
+  padding: 0 4px; background: var(--surface);
+}
+
+/* 顶部进度条 */
+#progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); width: 0; z-index: 60; }
+
+/* 窄屏顶栏 */
+#topbar {
+  display: none;
+  position: sticky; top: 0; z-index: 50;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line-soft);
+  padding: 10px 16px;
+  align-items: center; gap: 10px;
+  font-size: .85rem;
+}
+#topbar select {
+  flex: 1; min-width: 0;
+  font: inherit; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  padding: 6px 8px;
+}
+
+main { margin-left: 236px; }
+@media (max-width: 1080px) {
+  #rail { display: none; }
+  #topbar { display: flex; }
+  main { margin-left: 0; }
+}
+
+/* ---------- 版面 ---------- */
+.scene { padding: 9vh 0 10vh; border-top: 1px solid var(--line-soft); scroll-margin-top: 40px; }
+.scene:first-of-type { border-top: none; }
+.wrap { max-width: 880px; margin: 0 auto; padding: 0 28px; }
+.wrap.wide { max-width: 1120px; }
+@media (max-width: 640px) { .wrap { padding: 0 18px; } }
+
+.kicker {
+  font-size: .76rem; letter-spacing: .15em; color: var(--accent);
+  font-weight: 600; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.kicker .k-time { color: var(--muted); font-weight: 400; letter-spacing: .08em; }
+h2 {
+  font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+  line-height: 1.28; margin: 0 0 6px; font-weight: 700;
+  text-wrap: balance;
+}
+h3 { font-size: 1.22rem; margin: 2.4em 0 .5em; font-weight: 700; }
+h4 { font-size: 1.02rem; margin: 1.8em 0 .4em; font-weight: 600; }
+.lede { font-size: 1.1rem; color: var(--ink-2); margin: 8px 0 0; max-width: 62ch; }
+p { margin: 1em 0; max-width: 68ch; }
+.scene ul, .scene ol { max-width: 66ch; padding-left: 1.4em; }
+li { margin: .35em 0; }
+strong { font-weight: 650; }
+.term { font-family: var(--serif); font-style: italic; color: var(--muted); font-size: .92em; }
+.small, .note { font-size: .84rem; color: var(--muted); line-height: 1.7; }
+.note { max-width: 62ch; }
+a { color: var(--accent); }
+::selection { background: var(--accent); color: var(--on-accent); }
+:is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
+}
+
+/* 高亮论点 */
+.thesis {
+  margin: 2em 0; padding: 22px 26px;
+  background: var(--surface); border: 1.5px solid var(--accent);
+  border-radius: 14px; box-shadow: var(--shadow);
+  font-size: 1.18rem; line-height: 1.7; font-weight: 500;
+  max-width: 640px;
+}
+.thesis .t-mark { display: block; font-size: .72rem; letter-spacing: .16em; color: var(--accent); font-weight: 700; margin-bottom: 6px; }
+
+/* 数字卡片 */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin: 1.6em 0; }
+.tile {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; padding: 16px 18px;
+}
+.tile .t-label { font-size: .76rem; color: var(--muted); letter-spacing: .06em; }
+.tile .t-num {
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: 1.65rem; font-weight: 600; line-height: 1.3; margin: 2px 0;
+}
+.tile .t-sub { font-size: .8rem; color: var(--ink-2); line-height: 1.5; }
+
+/* 思考卡片 */
+details.think {
+  margin: 1.8em 0; max-width: 66ch;
+  border: 1.5px dashed var(--line); border-radius: 12px;
+  background: var(--surface);
+}
+details.think summary {
+  cursor: pointer; padding: 14px 18px; font-weight: 600; list-style: none;
+  display: flex; gap: 10px; align-items: baseline;
+}
+details.think summary::-webkit-details-marker { display: none; }
+details.think summary .q-tag {
+  flex: none; font-size: .72rem; letter-spacing: .1em; color: var(--accent);
+  border: 1px solid var(--accent); border-radius: 999px; padding: 1px 9px;
+  font-weight: 700; transform: translateY(-1px);
+}
+details.think[open] summary { border-bottom: 1px dashed var(--line); }
+details.think .a { padding: 4px 18px 14px; color: var(--ink-2); }
+details.think .a p { margin: .7em 0; }
+
+/* 动手任务 */
+.task {
+  display: flex; gap: 12px; align-items: baseline;
+  margin: 1.4em 0; padding: 12px 16px; max-width: 66ch;
+  background: var(--accent-soft); border-radius: 10px;
+  font-size: .92rem; line-height: 1.7;
+}
+.task .task-tag { flex: none; font-size: .72rem; letter-spacing: .12em; font-weight: 700; color: var(--accent); }
+
+/* 公式 */
+.eq {
+  font-family: var(--serif); font-size: 1.28rem;
+  margin: 1.6em 0; padding: 18px 22px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  overflow-x: auto; white-space: nowrap;
+  display: flex; align-items: center; gap: .35em; width: fit-content; max-width: 100%;
+}
+.eq i { font-style: italic; }
+.eq .frac { display: inline-flex; flex-direction: column; text-align: center; vertical-align: middle; margin: 0 .15em; }
+.eq .frac .den { border-top: 1.2px solid currentColor; }
+.eq .frac span { padding: 0 .25em; line-height: 1.35; }
+.eq sub, .eq sup { font-size: .68em; }
+.eq-note { font-size: .84rem; color: var(--muted); margin-top: -.8em; }
+.hl-v { color: var(--c-v); font-weight: 600; }
+.hl-na { color: var(--c-na); font-weight: 600; }
+.hl-k { color: var(--c-k); font-weight: 600; }
+.hl-i { color: var(--c-i); font-weight: 600; }
+
+/* ---------- 仪器面板（两种主题下都是深色） ---------- */
+.rig {
+  background: var(--rig-bg); color: var(--rig-ink);
+  border: 1px solid var(--rig-line); border-radius: 16px;
+  margin: 1.8em 0; overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.rig-head {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 12px 18px; border-bottom: 1px solid var(--rig-line);
+  background: var(--rig-panel);
+}
+.rig-head .rig-name {
+  font-family: var(--mono); font-size: .8rem; letter-spacing: .12em;
+  color: var(--rig-ink); font-weight: 600;
+}
+.rig-head .led {
+  width: 8px; height: 8px; border-radius: 50%; background: #3A4254; flex: none;
+}
+.rig-head .led.on { background: #57D08A; box-shadow: 0 0 8px #57D08A88; }
+.rig-head .rig-spacer { flex: 1; }
+.rig-body { padding: 18px; }
+.rig canvas { display: block; width: 100%; border-radius: 8px; background: var(--rig-bg); }
+.rig .scope-frame { border: 1px solid var(--rig-line); border-radius: 10px; padding: 6px; background: var(--rig-bg); }
+
+/* 仪器上的控制件 */
+.ctl-row { display: flex; gap: 18px 26px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+.ctl { display: flex; flex-direction: column; gap: 4px; min-width: 150px; }
+.ctl .ctl-label { font-size: .74rem; letter-spacing: .06em; color: var(--rig-muted); display: flex; justify-content: space-between; gap: 8px; }
+.ctl .ctl-val { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--rig-ink); }
+.rig input[type="range"] { accent-color: var(--rig-v); width: 100%; margin: 0; }
+.light-ctl .ctl-label { color: var(--muted); }
+.light-ctl .ctl-val { color: var(--ink); }
+
+button.btn {
+  font: inherit; font-size: .88rem; font-weight: 600;
+  padding: 8px 18px; border-radius: 9px; cursor: pointer;
+  background: var(--accent); color: var(--on-accent);
+  border: 1px solid transparent;
+}
+button.btn:hover { filter: brightness(1.08); }
+button.btn:active { transform: translateY(1px); }
+button.btn.ghost {
+  background: transparent; color: var(--accent); border-color: var(--accent);
+}
+.rig button.btn { background: var(--rig-v); color: #14101F; }
+.rig button.btn.ghost { background: transparent; color: var(--rig-ink); border-color: var(--rig-line); }
+button.chip {
+  font: inherit; font-size: .8rem; font-weight: 600;
+  padding: 5px 14px; border-radius: 999px; cursor: pointer;
+  background: transparent; color: var(--rig-ink);
+  border: 1px solid var(--rig-line);
+}
+button.chip[aria-pressed="true"] { background: #3A2430; border-color: #B3574A; color: #F0A08C; }
+button.chip.chip-k[aria-pressed="true"] { background: #1E2C3E; border-color: #3E6EA0; color: #8FBCE8; }
+.chip-note { font-size: .74rem; color: var(--rig-muted); }
+
+/* 门控变量指示 */
+.gates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+.gate { border: 1px solid var(--rig-line); border-radius: 10px; padding: 10px 12px; }
+.gate .g-name { font-family: var(--mono); font-size: .74rem; color: var(--rig-muted); display: flex; justify-content: space-between; }
+.gate .g-name b { color: var(--rig-ink); }
+.gate .g-bar { height: 8px; border-radius: 4px; background: var(--rig-grid); margin-top: 6px; overflow: hidden; }
+.gate .g-bar i { display: block; height: 100%; border-radius: 4px; width: 0; }
+.gate .g-val { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: .78rem; margin-top: 4px; color: var(--rig-ink); }
+
+/* 相位标签 */
+.phase-strip { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.phase {
+  font-size: .78rem; padding: 3px 12px; border-radius: 999px;
+  border: 1px solid var(--rig-line); color: var(--rig-muted);
+}
+.phase.on { border-color: var(--rig-v); color: var(--rig-v); font-weight: 600; }
+
+/* 实验选项卡 */
+.exp-tabs { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 18px 0; }
+.exp-tabs button {
+  font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer;
+  padding: 7px 16px; border-radius: 9px 9px 0 0;
+  background: transparent; color: var(--rig-muted); border: 1px solid transparent;
+}
+.exp-tabs button[aria-selected="true"] {
+  background: var(--rig-bg); color: var(--rig-ink);
+  border-color: var(--rig-line); border-bottom-color: var(--rig-bg);
+  position: relative; top: 1px;
+}
+.exp-panel { border-top: 1px solid var(--rig-line); }
+
+/* ---------- 浅色图表卡 ---------- */
+.chart-card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px; margin: 1.6em 0; box-shadow: var(--shadow);
+}
+.chart-card canvas { display: block; width: 100%; }
+.chart-title { font-size: .85rem; font-weight: 600; color: var(--ink-2); margin-bottom: 10px; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: .8rem; color: var(--ink-2); margin-top: 10px; }
+.legend .li { display: flex; align-items: center; gap: 6px; }
+.legend .sw { width: 14px; height: 3px; border-radius: 2px; }
+
+/* ---------- 代码实验台 ---------- */
+.code-lab { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; }
+@media (max-width: 900px) { .code-lab { grid-template-columns: 1fr; } }
+.code-pane { padding: 18px; border-right: 1px solid var(--rig-line); min-width: 0; }
+@media (max-width: 900px) { .code-pane { border-right: none; border-bottom: 1px solid var(--rig-line); } }
+.result-pane { padding: 18px; min-width: 0; }
+pre.code {
+  font-family: var(--mono); font-size: .82rem; line-height: 1.75;
+  margin: 0; overflow-x: auto; color: #AEB9CE; tab-size: 4;
+}
+pre.code .cm { color: #5B6578; }
+pre.code .kw { color: #C792EA; }
+pre.code .fn { color: #82AAFF; }
+pre.code .st { color: #C3E88D; }
+input.cnum {
+  font-family: var(--mono); font-size: .82rem; font-weight: 600;
+  width: 5ch; text-align: center;
+  background: #232B3B; color: #F5D67B;
+  border: 1px solid #3A4254; border-radius: 5px; padding: 1px 2px;
+  -moz-appearance: textfield; appearance: textfield;
+}
+input.cnum::-webkit-inner-spin-button { display: none; }
+input.cnum:focus { border-color: var(--rig-v); outline: none; }
+textarea.code-free {
+  width: 100%; min-height: 380px; resize: vertical;
+  font-family: var(--mono); font-size: .8rem; line-height: 1.7;
+  background: #0C1017; color: #C8D2E4;
+  border: 1px solid var(--rig-line); border-radius: 8px; padding: 12px;
+}
+.run-row { display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+.run-msg { font-family: var(--mono); font-size: .76rem; color: var(--rig-muted); }
+.run-msg.err { color: #E08A8A; }
+
+/* ---------- 时间轴（双车道） ---------- */
+.lanes-scroll { overflow-x: auto; margin: 1.8em 0; padding-bottom: 8px; }
+.lanes { display: grid; grid-auto-flow: column; gap: 0; min-width: 900px; }
+.lane-col { display: grid; grid-template-rows: 1fr 46px 1fr; min-width: 128px; }
+.lane-evt {
+  margin: 4px 6px; padding: 10px 12px; border-radius: 10px;
+  background: var(--surface); border: 1px solid var(--line);
+  font-size: .78rem; line-height: 1.55; cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+}
+.lane-evt:hover, .lane-evt.open { border-color: var(--accent); box-shadow: var(--shadow); }
+.lane-evt .y { font-family: var(--mono); font-weight: 600; color: var(--accent); font-size: .74rem; }
+.lane-evt .t { font-weight: 650; display: block; margin: 1px 0 2px; }
+.lane-evt .d { color: var(--muted); display: none; }
+.lane-evt.open .d { display: block; }
+.lane-evt.neu { align-self: end; }
+.lane-evt.ai { align-self: start; }
+.lane-axis { position: relative; }
+.lane-axis::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 50%;
+  border-top: 2px solid var(--line);
+}
+.lane-axis svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.lane-tags { display: flex; justify-content: space-between; max-width: 900px; font-size: .76rem; color: var(--muted); letter-spacing: .1em; }
+
+/* ---------- 解剖图 ---------- */
+.anat-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 20px; align-items: start; margin: 1.8em 0; }
+@media (max-width: 860px) { .anat-grid { grid-template-columns: 1fr; } }
+.anat-fig {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 14px; box-shadow: var(--shadow);
+}
+.anat-fig svg { width: 100%; height: auto; display: block; }
+.anat-part { cursor: pointer; }
+.anat-part .shape { transition: opacity .15s; }
+.anat-part:hover .shape { opacity: .75; }
+.anat-part.sel .halo { opacity: 1; }
+.anat-part .halo { opacity: 0; transition: opacity .2s; }
+.anat-info {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px 20px; position: sticky; top: 60px;
+}
+.anat-info .ai-name { font-weight: 700; font-size: 1.05rem; }
+.anat-info .ai-en { font-family: var(--serif); font-style: italic; color: var(--muted); font-size: .88rem; margin-bottom: 8px; }
+.anat-info .ai-role {
+  margin-top: 10px; padding: 10px 12px; border-radius: 9px;
+  background: var(--accent-soft); font-size: .86rem; line-height: 1.65;
+}
+.anat-info .ai-role b { color: var(--accent); }
+.anat-info .ai-num { font-size: .8rem; color: var(--muted); margin-top: 10px; }
+
+/* ---------- 离子 / 电位标尺 ---------- */
+.ion-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; margin: 1.8em 0; align-items: stretch; }
+@media (max-width: 860px) { .ion-grid { grid-template-columns: 1fr; } }
+.panel {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px; box-shadow: var(--shadow); min-width: 0;
+}
+.panel .p-title { font-size: .85rem; font-weight: 650; color: var(--ink-2); margin-bottom: 12px; }
+.ion-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.ion-table th, .ion-table td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--line-soft); font-variant-numeric: tabular-nums; }
+.ion-table th { font-size: .76rem; color: var(--muted); font-weight: 600; letter-spacing: .04em; }
+.ion-table td:first-child, .ion-table th:first-child { text-align: left; }
+.ion-table .mono { font-family: var(--mono); }
+
+/* ---------- 对照区 ---------- */
+.duel { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 1.8em 0; }
+@media (max-width: 780px) { .duel { grid-template-columns: 1fr; } }
+.duel .panel h4 { margin: 0 0 6px; }
+.cmp-scroll { overflow-x: auto; margin: 1.6em 0; }
+.cmp-table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: .9rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.cmp-table th, .cmp-table td { padding: 11px 14px; border-bottom: 1px solid var(--line-soft); text-align: left; vertical-align: top; line-height: 1.6; }
+.cmp-table thead th { background: var(--surface-2); font-size: .8rem; letter-spacing: .04em; }
+.cmp-table td:first-child { font-weight: 600; white-space: nowrap; color: var(--ink-2); }
+.cmp-table tr:last-child td { border-bottom: none; }
+
+/* ---------- 封面 ---------- */
+.cover { padding-top: 12vh; }
+.cover .c-course { font-size: .8rem; letter-spacing: .22em; color: var(--muted); margin-bottom: 14px; }
+.cover h1 {
+  font-size: clamp(2.5rem, 6vw, 4.3rem); line-height: 1.15;
+  margin: 0 0 10px; font-weight: 700; letter-spacing: .01em; text-wrap: balance;
+}
+.cover .c-sub { font-size: clamp(1rem, 2vw, 1.25rem); color: var(--ink-2); max-width: 56ch; }
+.cover-spark { margin: 26px 0 6px; }
+.cover-spark canvas { width: 100%; max-width: 720px; height: auto; display: block; }
+
+/* ---------- 课间 / 收尾 ---------- */
+.interlude { text-align: center; padding: 7vh 0; }
+.interlude .i-mark { font-size: .78rem; letter-spacing: .3em; color: var(--muted); }
+.interlude .i-text { font-size: 1.3rem; font-weight: 600; margin-top: 8px; }
+.next-teaser {
+  margin: 2em 0 0; padding: 20px 24px; max-width: 640px;
+  border: 1px solid var(--line); border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent-soft), var(--surface));
+}
+.next-teaser .nt-tag { font-size: .74rem; letter-spacing: .16em; color: var(--accent); font-weight: 700; }
+.next-teaser .nt-title { font-size: 1.2rem; font-weight: 700; margin: 4px 0; }
+footer.colophon {
+  margin-left: 0; padding: 26px 28px 40px; border-top: 1px solid var(--line-soft);
+  font-size: .78rem; color: var(--muted);
+}
+
+/* 揭示动画 */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal { opacity: 0; transform: translateY(14px); transition: opacity .55s ease, transform .55s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+}
+
+/* ---------- 预测-投票组件 ---------- */
+.predict {
+  margin: 1.6em 0; max-width: 66ch;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 16px 18px;
+}
+.predict .pq { font-weight: 650; margin-bottom: 10px; line-height: 1.7; }
+.predict .pq .p-tag { display: inline-block; font-size: .7rem; letter-spacing: .12em; color: var(--on-accent); background: var(--accent); border-radius: 999px; padding: 2px 10px; font-weight: 700; margin-right: 8px; transform: translateY(-2px); }
+.predict .opts { display: flex; flex-direction: column; gap: 8px; }
+.predict .opts button {
+  font: inherit; font-size: .92rem; text-align: left; cursor: pointer;
+  padding: 9px 14px; border-radius: 9px;
+  background: var(--surface-2); color: var(--ink); border: 1.5px solid transparent;
+  line-height: 1.55;
+}
+.predict .opts button:hover { border-color: var(--accent); }
+.predict .opts button.chosen { border-color: var(--accent); background: var(--accent-soft); }
+.predict.revealed .opts button.right { border-color: var(--good); background: color-mix(in srgb, var(--good) 12%, var(--surface)); }
+.predict.revealed .opts button.chosen:not(.right) { border-color: var(--bad); }
+.predict .p-reveal { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); color: var(--ink-2); font-size: .92rem; line-height: 1.7; }
+.predict.revealed .p-reveal { display: block; }
+.predict .p-hint { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+.rig .predict { background: var(--rig-panel); border-color: var(--rig-line); }
+.rig .predict .pq { color: var(--rig-ink); }
+.rig .predict .opts button { background: #202737; color: var(--rig-ink); }
+.rig .predict .p-reveal { color: var(--rig-ink); border-top-color: var(--rig-line); }
+.rig .predict .p-hint { color: var(--rig-muted); }
+
+/* ---------- 生物⇄ML 翻译胶囊 ---------- */
+.mlb {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: .78rem; line-height: 1.4; vertical-align: 2px;
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 2px 4px 2px 10px; margin: 0 3px;
+  background: var(--surface); white-space: nowrap;
+}
+.mlb .b { color: var(--ink-2); font-weight: 600; }
+.mlb .arr { color: var(--accent); font-weight: 700; }
+.mlb .m { font-family: var(--mono); font-size: .72rem; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 1px 9px; font-weight: 600; }
+.mlb-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 1.2em 0; }
+
+/* ---------- 配对游戏 ---------- */
+.match-cards { display: flex; gap: 10px; flex-wrap: wrap; margin: 1.2em 0; }
+.match-card {
+  font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer;
+  padding: 9px 16px; border-radius: 10px;
+  background: var(--accent-soft); color: var(--accent);
+  border: 1.5px solid var(--accent);
+  font-family: var(--mono);
+}
+.match-card.selected { background: var(--accent); color: var(--on-accent); }
+.match-card.done { opacity: .35; cursor: default; border-style: dashed; }
+.match-msg { min-height: 1.6em; font-size: .88rem; font-weight: 600; }
+.match-msg.ok { color: var(--good); }
+.match-msg.no { color: var(--bad); }
+.anat-slot { cursor: pointer; }
+.anat-slot rect { fill: transparent; stroke: var(--muted); stroke-dasharray: 5 4; transition: stroke .15s; }
+.anat-slot:hover rect { stroke: var(--accent); }
+.anat-slot text { fill: var(--muted); font-size: 12px; }
+.anat-slot.filled rect { stroke: var(--accent); stroke-dasharray: none; fill: var(--accent-soft); }
+.anat-slot.filled text { fill: var(--accent); font-weight: 700; }
+.anat-slot.shake { animation: slot-shake .3s; }
+@keyframes slot-shake { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+
+/* ---------- 想深入折叠块 ---------- */
+details.deep {
+  margin: 1.6em 0; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface-2);
+}
+details.deep summary {
+  cursor: pointer; padding: 12px 18px; font-weight: 600; font-size: .92rem;
+  color: var(--ink-2); list-style: none; display: flex; gap: 10px; align-items: baseline;
+}
+details.deep summary::-webkit-details-marker { display: none; }
+details.deep summary::before { content: "+"; font-family: var(--mono); color: var(--accent); font-weight: 700; }
+details.deep[open] summary::before { content: "−"; }
+details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); border-radius: 0 0 12px 12px; }
+
+/* ---------- 预设按钮 ---------- */
+.presets { display: flex; gap: 6px; flex-wrap: wrap; }
+button.mini {
+  font-family: var(--mono); font-size: .74rem; font-weight: 600; cursor: pointer;
+  padding: 3px 10px; border-radius: 7px;
+  background: transparent; color: var(--rig-ink); border: 1px solid var(--rig-line);
+}
+button.mini:hover { border-color: var(--rig-v); color: var(--rig-v); }
+button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--rig-v); }
+.panel button.mini, .chart-card button.mini { color: var(--ink-2); border-color: var(--line); }
+.panel button.mini:hover, .chart-card button.mini:hover { border-color: var(--accent); color: var(--accent); }
+.panel button.mini.on, .chart-card button.mini.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+
+/* ---------- 装配徽章 ---------- */
+.gained {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin: 1.6em 0 0; padding: 8px 16px;
+  border: 1.5px solid var(--good); border-radius: 999px;
+  color: var(--good); font-size: .86rem; font-weight: 650;
+  background: color-mix(in srgb, var(--good) 8%, var(--surface));
+}
+.gained .g-eq { font-family: var(--mono); font-size: .82rem; }
+
+/* ---------- 结果徽标 ---------- */
+.outcome {
+  font-family: var(--mono); font-size: .84rem; font-weight: 600;
+  padding: 4px 12px; border-radius: 8px; display: inline-block;
+}
+.outcome.spike { color: #7BE3A5; background: #16301F; }
+.outcome.fail { color: #E8A0A0; background: #331C1C; }
+.outcome.idle { color: var(--rig-muted); background: var(--rig-panel); }
+
+/* 声音开关 */
+.snd-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: .8rem; color: var(--rig-muted); cursor: pointer; user-select: none; }
+.snd-toggle input { accent-color: var(--rig-v); }
+
+/* ---------- 引擎盖 / 实验布局 ---------- */
+.ap-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 920px) { .ap-grid { grid-template-columns: 1fr; } }
+.story {
+  background: var(--rig-panel); border: 1px solid var(--rig-line); border-radius: 10px;
+  padding: 12px 16px; font-size: .9rem; line-height: 1.75; color: var(--rig-ink);
+  min-height: 6.2em; margin-top: 12px;
+}
+.story b { color: var(--rig-v); }
+.chan-svg { width: 100%; height: auto; display: block; }
+.rig.homework { border-style: dashed; }
+.exp-badge {
+  font-size: .7rem; letter-spacing: .12em; color: var(--rig-muted);
+  border: 1px solid var(--rig-line); padding: 2px 10px; border-radius: 999px; font-family: var(--mono);
+}
+.surprise-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+@media (max-width: 720px) { .surprise-cards { grid-template-columns: 1fr; } }
+.s-card { border: 1px solid var(--rig-line); border-radius: 10px; padding: 12px 14px; font-size: .86rem; line-height: 1.7; color: var(--rig-ink); }
+.s-card b { color: var(--rig-v); }
+.recap-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 1.2em 0; }
+.recap-row .gained { margin: 0; font-size: .8rem; padding: 5px 13px; }
+.anat-part.sel { filter: drop-shadow(0 0 5px var(--accent)); }
+.anat-part:focus-visible, .anat-slot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+<div id="progress" role="presentation"></div>
+
+<nav id="rail" aria-label="课程目录">
+  <div class="rail-course">神经科学导论</div>
+  <div class="rail-lec">第一讲<br>神经元如何计算</div>
+  <div class="rail-group">第一课时 · 真实的神经元</div>
+  <a href="#s0" data-sec="s0">开场 · 二十瓦的机器</a>
+  <a href="#s1" data-sec="s1">1 · 为什么要回头看大脑</a>
+  <a href="#s2" data-sec="s2">2 · 认识神经元</a>
+  <a href="#s3" data-sec="s3">3 · 电从哪里来</a>
+  <a href="#s4" data-sec="s4">4 · 动作电位的诞生</a>
+  <div class="rail-group">第二课时 · 从生物到模型</div>
+  <a href="#s5" data-sec="s5">5 · 引擎盖之下 · 实验室</a>
+  <a href="#s6" data-sec="s6">6 · 抽象的艺术：LIF</a>
+  <a href="#s7" data-sec="s7">7 · 两种神经元的对话</a>
+  <a href="#s8" data-sec="s8">8 · 一句话与三个问题</a>
+  <div class="rail-hint">
+    键盘 <kbd>←</kbd> <kbd>→</kbd> 切换小节<br>
+    所有仪器都可以动手操作
+  </div>
+</nav>
+
+<div id="topbar">
+  <button class="btn ghost" id="tb-prev" aria-label="上一节" style="padding:6px 12px">←</button>
+  <select id="tb-select" aria-label="跳转到小节"></select>
+  <button class="btn ghost" id="tb-next" aria-label="下一节" style="padding:6px 12px">→</button>
+</div>
+
+<main>
+
+<!-- ============ 封面 ============ -->
+<section class="scene cover" id="s0" data-title="开场 · 二十瓦的机器">
+  <div class="wrap">
+    <div class="c-course">神经科学导论 · 南京大学人工智能学院 · 第一讲</div>
+    <h1>神经元如何计算</h1>
+    <p class="c-sub">从离子到脉冲，再到人工神经元</p>
+    <div class="cover-spark" aria-hidden="true"><canvas id="cover-canvas" height="120"></canvas></div>
+
+    <p style="max-width:60ch">此刻，你颅骨里那台机器正以大约 <strong>20 瓦</strong> 的功率运行——和一只节能灯泡差不多。它在做的事情，是任何数据中心都还做不到的。</p>
+
+    <div class="tiles">
+      <div class="tile">
+        <div class="t-label">大脑功耗</div>
+        <div class="t-num">20 W</div>
+        <div class="t-sub">约一只节能灯泡；一块 H100 GPU 满载约 700 W</div>
+      </div>
+      <div class="tile">
+        <div class="t-label">神经元数量</div>
+        <div class="t-num">8.6×10¹⁰</div>
+        <div class="t-sub">860 亿个「处理单元」，每个都又慢又吵</div>
+      </div>
+      <div class="tile">
+        <div class="t-label">突触连接</div>
+        <div class="t-num">~10¹⁴</div>
+        <div class="t-sub">比最大语言模型的参数量还多约两个数量级</div>
+      </div>
+      <div class="tile">
+        <div class="t-label">信号速度</div>
+        <div class="t-num">≤120 m/s</div>
+        <div class="t-sub">比芯片里的电信号慢约六个数量级——它靠架构取胜</div>
+      </div>
+    </div>
+
+    <div class="thesis reveal">
+      <span class="t-mark">本讲唯一要讲透的一件事</span>
+      神经元是一个<strong>带泄漏的积分器，外加一个阈值</strong>——它把连续的输入电流，变成离散的电脉冲序列。<br>
+      <span class="small">抓住这个骨架，就抓住了单神经元计算的第一性描述。两节课之后，你能亲手模拟它，并说清它与 ReLU 的全部异同。</span>
+    </div>
+
+    <div class="chart-card" style="max-width:720px">
+      <div class="chart-title">开场悬念 · 一条曲线的两个身份</div>
+      <canvas id="mystery-fi" height="300"></canvas>
+      <div class="legend">
+        <span class="li"><span class="sw" style="background:var(--c-v)"></span>某个真实神经元的「输入电流 → 输出频率」实测点</span>
+        <span class="li"><span class="sw" style="background:var(--c-ref)"></span>你天天在用的 ReLU</span>
+      </div>
+      <p class="note" style="margin-bottom:0">左边的点来自电生理实验，右边的折线来自深度学习。它们为什么长得像？——先记下这个问题。<strong>100 分钟后，这张图上的每一个数据点，都会由你亲手测出来。</strong></p>
+    </div>
+
+    <p style="max-width:60ch">最后说清楚这门课和高中生物的关系：你在高中见过「静息电位」「动作电位」「Na⁺ 内流」——<strong>那些是现象的名字</strong>。今天你会得到高中没给过的东西：<strong>机制、方程，和一段 15 行、你可以亲手改坏再改好的代码</strong>。</p>
+  </div>
+</section>
+
+<!-- ============ 1 · 为什么要回头看大脑 ============ -->
+<section class="scene" id="s1" data-title="1 · 为什么要回头看大脑">
+  <div class="wrap wide">
+    <div class="kicker">第 1 节 <span class="k-time">第一课时 · 约 3 分钟</span></div>
+    <h2>为什么做 AI 的人要回头看大脑</h2>
+    <p class="lede">不是情怀。人工智能历史上几乎每一次架构级的跃迁，上游都有一个神经科学的发现。下面这张图是<strong>整门课的地图</strong>——今天只讲它的第一格：单个神经元。</p>
+
+    <div class="lane-tags" style="margin-top:2em"><span>↑ 神经科学</span><span>人工智能 ↓</span></div>
+    <div class="lanes-scroll">
+      <div class="lanes" id="timeline">
+        <div class="lane-col">
+          <div class="lane-evt neu" tabindex="0"><span class="y">1906</span><span class="t">Cajal：神经元学说</span><span class="d">大脑不是一张连续的网，而是由离散的细胞——神经元——构成。计算单元由此有了定义。</span></div>
+          <div class="lane-axis"><svg viewBox="0 0 100 46" aria-hidden="true"><circle cx="50" cy="23" r="3" fill="var(--accent)"/></svg></div>
+          <div></div>
+        </div>
+        <div class="lane-col">
+          <div class="lane-evt neu" tabindex="0"><span class="y">1949</span><span class="t">Hebb：一起放电，一起相连</span><span class="d">「细胞 A 反复参与激发细胞 B，两者间的连接就会增强。」——日后几乎所有学习规则的种子，也是我们下一讲的主角。</span></div>
+          <div class="lane-axis"><svg viewBox="0 0 100 46" aria-hidden="true"><line x1="50" y1="2" x2="50" y2="38" stroke="var(--accent)" stroke-width="1.6"/><polygon points="45,36 55,36 50,45" fill="var(--accent)"/></svg></div>
+          <div class="lane-evt ai" tabindex="0"><span class="y">1943</span><span class="t">McCulloch &amp; Pitts：数学神经元</span><span class="d">受神经元「全或无」放电启发，把神经元抽象为阈值逻辑单元——今天所有人工神经网络的公共祖先。</span></div>
+        </div>
+        <div class="lane-col">
+          <div class="lane-evt neu star" tabindex="0"><span class="y">1952</span><span class="t">Hodgkin &amp; Huxley：动作电位方程</span><span class="d">用枪乌贼巨轴突 + 电压钳，写出了神经脉冲的微分方程，1963 年获诺贝尔奖。<b>今天第 4 节，这套方程会在你面前实时运行。</b></span></div>
+          <div class="lane-axis"><svg viewBox="0 0 100 46" aria-hidden="true"><circle cx="50" cy="23" r="3" fill="var(--accent)"/></svg></div>
+          <div class="lane-evt ai" tabindex="0"><span class="y">1958</span><span class="t">Rosenblatt：感知机</span><span class="d">第一个能从数据中「学」出权重的神经元模型，直接引用 Hebb 的思想。</span></div>
+        </div>
+        <div class="lane-col">
+          <div class="lane-evt neu" tabindex="0"><span class="y">1962</span><span class="t">Hubel &amp; Wiesel：视觉皮层的层级</span><span class="d">猫的视觉皮层里，简单细胞检测朝向，复杂细胞逐层组合出不变性——层级特征提取的生物原型，1981 年获诺贝尔奖。</span></div>
+          <div class="lane-axis"><svg viewBox="0 0 100 46" aria-hidden="true"><line x1="50" y1="2" x2="50" y2="38" stroke="var(--accent)" stroke-width="1.6"/><polygon points="45,36 55,36 50,45" fill="var(--accent)"/></svg></div>
+          <div class="lane-evt ai" tabindex="0"><span class="y">1980 / 1989</span><span class="t">Neocognitron → CNN</span><span class="d">福岛邦彦按 Hubel &amp; Wiesel 的简单/复杂细胞设计了 Neocognitron；LeCun 加上反向传播，成为卷积神经网络。</span></div>
+        </div>
+        <div class="lane-col">
+          <div class="lane-evt neu" tabindex="0"><span class="y">1997</span><span class="t">Schultz：多巴胺 = 预测误差</span><span class="d">猴子中脑多巴胺神经元的放电，精确等于「实际奖励 − 预期奖励」。</span></div>
+          <div class="lane-axis"><svg viewBox="0 0 100 46" aria-hidden="true"><line x1="50" y1="8" x2="50" y2="38" stroke="var(--accent)" stroke-width="1.6"/><polygon points="45,10 55,10 50,1" fill="var(--accent)"/><polygon points="45,36 55,36 50,45" fill="var(--accent)"/></svg></div>
+          <div class="lane-evt ai" tabindex="0"><span class="y">1988</span><span class="t">Sutton：TD 学习</span><span class="d">时序差分学习先于实验提出了同样的误差信号——理论与生物学在这里对上了暗号，成为强化学习的基石。</span></div>
+        </div>
+        <div class="lane-col">
+          <div class="lane-evt neu" tabindex="0"><span class="y">2014→</span><span class="t">深度网络成为大脑模型</span><span class="d">方向反转：CNN/Transformer 的内部表征，成了预测视觉皮层、语言皮层神经活动最好的模型。AI 开始反哺神经科学。</span></div>
+          <div class="lane-axis"><svg viewBox="0 0 100 46" aria-hidden="true"><line x1="50" y1="8" x2="50" y2="44" stroke="var(--accent)" stroke-width="1.6"/><polygon points="45,10 55,10 50,1" fill="var(--accent)"/></svg></div>
+          <div class="lane-evt ai" tabindex="0"><span class="y">2012→</span><span class="t">深度学习爆发</span><span class="d">AlexNet、AlphaGo、大语言模型……工程一路狂奔，但功耗与数据效率仍与大脑相差成千上万倍。</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="note">点击任意事件卡片可展开细节。箭头表示思想的流向：神经科学 → AI，或反向。</p>
+
+    <p style="margin-top:2em">课堂上只讲两个故事就够了：<strong>Hubel &amp; Wiesel 的猫 → 卷积网络</strong>；<strong>多巴胺神经元 ⇄ TD 误差</strong>（理论先于实验八年，然后被生物学证实——两个学科对上了暗号）。其余节点留给你课后点开。</p>
+    <p>注意反复出现的模式：<strong>神经科学提供「原理性发现」，AI 把它变成「可扩展的算法」</strong>；而最近十年，箭头第一次掉头向上。这门课接下来的每一讲，都对应地图上的一个节点。今天，回到一切的起点——<strong>单个神经元</strong>。</p>
+  </div>
+</section>
+<!-- ============ 2 · 认识神经元 ============ -->
+<section class="scene" id="s2" data-title="2 · 认识神经元">
+  <div class="wrap wide">
+    <div class="kicker">第 2 节 <span class="k-time">第一课时 · 约 10 分钟</span></div>
+    <h2>认识神经元：你其实见过它的漫画版</h2>
+    <p class="lede">你写过 <code style="font-family:var(--mono);font-size:.9em">y = φ(Σ wᵢxᵢ + b)</code>。这行代码的每个零件，都是从下面这个细胞身上抄来的——问题是：<strong>哪个零件对应哪个部位？</strong></p>
+
+    <div class="task"><span class="task-tag">配对任务</span><span>下面四张卡片是人工神经元的四个零件。先点选一张卡片，再点击解剖图上你认为对应的虚线框。放错会弹回；全部放对后，看看你和 1943 年的 McCulloch &amp; Pitts 是不是同一个思路。</span></div>
+
+    <div class="match-cards" id="match-cards">
+      <button class="match-card" data-target="dendrite">加权输入 w·x</button>
+      <button class="match-card" data-target="soma">求和 Σ</button>
+      <button class="match-card" data-target="hillock">非线性判定 φ</button>
+      <button class="match-card" data-target="axon">输出 y → 下一层</button>
+    </div>
+    <div class="match-msg" id="match-msg" role="status"></div>
+
+    <div class="anat-grid">
+      <figure class="anat-fig" style="margin:0">
+        <svg id="anat-svg" viewBox="0 0 760 470" role="img" aria-label="神经元解剖示意图：树突接收输入，胞体整合，轴丘判定，轴突传出至突触末梢">
+          <!-- 树突 -->
+          <g class="anat-part" data-part="dendrite" tabindex="0" role="button" aria-label="树突">
+            <path class="shape" d="M225 195 L155 125 M155 125 L105 75 M155 125 L190 62 M282 185 L322 95 M322 95 L287 48 M322 95 L368 58 M205 255 L125 292 M125 292 L72 262 M125 292 L95 342" fill="none" stroke="var(--c-k)" stroke-width="5" stroke-linecap="round" opacity=".85"/>
+            <path d="M225 195 L155 125 L105 75 M282 185 L322 95 M205 255 L125 292" fill="none" stroke="transparent" stroke-width="30"/>
+            <text x="88" y="112" font-size="13" fill="var(--ink-2)" font-weight="600">树突</text>
+          </g>
+          <!-- 胞体 -->
+          <g class="anat-part" data-part="soma" tabindex="0" role="button" aria-label="胞体">
+            <ellipse class="shape" cx="250" cy="228" rx="54" ry="49" fill="var(--accent-soft)" stroke="var(--ink-2)" stroke-width="2.5"/>
+            <circle class="shape" cx="248" cy="228" r="17" fill="var(--accent)" opacity=".4"/>
+            <text x="226" y="300" font-size="13" fill="var(--ink-2)" font-weight="600">胞体</text>
+          </g>
+          <!-- 轴丘 -->
+          <g class="anat-part" data-part="hillock" tabindex="0" role="button" aria-label="轴丘">
+            <polygon class="shape" points="300,213 342,222 342,234 300,243" fill="var(--c-i)" opacity=".8" stroke="var(--ink-2)" stroke-width="1.5"/>
+            <rect x="292" y="200" width="60" height="60" fill="transparent"/>
+            <text x="306" y="196" font-size="13" fill="var(--ink-2)" font-weight="600">轴丘</text>
+          </g>
+          <!-- 轴突 + 髓鞘 + 末梢 -->
+          <g class="anat-part" data-part="axon" tabindex="0" role="button" aria-label="轴突与突触末梢">
+            <line class="shape" x1="342" y1="228" x2="560" y2="228" stroke="var(--ink-2)" stroke-width="4"/>
+            <rect class="shape" x="352" y="219" width="42" height="18" rx="9" fill="var(--surface-2)" stroke="var(--muted)" stroke-width="1.5"/>
+            <rect class="shape" x="406" y="219" width="42" height="18" rx="9" fill="var(--surface-2)" stroke="var(--muted)" stroke-width="1.5"/>
+            <rect class="shape" x="460" y="219" width="42" height="18" rx="9" fill="var(--surface-2)" stroke="var(--muted)" stroke-width="1.5"/>
+            <rect class="shape" x="514" y="219" width="42" height="18" rx="9" fill="var(--surface-2)" stroke="var(--muted)" stroke-width="1.5"/>
+            <path class="shape" d="M560 228 L618 172 M560 228 L632 228 M560 228 L618 284" fill="none" stroke="var(--ink-2)" stroke-width="3" stroke-linecap="round"/>
+            <circle class="shape" cx="626" cy="165" r="9" fill="var(--c-na)" opacity=".85"/>
+            <circle class="shape" cx="641" cy="228" r="9" fill="var(--c-na)" opacity=".85"/>
+            <circle class="shape" cx="626" cy="291" r="9" fill="var(--c-na)" opacity=".85"/>
+            <text x="430" y="262" font-size="13" fill="var(--ink-2)" font-weight="600">轴突（髓鞘包裹）</text>
+            <text x="588" y="322" font-size="13" fill="var(--ink-2)" font-weight="600">突触末梢</text>
+          </g>
+          <!-- 下一个神经元的树突（接收方） -->
+          <g opacity=".55">
+            <path d="M668 130 Q690 200 668 260 Q660 300 675 340" fill="none" stroke="var(--muted)" stroke-width="5" stroke-linecap="round"/>
+            <text x="700" y="368" font-size="12" fill="var(--muted)" text-anchor="middle">下一个神经元</text>
+            <text x="698" y="104" font-size="12" fill="var(--muted)" text-anchor="middle">突触间隙：</text>
+            <text x="698" y="121" font-size="12" fill="var(--muted)" text-anchor="middle">「权重」所在地</text>
+          </g>
+          <!-- 信号方向 -->
+          <g opacity=".8">
+            <line x1="120" y1="425" x2="600" y2="425" stroke="var(--muted)" stroke-width="1.5"/>
+            <polygon points="600,420 612,425 600,430" fill="var(--muted)"/>
+            <text x="300" y="447" font-size="12" fill="var(--muted)">信号方向：输入 → 整合 → 判定 → 输出</text>
+          </g>
+          <!-- 配对插槽 -->
+          <g class="anat-slot" data-slot="dendrite" tabindex="0"><rect x="30" y="18" width="150" height="30" rx="8"/><text x="42" y="38">① 树突（含突触）</text></g>
+          <g class="anat-slot" data-slot="soma" tabindex="0"><rect x="150" y="330" width="150" height="30" rx="8"/><text x="162" y="350">② 胞体</text></g>
+          <g class="anat-slot" data-slot="hillock" tabindex="0"><rect x="330" y="130" width="150" height="30" rx="8"/><text x="342" y="150">③ 轴丘</text></g>
+          <g class="anat-slot" data-slot="axon" tabindex="0"><rect x="400" y="285" width="160" height="30" rx="8"/><text x="412" y="305">④ 轴突 → 末梢</text></g>
+        </svg>
+        <figcaption class="small" style="padding:8px 6px 0">一个（高度简化的）神经元。点击部件可查看右侧说明；虚线框是配对插槽。</figcaption>
+      </figure>
+      <div class="anat-info" id="anat-info">
+        <div class="ai-name">点一点左图</div>
+        <div class="ai-en">click any part</div>
+        <div>每个部件都有它的「计算角色」。配对完成后，这里还会告诉你这个对应<em>在哪里开始失真</em>——那才是这门课有意思的地方。</div>
+      </div>
+    </div>
+
+    <p>规模感：你的大脑里有 <strong>860 亿</strong>个这样的细胞，一个皮层锥体神经元大约收 <strong>1 万</strong>路输入。而所有这些细胞说的都是同一种语言——<strong>电</strong>。下一节就看电从哪里来。</p>
+  </div>
+</section>
+
+<!-- ============ 3 · 电从哪里来 ============ -->
+<section class="scene" id="s3" data-title="3 · 电从哪里来">
+  <div class="wrap">
+    <div class="kicker">第 3 节 <span class="k-time">第一课时 · 约 10 分钟</span></div>
+    <h2>电从哪里来：一场拔河</h2>
+    <p class="lede">神经元是一颗被「浓度差」充上电的电池。先用一张表看电池怎么充，再用一个你认识的公式看电压落在哪里。</p>
+
+    <h3>充电：浓度差就是电池</h3>
+    <div class="ion-grid">
+      <div class="panel">
+        <div class="p-title">细胞内外的离子浓度（哺乳动物神经元，近似值）</div>
+        <table class="ion-table">
+          <thead><tr><th>离子</th><th>胞内 (mM)</th><th>胞外 (mM)</th><th>想往哪边跑</th><th>平衡电位</th></tr></thead>
+          <tbody>
+            <tr><td><span class="hl-k">K⁺</span></td><td class="mono">140</td><td class="mono">5</td><td>往外冲</td><td class="mono hl-k">≈ −89 mV</td></tr>
+            <tr><td><span class="hl-na">Na⁺</span></td><td class="mono">15</td><td class="mono">145</td><td>往里冲</td><td class="mono hl-na">≈ +61 mV</td></tr>
+          </tbody>
+        </table>
+        <p class="small" style="margin-top:10px">「平衡电位」：当膜只让这一种离子通过时，膜电位最终会停在的电压——即这块「电池」的电动势。</p>
+      </div>
+      <div class="panel">
+        <div class="p-title">谁来维持浓度差？</div>
+        <p style="margin-top:0;font-size:.95rem">钠钾泵<span class="term">Na⁺/K⁺-ATPase</span> 日夜不停：每消耗 1 个 ATP，泵出 3 个 Na⁺、泵进 2 个 K⁺。</p>
+        <p style="font-size:.95rem"><strong>记一句话：泵负责充电池（烧 ATP），通道的开与关决定电压落在哪里。</strong></p>
+        <p class="small">伏笔：维持离子梯度是大脑最大的一笔电费——第 8 节我们用它回答开场的「为什么只要 20 瓦」。</p>
+      </div>
+    </div>
+
+    <h3>放电位置：两块电池的拔河</h3>
+    <p>膜上有 K⁺ 通道和 Na⁺ 通道。两种通道各自把膜电位往自己的平衡电位拽，<strong>谁的门开得大（电导 g 高），谁的话语权就大</strong>。膜电位就停在：</p>
+    <div class="eq"><i>V</i><sub>m</sub> = <span class="frac"><span class="num"><span class="hl-k">g</span><sub class="hl-k">K</sub><span class="hl-k">·E</span><sub class="hl-k">K</sub> + <span class="hl-na">g</span><sub class="hl-na">Na</sub><span class="hl-na">·E</span><sub class="hl-na">Na</sub></span><span class="den"><span class="hl-k">g</span><sub class="hl-k">K</sub> + <span class="hl-na">g</span><sub class="hl-na">Na</sub></span></span></div>
+    <p>看清楚这个公式——<strong>你认识它</strong>。它就是<span class="mlb"><span class="b">电导加权</span><span class="arr">⇄</span><span class="m">加权平均 / 归一化加权和</span></span>：电导是权重，平衡电位是被加权的值。你的第一行神经网络代码，生物膜早写了五亿年。</p>
+
+    <div class="panel" style="margin:1.6em 0">
+      <div class="p-title">拔河现场 · 拖动滑杆，改变两队的力量对比</div>
+      <svg id="tug-svg" viewBox="0 0 640 190" role="img" aria-label="电导拔河：膜电位停在EK与ENa之间由电导加权的位置" style="width:100%;height:auto;display:block"></svg>
+      <div class="ctl-row light-ctl">
+        <div class="ctl" style="flex:1;max-width:340px">
+          <span class="ctl-label"><span>电导比 g<sub>Na</sub> : g<sub>K</sub></span><span class="ctl-val" id="tug-ratio">0.06 : 1</span></span>
+          <input type="range" id="tug-slider" min="-2" max="1.5" step="0.01" value="-1.22" style="accent-color:var(--accent)">
+        </div>
+        <div class="presets">
+          <button class="mini" data-tug="-1.22">静息状态（K⁺ 掌权）</button>
+          <button class="mini" data-tug="1.3">Na⁺ 门全开</button>
+        </div>
+      </div>
+      <p class="note" style="margin-bottom:0">静息时 Na⁺ 的门几乎全关，K⁺ 单方面掌权，所以静息电位 ≈ −70 mV，贴着 E<sub>K</sub>。<span class="small">（真实值还受 Cl⁻ 和泵的少量直接贡献影响，骨架不变。）</span></p>
+    </div>
+
+    <div class="predict" data-predict="p-na" data-answer="1">
+      <div class="pq"><span class="p-tag">先投票</span>假如膜对 Na⁺ 的通透性突然暴增 20 倍（K⁺ 不变），膜电位会怎样？</div>
+      <div class="opts">
+        <button data-i="0">基本不变——离子太小，改不了什么</button>
+        <button data-i="1">猛冲向 E<sub>Na</sub> ≈ +61 mV</button>
+        <button data-i="2">停在两个平衡电位的正中间附近</button>
+      </div>
+      <div class="p-reveal">用上面的拔河模拟验证：点「Na⁺ 门全开」。膜电位瞬间冲向 +50 mV 以上。<strong>记住这个动作——它就是动作电位的上升支。</strong>下一节，你会看到细胞亲自表演这一手。</div>
+      <div class="p-hint">课堂：先举手表决，再拖滑杆揭晓。</div>
+    </div>
+
+    <div class="gained">✓ 已测得论点零件 <span class="g-eq">E_L（泄漏平衡点）</span>：没有输入时，膜电位总被拔河拽回这里</div>
+
+    <details class="deep">
+      <summary>想深入？平衡电位是算出来的：Nernst 方程</summary>
+      <div class="deep-body">
+        <p style="margin-top:12px">一种离子的「电池电压」只由内外浓度比决定（37 ℃ 时）：</p>
+        <div class="eq" style="font-size:1.1rem"><i>E</i><sub>ion</sub> = <span class="frac"><span class="num">61.5 mV</span><span class="den"><i>z</i></span></span> · log<sub>10</sub><span class="frac"><span class="num">[ion]<sub>外</sub></span><span class="den">[ion]<sub>内</sub></span></span></div>
+        <p class="small">z 是离子价数（K⁺、Na⁺ 都是 +1）。直觉：浓度差产生的「外推力」与电压差产生的「回拉力」打平时的电压。</p>
+        <div class="ctl-row light-ctl">
+          <div class="ctl" style="flex:1;max-width:340px">
+            <span class="ctl-label"><span>胞外 [K⁺] (mM)</span><span class="ctl-val" id="nernst-val">5.0</span></span>
+            <input type="range" id="nernst-slider" min="2" max="60" step="0.5" value="5" style="accent-color:var(--accent)">
+          </div>
+          <div style="font-family:var(--mono);font-size:1.05rem">E<sub>K</sub> = <b id="nernst-ek" style="color:var(--c-k)">−89.0 mV</b></div>
+        </div>
+        <p class="small" id="nernst-story">拖到 10 mM 以上看看 E<sub>K</sub> 怎么走——这不是纸上谈兵：临床上血钾升高会让所有可兴奋细胞的静息电位漂移，心肌细胞首当其冲。这就是为什么静脉补钾必须慢滴，也是为什么高钾是最危险的电解质紊乱之一。</p>
+      </div>
+    </details>
+  </div>
+</section>
+<!-- ============ 4 · 动作电位 ============ -->
+<section class="scene" id="s4" data-title="4 · 动作电位的诞生">
+  <div class="wrap wide">
+    <div class="kicker">第 4 节 <span class="k-time">第一课时 · 约 15 分钟</span></div>
+    <h2>动作电位：把电极插进去，亲手找阈值</h2>
+    <p class="lede">下面是一台虚拟膜片钳。它背后跑的不是动画，而是 Hodgkin 与 Huxley 1952 年写下的那组方程，实时数值求解——和拿了诺贝尔奖的是同一套数学。</p>
+    <p class="note">体内的神经元接收的是上万路突触的脉冲轰击；实验室里我们用微电极直接注入电流方波——这是电生理学一百年来的标准抽象，本讲全程沿用。</p>
+
+    <div class="rig" id="rig-hh">
+      <div class="rig-head">
+        <span class="led on" id="hh-led"></span>
+        <span class="rig-name">VIRTUAL PATCH-CLAMP · 实时求解 HH 方程</span>
+        <span class="rig-spacer"></span>
+        <div class="presets" role="group" aria-label="仿真速度">
+          <button class="mini" data-speed="0.3">慢放</button>
+          <button class="mini on" data-speed="1">实时感</button>
+          <button class="mini" data-speed="3">快进</button>
+        </div>
+      </div>
+      <div class="rig-body">
+        <div class="scope-frame"><canvas id="hh-scope" height="260"></canvas></div>
+        <div class="ctl-row">
+          <button class="btn" id="hh-stim">⚡ 注入 1 ms 电流脉冲</button>
+          <div class="ctl" style="flex:1;max-width:300px">
+            <span class="ctl-label"><span>脉冲幅度 (µA/cm²)</span><span class="ctl-val" id="hh-amp-val">5.0</span></span>
+            <input type="range" id="hh-amp" min="0" max="20" step="0.5" value="5">
+          </div>
+          <div class="presets">
+            <button class="mini" data-amp="2">2</button>
+            <button class="mini" data-amp="5">5</button>
+            <button class="mini" data-amp="10">10</button>
+            <button class="mini" data-amp="15">15</button>
+          </div>
+          <span class="outcome idle" id="hh-outcome">等待刺激…</span>
+        </div>
+        <div class="ctl-row" style="align-items:baseline">
+          <span class="chip-note">尝试记录：</span>
+          <div class="presets" id="hh-log" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="task"><span class="task-tag">目标任务</span><span><strong>阈值狩猎：</strong>用尽量少的尝试，找出能触发脉冲的<strong>最小</strong>电流幅度，精确到 0.5 µA/cm²。提示：像调超参数一样做二分搜索。找到后把这个数字记在纸上——第 6 节它有个名字。</span></div>
+
+    <div class="predict" data-predict="p-allornone" data-answer="1">
+      <div class="pq"><span class="p-tag">先投票</span>你已经找到了「刚好能触发」的电流。现在把电流<strong>加倍</strong>——脉冲的<strong>高度</strong>会怎样？</div>
+      <div class="opts">
+        <button data-i="0">大约也加倍——输入强，输出强</button>
+        <button data-i="1">几乎不变——高度是固定的</button>
+        <button data-i="2">反而变矮——通道来不及开</button>
+      </div>
+      <div class="p-reveal"><strong>全或无</strong><span class="term">all-or-none</span>：只要过了阈值，脉冲的形状就几乎与输入无关。去上面把 5 和 15 各注入几次，然后看下面这台「波形对齐仪」——你触发过的所有脉冲，被按峰值对齐叠放在一起。</div>
+      <div class="p-hint">课堂：先举手表决，再动手揭晓。</div>
+    </div>
+
+    <div class="rig">
+      <div class="rig-head"><span class="led" id="ov-led"></span><span class="rig-name">SPIKE ALIGNER · 脉冲对齐叠放</span></div>
+      <div class="rig-body">
+        <div class="scope-frame"><canvas id="hh-overlay" height="180"></canvas></div>
+        <p class="chip-note" style="margin:10px 0 0" id="ov-note">还没有捕获到脉冲。去上面触发几个（用不同幅度的电流），它们会叠放在这里。</p>
+      </div>
+    </div>
+    <p>不同强度的输入，产出<strong>同一个波形</strong>。这意味着一件对做 AI 的你极其重要的事：<strong>脉冲的形状不携带信息。信息只藏在「发不发」和「何时发」里。</strong>神经元的输出不是模拟量，是事件。<span class="mlb"><span class="b">脉冲</span><span class="arr">⇄</span><span class="m">事件驱动的 1-bit 输出</span></span></p>
+
+    <p class="note">诚实脚注：如果你把滑杆拧得足够细，会发现阈值附近有一个极窄的窗口，响应介于「有」和「无」之间——阈值其实是一个动力学现象，不是硬件开关。发现了这一点？你已经比大多数教科书插图更懂它了。</p>
+
+    <div class="gained">✓ 已测得论点零件 <span class="g-eq">θ（阈值）</span>：低于它，没动静；高于它，满额脉冲</div>
+  </div>
+</section>
+
+<!-- ============ 课间 ============ -->
+<section class="scene interlude" id="break" data-title="课间">
+  <div class="wrap">
+    <div class="i-mark">第一课时完 · 课间 10 分钟</div>
+    <div class="i-text">悬念：为什么是全或无？<br>细胞里到底藏着一个什么样的开关？</div>
+    <p class="small" style="margin-top:14px">你已亲手测出：拔河的平衡点 E<sub>L</sub>、阈值 θ。答案在引擎盖下面——回来就掀开它。</p>
+  </div>
+</section>
+<!-- ============ 5 · 引擎盖之下 · 实验室 ============ -->
+<section class="scene" id="s5" data-title="5 · 引擎盖之下 · 实验室">
+  <div class="wrap wide">
+    <div class="kicker">第 5 节 <span class="k-time">第二课时 · 约 22 分钟</span></div>
+    <h2>掀开引擎盖，然后做实验</h2>
+    <p class="lede">课间悬着的问题：细胞里藏着什么开关？答案是两种带「门」的蛋白质通道。掀开引擎盖之前，先认一个数学上的老朋友——你会发现门的方程你早就写过。</p>
+
+    <div class="panel" style="margin:1.8em 0">
+      <div class="p-title">数学热身 · 30 秒</div>
+      <div class="eq" style="font-size:1.15rem"><span class="frac"><span class="num">d<i>x</i></span><span class="den">d<i>t</i></span></span> = <span class="frac"><span class="num"><i>x</i><sub>∞</sub> − <i>x</i></span><span class="den"><i>τ</i></span></span> <span style="color:var(--muted);margin-left:1.2em">离散化后：</span> <i>x</i> ← <i>x</i> + <span class="frac"><span class="num">Δ<i>t</i></span><span class="den"><i>τ</i></span></span>(<i>x</i><sub>∞</sub> − <i>x</i>)</div>
+      <p style="margin:.4em 0 0"><strong>这就是指数滑动平均。</strong>你在优化器的动量里、在 BatchNorm 的 running mean 里、在 RNN 的门控里写过它无数次：变量 x 以时间常数 τ 追赶目标值 x<sub>∞</sub>。<span class="mlb"><span class="b">门控动力学</span><span class="arr">⇄</span><span class="m">EMA / 一阶低通</span></span></p>
+      <p class="small" style="margin-bottom:0">Hodgkin–Huxley 方程里所有的「门」都服从这一个方程——只是目标值 x<sub>∞</sub> 和快慢 τ 会随电压变化。整个引擎盖下面，没有比这更难的数学。</p>
+    </div>
+
+    <h3>引擎盖之下：一次动作电位的慢镜头解剖</h3>
+    <p>下面是一次动作电位的完整录像（由 HH 方程算出）。拖动<strong>时间游标</strong>或点「慢放」，同时盯住三样东西：膜电位 <span class="hl-v">V</span>、两种通道的电导 <span class="hl-na">g<sub>Na</sub></span> 与 <span class="hl-k">g<sub>K</sub></span>、以及右侧通道卡通里每一扇门的开合。</p>
+
+    <div class="rig" id="rig-ap">
+      <div class="rig-head">
+        <span class="led" id="ap-led"></span>
+        <span class="rig-name">AP ANATOMY · 单个动作电位逐帧解剖</span>
+        <span class="rig-spacer"></span>
+        <button class="btn" id="ap-play" style="padding:5px 14px;font-size:.8rem">▶ 慢放</button>
+      </div>
+      <div class="rig-body">
+        <div class="ap-grid">
+          <div>
+            <div class="scope-frame"><canvas id="ap-canvas" height="300"></canvas></div>
+            <div class="ctl" style="margin-top:12px">
+              <span class="ctl-label"><span>时间游标</span><span class="ctl-val" id="ap-t-val">0.0 ms</span></span>
+              <input type="range" id="ap-scrub" min="0" max="1000" step="1" value="0">
+            </div>
+            <div class="phase-strip" id="ap-phases">
+              <span class="phase" data-ph="0">① 静息</span>
+              <span class="phase" data-ph="1">② 雪崩去极化</span>
+              <span class="phase" data-ph="2">③ 反转复极化</span>
+              <span class="phase" data-ph="3">④ 超极化恢复</span>
+            </div>
+          </div>
+          <div>
+            <svg id="chan-svg" class="chan-svg" viewBox="0 0 320 300" role="img" aria-label="Na与K通道门控状态卡通"></svg>
+            <div class="gates">
+              <div class="gate"><div class="g-name"><b>m</b><span>Na 激活门·快</span></div><div class="g-bar"><i id="g-m" style="background:var(--rig-na)"></i></div><div class="g-val" id="g-m-v">0.05</div></div>
+              <div class="gate"><div class="g-name"><b>h</b><span>Na 失活闸·慢</span></div><div class="g-bar"><i id="g-h" style="background:var(--rig-na)"></i></div><div class="g-val" id="g-h-v">0.60</div></div>
+              <div class="gate"><div class="g-name"><b>n</b><span>K 门·慢</span></div><div class="g-bar"><i id="g-n" style="background:var(--rig-k)"></i></div><div class="g-val" id="g-n-v">0.32</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="story" id="ap-story" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <p>看明白开关了吗？<strong>全或无的秘密是一个正反馈：</strong>电压升 → m 门开 → Na⁺ 涌入 → 电压更高 → m 门开得更大……一旦点火就刹不住车，必然冲到顶。<strong>而收尾靠两个慢动作</strong>：h 闸落下（Na⁺ 断流）、n 门打开（K⁺ 拔河队增援）——把电位拽回去，甚至矫枉过正（超极化）。快门点火、慢门灭火，<strong>时间尺度分离</strong>是整台发动机的设计原理。</p>
+
+    <h3>三个实验（其中一个课后做）</h3>
+
+    <!-- 实验 A · 不应期 -->
+    <div class="rig" id="rig-refract">
+      <div class="rig-head"><span class="exp-badge">EXP A</span><span class="rig-name">双脉冲实验 · 不应期</span></div>
+      <div class="rig-body">
+        <div class="predict" data-predict="p-refract" data-answer="2">
+          <div class="pq"><span class="p-tag">先投票</span>先给一针足以触发脉冲的刺激，紧接着再给<strong>完全相同</strong>的第二针。第二针会怎样？</div>
+          <div class="opts">
+            <button data-i="0">照样触发——同样的输入，同样的输出</button>
+            <button data-i="1">永远触发不了——细胞已经累了</button>
+            <button data-i="2">取决于两针的间隔——太近就失败</button>
+          </div>
+          <div class="p-reveal">刚才的慢镜头已经给了答案：脉冲结束后，<b>h 闸还没抬起、n 门还没关上</b>——发动机还在冷却。用下面的仪器找出恢复需要多久。</div>
+        </div>
+        <div class="scope-frame"><canvas id="refract-canvas" height="240"></canvas></div>
+        <div class="ctl-row">
+          <div class="ctl" style="flex:1;max-width:320px">
+            <span class="ctl-label"><span>双脉冲间隔 (ms)</span><span class="ctl-val" id="refract-gap-val">12.0</span></span>
+            <input type="range" id="refract-gap" min="2" max="25" step="0.5" value="12">
+          </div>
+          <div class="presets">
+            <button class="mini" data-gap="4">4</button>
+            <button class="mini" data-gap="8">8</button>
+            <button class="mini" data-gap="15">15</button>
+            <button class="mini" data-gap="20">20</button>
+          </div>
+          <span class="outcome idle" id="refract-outcome">—</span>
+        </div>
+        <div class="chip-note" style="margin-top:10px">目标：找出第二针能成功的<strong>最小间隔</strong>，精确到 0.5 ms，把它记下来。<br>通关判据：你应该观察到——间隔大时两个满额脉冲；间隔小时第二针只激起一个小水花（相对不应期里加大电流才行；绝对不应期里给多大都没用）。</div>
+      </div>
+    </div>
+    <p>不应期给了脉冲三样东西：<strong>离散性</strong>（两个脉冲永远不会糊在一起）、<strong>频率上限</strong>（间隔 ≳ 几毫秒 → 最高几百 Hz）、<strong>单向传播</strong>（脉冲身后是一片不应之地，回不了头）。<span class="mlb"><span class="b">不应期</span><span class="arr">⇄</span><span class="m">发放后的强制静默 / 重置</span></span></p>
+    <div class="gained">✓ 已测得论点零件 <span class="g-eq">重置 + 静默（不应期）</span></div>
+
+    <!-- 实验 B · 时间求和 -->
+    <div class="rig" id="rig-sum">
+      <div class="rig-head"><span class="exp-badge">EXP B</span><span class="rig-name">时间求和 · 泄漏与积分的对抗</span></div>
+      <div class="rig-body">
+        <div class="predict" data-predict="p-sum" data-answer="1">
+          <div class="pq"><span class="p-tag">先投票</span>两针刺激，每针都只有阈值的七成，<strong>单独谁也触发不了脉冲</strong>。两针一起上，能触发吗？</div>
+          <div class="opts">
+            <button data-i="0">不能——0.7 永远小于 1，加几针都没用</button>
+            <button data-i="1">能，但两针必须靠得够近</button>
+            <button data-i="2">能，间隔无所谓——反正 0.7 + 0.7 &gt; 1</button>
+          </div>
+          <div class="p-reveal">关键在<b>泄漏</b>：第一针充上的电，一直在往外漏。第二针来得晚，电已漏光，各自为战；来得早，就能踩着第一针的余温过阈值。<b>这是「带泄漏的积分器」第一次在你面前露出全形。</b></div>
+        </div>
+        <div class="scope-frame"><canvas id="sum-canvas" height="240"></canvas></div>
+        <div class="ctl-row">
+          <div class="ctl" style="flex:1;max-width:320px">
+            <span class="ctl-label"><span>双脉冲间隔 (ms)</span><span class="ctl-val" id="sum-gap-val">5.0</span></span>
+            <input type="range" id="sum-gap" min="0.5" max="8" step="0.25" value="5">
+          </div>
+          <div class="presets">
+            <button class="mini" data-sgap="1">1</button>
+            <button class="mini" data-sgap="2">2</button>
+            <button class="mini" data-sgap="3">3</button>
+            <button class="mini" data-sgap="6">6</button>
+          </div>
+          <span class="outcome idle" id="sum-outcome">—</span>
+        </div>
+        <div class="chip-note" style="margin-top:10px">目标：找出还能触发脉冲的<strong>最大间隔</strong>。这个毫秒数就是神经元「记得住上一个输入」的时间窗——膜时间常数 τ 的量级。<br>通关判据：间隔小 → 第二针踩着第一针的肩膀过阈；间隔大 → 两个孤零零的小鼓包，谁也过不了线。<br>你会发现这只鱿鱼轴突的记性短得惊人（τ ≈ 2 ms）——皮层神经元的 τ 通常有 10–30 ms，第 6 节的 LIF 用的就是 20 ms。</div>
+      </div>
+    </div>
+    <p>泄漏不是缺陷，是<strong>遗忘的机制</strong>：它让神经元只对「短时间窗内凑齐的证据」发言，天然过滤掉稀稀拉拉的噪声。<span class="mlb"><span class="b">泄漏</span><span class="arr">⇄</span><span class="m">EMA 的衰减因子 / 遗忘门</span></span></p>
+    <div class="gained">✓ 已测得论点零件 <span class="g-eq">τ（积分时间窗）</span>：泄漏的速度，也是证据的保质期</div>
+
+    <!-- 实验 C · f-I -->
+    <div class="rig" id="rig-fi">
+      <div class="rig-head"><span class="exp-badge">EXP C</span><span class="rig-name">频率编码 · 测出你自己的 f–I 曲线</span>
+        <span class="rig-spacer"></span>
+        <label class="snd-toggle"><input type="checkbox" id="fi-sound">扬声器（电生理学家靠耳朵找细胞）</label>
+      </div>
+      <div class="rig-body">
+        <div class="predict" data-predict="p-fi" data-answer="1">
+          <div class="pq"><span class="p-tag">先投票</span>这次不打脉冲，改为<strong>持续</strong>注入电流。电流越大，输出会怎么变？</div>
+          <div class="opts">
+            <button data-i="0">脉冲变高——更强的输入，更高的波</button>
+            <button data-i="1">脉冲变密——高度不变，频率上升</button>
+            <button data-i="2">又高又密</button>
+          </div>
+          <div class="p-reveal">全或无已经封死了「变高」这条路。神经元只剩一个旋钮可拧：<b>发放频率</b>。这就是频率编码——模拟量被调制成了事件的密度。打开扬声器听一听：电流越大，嗒嗒声越密。</div>
+        </div>
+        <div class="scope-frame"><canvas id="fi-train-canvas" height="200"></canvas></div>
+        <div class="ctl-row">
+          <div class="ctl" style="flex:1;max-width:320px">
+            <span class="ctl-label"><span>持续电流 (µA/cm²)</span><span class="ctl-val" id="fi-i-val">10</span></span>
+            <input type="range" id="fi-i" min="0" max="100" step="1" value="10">
+          </div>
+          <span class="outcome idle" id="fi-rate">— Hz</span>
+          <button class="btn ghost" id="fi-add">把这个点记到曲线上</button>
+          <button class="btn" id="fi-sweep">自动扫描 0 → 100</button>
+        </div>
+        <div class="scope-frame" style="margin-top:14px"><canvas id="fi-canvas" height="260"></canvas></div>
+        <div class="surprise-cards">
+          <div class="s-card"><b>惊喜一：起步就是全速。</b>这个神经元不会慢悠悠地从 1 Hz 开始——一过临界电流，直接跳到约 50 Hz。这类「跳变起步」叫 Type II 神经元，鱿鱼巨轴突就是。你皮层里的多数兴奋性神经元是 Type I：频率从 0 连续爬升。<b>模型要匹配对象</b>——下一节的 LIF 模拟的是后者的骨架，所以它的 f–I 是连续的。</div>
+          <div class="s-card"><b>惊喜二：电流太大反而哑火。</b>扫到最右边看看——脉冲消失了。持续的强去极化让 h 闸抬不起来，发动机熄火，这叫去极化阻滞<span style="color:var(--rig-muted);font-style:italic"> depolarization block</span>。真实系统在超出设计范围时会露出模型没有的行为——做仿真的人要一辈子记住这件事。</div>
+        </div>
+      </div>
+    </div>
+    <div class="gained">✓ 已测得论点零件 <span class="g-eq">f–I（输入 → 输出频率关系）</span>：封面悬念的左半边，你刚亲手测完</div>
+
+    <!-- 实验 D · 药理（课后） -->
+    <div class="rig homework" id="rig-pharma">
+      <div class="rig-head"><span class="exp-badge">EXP D · 课后自助</span><span class="rig-name">虚拟药理实验 · 拆掉一种通道</span></div>
+      <div class="rig-body">
+        <p class="chip-note" style="margin-top:0">工程师理解系统的方式：拆掉一个零件，看哪里坏。药理学家早就在这么干了。下面的示波器每 60 ms 自动打一针足量刺激。</p>
+        <div class="predict" data-predict="p-ttx" data-answer="0">
+          <div class="pq"><span class="p-tag">先预测</span>河豚毒素 TTX 会堵死全部 Na⁺ 通道。投毒之后，示波器上会看到什么？</div>
+          <div class="opts">
+            <button data-i="0">脉冲彻底消失，只剩小小的被动鼓包</button>
+            <button data-i="1">脉冲还在，但变矮一半</button>
+            <button data-i="2">脉冲变宽，迟迟回不到基线</button>
+          </div>
+          <div class="p-reveal">没有 Na⁺ 通道就没有正反馈，点不了火——只剩电流注入的被动响应（一个小鼓包）。这就是河豚致死的机制：呼吸肌的运动神经无法产生脉冲。<b>那脉冲变宽是谁？</b>试试 TEA（堵 K⁺ 通道）：点火照旧，但没有灭火队，复极化只能靠慢吞吞的泄漏。</div>
+        </div>
+        <div class="scope-frame"><canvas id="pharma-canvas" height="220"></canvas></div>
+        <div class="ctl-row">
+          <button class="chip" id="btn-ttx" aria-pressed="false">☠ TTX（阻断 Na⁺ 通道）</button>
+          <button class="chip chip-k" id="btn-tea" aria-pressed="false">⊘ TEA（阻断 K⁺ 通道）</button>
+          <span class="chip-note">两种毒都是真实实验室的日常工具。</span>
+        </div>
+        <details class="think" style="margin-bottom:0;border-color:var(--rig-line)">
+          <summary style="color:var(--rig-ink)"><span class="q-tag">课后思考</span>河豚的 TTX 存在自己体内，为什么毒不死河豚自己？</summary>
+          <div class="a" style="color:var(--rig-muted)">河豚的 Na⁺ 通道基因带有几个点突变，改变了 TTX 结合位点的构象——毒素塞不进去。一次通道蛋白层面的军备竞赛：抗毒性突变 → 毒素浓度升级 → 更强的突变。答案藏在分子结构里，而不是玄学里。</div>
+        </details>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ============ 6 · 抽象的艺术：LIF ============ -->
+<section class="scene" id="s6" data-title="6 · 抽象的艺术：LIF">
+  <div class="wrap wide">
+    <div class="kicker">第 6 节 <span class="k-time">第二课时 · 约 15 分钟</span></div>
+    <h2>抽象的艺术：四维方程，一维骨架</h2>
+    <p class="lede">HH 方程有四个变量（V、m、h、n），精确但昂贵。现在做一件 AI 工程师最擅长的事：<strong>有原则地扔东西</strong>。扔完剩下的，就是你两节课以来一直在测量的那个模型。</p>
+
+    <h3>凭什么敢扔掉 m、h、n？</h3>
+    <ul>
+      <li><strong>证据一（你亲眼看过）：</strong>第 4 节的「波形对齐仪」——所有脉冲一个模样。波形不携带信息，就没必要逐毫秒模拟它，<strong>记一个事件、做一次重置</strong>就够了。</li>
+      <li><strong>证据二（你亲手测过）：</strong>门有快慢——m 快到瞬间跟随，h、n 慢到只在脉冲后留下「静默期」。快的取极限、慢的归纳成一条规则，中间只剩膜电位自己的方程。<span class="mlb"><span class="b">机制约减</span><span class="arr">⇄</span><span class="m">蒸馏 / 查表替换子网络</span></span></li>
+    </ul>
+    <p>扔完之后，剩下的每一项，都是你已经<strong>亲手测量过</strong>的东西：</p>
+
+    <figure style="margin:1.8em 0">
+      <div class="panel" style="overflow-x:auto">
+        <svg id="assembly-svg" viewBox="0 0 800 340" role="img" aria-label="LIF方程装配图：每一项对应此前的一个实验" style="min-width:640px;width:100%;height:auto;display:block;color:var(--ink)">
+          <!-- 主方程 -->
+          <text x="90" y="160" font-size="30" font-family="Georgia, serif" font-style="italic" fill="currentColor">τ</text>
+          <text x="112" y="160" font-size="26" font-family="Georgia, serif" fill="currentColor">·</text>
+          <g font-family="Georgia, serif" font-style="italic">
+            <text x="128" y="148" font-size="22" fill="currentColor">dV</text>
+            <text x="130" y="180" font-size="22" fill="currentColor">dt</text>
+            <line x1="126" y1="155" x2="164" y2="155" stroke="currentColor" stroke-width="1.6"/>
+          </g>
+          <text x="178" y="160" font-size="26" font-family="Georgia, serif" fill="currentColor">=</text>
+          <text x="205" y="160" font-size="26" font-family="Georgia, serif" fill="var(--c-k)" font-style="italic">−(V − E<tspan font-size="17" dy="5">L</tspan><tspan dy="-5">)</tspan></text>
+          <text x="352" y="160" font-size="26" font-family="Georgia, serif" fill="currentColor">+</text>
+          <text x="378" y="160" font-size="26" font-family="Georgia, serif" fill="var(--c-i)" font-style="italic">R·I(t)</text>
+          <!-- 规则行 -->
+          <text x="90" y="228" font-size="17" font-family="inherit" fill="currentColor">若 <tspan font-style="italic" font-family="Georgia, serif" font-size="20">V ≥ </tspan><tspan font-style="italic" font-family="Georgia, serif" font-size="20" fill="var(--c-na)">θ</tspan> ：记一个脉冲，<tspan font-style="italic" font-family="Georgia, serif" font-size="19">V ← V</tspan><tspan font-size="13" dy="4">reset</tspan><tspan dy="-4">，静默 </tspan><tspan font-style="italic" font-family="Georgia, serif" font-size="19">t</tspan><tspan font-size="13" dy="4">ref</tspan></text>
+          <!-- 装配注记 -->
+          <g font-size="13">
+            <rect x="40" y="30" width="180" height="44" rx="9" fill="none" stroke="var(--accent)" stroke-width="1.4"/>
+            <text x="54" y="48" fill="currentColor" font-weight="600">τ = 证据的保质期</text>
+            <text x="54" y="66" fill="var(--accent)">实验 B · 时间求和 测得</text>
+            <line x1="105" y1="74" x2="98" y2="132" stroke="var(--accent)" stroke-width="1.4"/>
+            <polygon points="94,130 104,128 98,140" fill="var(--accent)"/>
+
+            <rect x="250" y="30" width="205" height="44" rx="9" fill="none" stroke="var(--accent)" stroke-width="1.4"/>
+            <text x="264" y="48" fill="currentColor" font-weight="600">泄漏项：拔河拽回平衡点</text>
+            <text x="264" y="66" fill="var(--accent)">第 3 节 · 电导拔河 测得</text>
+            <line x1="300" y1="74" x2="285" y2="130" stroke="var(--accent)" stroke-width="1.4"/>
+            <polygon points="281,128 291,128 285,140" fill="var(--accent)"/>
+
+            <rect x="530" y="30" width="230" height="44" rx="9" fill="none" stroke="var(--accent)" stroke-width="1.4"/>
+            <text x="544" y="48" fill="currentColor" font-weight="600">输入：电极注入 / 突触轰击</text>
+            <text x="544" y="66" fill="var(--accent)">第 4 节 · 标准实验抽象</text>
+            <line x1="560" y1="74" x2="430" y2="140" stroke="var(--accent)" stroke-width="1.4"/>
+            <polygon points="428,136 437,140 430,148 " fill="var(--accent)"/>
+
+            <rect x="150" y="272" width="185" height="44" rx="9" fill="none" stroke="var(--accent)" stroke-width="1.4"/>
+            <text x="164" y="290" fill="currentColor" font-weight="600">θ = 你狩猎到的阈值</text>
+            <text x="164" y="308" fill="var(--accent)">第 4 节 · 阈值狩猎 测得</text>
+            <line x1="255" y1="272" x2="262" y2="238" stroke="var(--accent)" stroke-width="1.4"/>
+            <polygon points="257,240 267,242 262,230" fill="var(--accent)"/>
+
+            <rect x="430" y="272" width="215" height="44" rx="9" fill="none" stroke="var(--accent)" stroke-width="1.4"/>
+            <text x="444" y="290" fill="currentColor" font-weight="600">重置 + 静默 = 发动机冷却</text>
+            <text x="444" y="308" fill="var(--accent)">实验 A · 不应期 测得</text>
+            <line x1="500" y1="272" x2="470" y2="240" stroke="var(--accent)" stroke-width="1.4"/>
+            <polygon points="466,244 475,238 472,250" fill="var(--accent)"/>
+          </g>
+        </svg>
+      </div>
+      <figcaption class="small" style="padding:8px 4px 0">带泄漏的整合-发放模型 <span class="term">Leaky Integrate-and-Fire, LIF</span>（Lapicque, 1907——比 HH 还早 45 年）。方程里没有一项是天上掉下来的：全部由你在前 90 分钟里亲手测出。</figcaption>
+    </figure>
+
+    <h3>15 行代码，跑起来</h3>
+    <p>下面左边的代码就是完整的 LIF——不是伪代码，是这个页面正在真实执行的程序。<strong>黄色数字全部可以直接改</strong>，改完立即重跑。右边是它的膜电位、脉冲和输入。</p>
+
+    <div class="rig" id="rig-code">
+      <div class="rig-head">
+        <span class="led on"></span><span class="rig-name">LIF LAB · 可编辑的神经元</span>
+        <span class="rig-spacer"></span>
+        <button class="btn ghost" id="code-free-btn" style="padding:5px 14px;font-size:.8rem">切换自由编辑模式</button>
+      </div>
+      <div class="code-lab">
+        <div class="code-pane">
+          <pre class="code" id="code-display"><span class="cm">// 一个 LIF 神经元，如假包换</span>
+<span class="kw">const</span> dt = 0.1;                <span class="cm">// ms</span>
+<span class="kw">const</span> tau    = <input class="cnum" id="p-tau" value="20">;   <span class="cm">// 膜时间常数 (ms)</span>
+<span class="kw">const</span> E_L    = <input class="cnum" id="p-el" value="-70">;  <span class="cm">// 泄漏平衡点 (mV)</span>
+<span class="kw">const</span> R      = <input class="cnum" id="p-r" value="10">;   <span class="cm">// 膜电阻 (MΩ)</span>
+<span class="kw">const</span> theta  = <input class="cnum" id="p-theta" value="-50">;  <span class="cm">// 阈值 θ (mV)</span>
+<span class="kw">const</span> Vreset = <input class="cnum" id="p-vreset" value="-65">;  <span class="cm">// 重置电位 (mV)</span>
+<span class="kw">const</span> t_ref  = <input class="cnum" id="p-tref" value="4">;    <span class="cm">// 不应期 (ms)</span>
+
+<span class="kw">let</span> V = E_L, tLast = -1e9, spikes = [];
+<span class="kw">for</span> (<span class="kw">let</span> t = 0; t &lt; 300; t += dt) {
+  <span class="kw">if</span> (t - tLast &lt; t_ref) { V = Vreset; <span class="kw">continue</span>; } <span class="cm">// 静默</span>
+  V += dt * ( -(V - E_L) + R * <span class="fn">I</span>(t) ) / tau; <span class="cm">// 泄漏+积分</span>
+  <span class="kw">if</span> (V &gt;= theta) {            <span class="cm">// 阈值判定</span>
+    spikes.<span class="fn">push</span>(t);            <span class="cm">// 记一个事件</span>
+    V = Vreset; tLast = t;     <span class="cm">// 重置</span>
+  }
+}</pre>
+          <div class="run-row">
+            <span class="chip-note">输入 I(t)：</span>
+            <div class="presets" id="code-inputs">
+              <button class="mini on" data-inp="const">恒定</button>
+              <button class="mini" data-inp="pulses">双亚阈值脉冲</button>
+              <button class="mini" data-inp="noise">噪声</button>
+              <button class="mini" data-inp="sine">正弦</button>
+            </div>
+            <div class="ctl" style="max-width:220px;flex:1">
+              <span class="ctl-label"><span>输入幅度</span><span class="ctl-val" id="code-i-val">2.5</span></span>
+              <input type="range" id="code-i" min="0" max="6" step="0.1" value="2.5">
+            </div>
+          </div>
+          <div class="run-row" id="code-free-row" hidden>
+            <textarea class="code-free" id="code-free" spellcheck="false" aria-label="自由编辑代码"></textarea>
+            <button class="btn" id="code-run">▶ 运行我的代码</button>
+            <span class="run-msg" id="code-msg"></span>
+          </div>
+        </div>
+        <div class="result-pane">
+          <div class="scope-frame"><canvas id="lif-canvas" height="320"></canvas></div>
+          <div class="ctl-row" style="justify-content:space-between">
+            <span class="outcome idle" id="lif-stats">—</span>
+            <span class="chip-note">改动任何黄色数字都会立即重跑</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="task"><span class="task-tag">代码任务 ①</span><span><strong>逼近死区边缘：</strong>输入选「恒定」，幅度调到 1.9——V 爬到 −51 mV 就停住了：<strong>泄漏把输入完全吃掉，差 1 mV 就是不发放</strong>。改成 2.1，立即发放。死区边界 = (θ−E_L)/R = 2.0。<strong>领悟：泄漏创造了最小电流死区（rheobase）——f–I 曲线的那段「平地」，就是 ReLU 拐点的生物起源。</strong>（想彻底杀死泄漏？自由编辑模式里删掉泄漏项 −(V−E_L)，任何正电流都会被慢慢积到发放。）</span></div>
+    <div class="task"><span class="task-tag">代码任务 ②</span><span><strong>挪动拐点：</strong>把 θ 从 −50 改成 −55，然后在下面的图上重新扫描 f–I。判据：整条曲线左移（幅度 1.6 现在也能发放了）。你刚刚拧的东西，在你的网络里叫「偏置 b」。</span></div>
+    <div class="task"><span class="task-tag">代码任务 ③</span><span><strong>拉长记忆：</strong>输入切到「双亚阈值脉冲」（两针间隔固定 12 ms），确认求和失败；然后把 τ 改成 40、<strong>同时</strong>把 R 改成 20，重跑。判据：同样的两针，求和成功。为什么要同时改 R？因为电容 C = τ/R——只改 τ 等于偷偷换了细胞的电容，两针各自的冲高也会变矮。保持 C 不变，τ 的含义才纯粹：<strong>记忆窗口的长度</strong>，正是实验 B 里你测到的那个毫秒数。</span></div>
+
+    <h3>收官：把封面的悬念亲手做完</h3>
+    <p>点「扫描」，用你当前的 LIF 参数逐点测出 f–I 曲线——和你在实验 C 里对真实模型做的事一模一样。然后<strong>拖动图上的两个白色手柄</strong>（拐点、斜率），把一条 ReLU 拟合到你自己的数据上。</p>
+
+    <div class="chart-card">
+      <div class="chart-title">f–I 曲线 × ReLU · 亲手拟合</div>
+      <canvas id="fit-canvas" height="320"></canvas>
+      <div class="ctl-row light-ctl" style="margin-top:12px">
+        <button class="btn" id="fit-sweep">扫描：用当前 LIF 参数测 f–I</button>
+        <label class="snd-toggle" style="color:var(--muted)"><input type="checkbox" id="fit-softplus" style="accent-color:var(--accent)">叠加 softplus 对照</label>
+        <span class="outcome idle" id="fit-rmse" style="background:var(--surface-2);color:var(--ink-2)">拟合误差 — Hz</span>
+      </div>
+      <p class="note" style="margin-bottom:0">目标：把拟合误差压到 5 Hz 以内。会发现 LIF 的曲线在拐点附近微微内凹——所以 softplus 贴得更服帖，ReLU 是它的折线速写。</p>
+    </div>
+
+    <div class="thesis">
+      <span class="t-mark">此刻可以说出口了</span>
+      你天天在用的激活函数，就是你十分钟前亲手测出来的那条 f–I 曲线。<br>
+      <span class="small">人工神经元 = 把 LIF 的时间维度积分掉之后剩下的稳态骨架。</span>
+    </div>
+  </div>
+</section>
+<!-- ============ 7 · 两种神经元的对话 ============ -->
+<section class="scene" id="s7" data-title="7 · 两种神经元的对话">
+  <div class="wrap">
+    <div class="kicker">第 7 节 <span class="k-time">第二课时 · 约 8 分钟</span></div>
+    <h2>两种神经元的对话</h2>
+    <p class="lede">现在把它们并排放在桌上。相同之处解释了深度学习为什么行得通；不同之处，是这门课接下来所有讲次的目录。</p>
+
+    <div class="duel">
+      <div class="panel">
+        <h4>生物神经元（LIF 骨架）</h4>
+        <svg viewBox="0 0 330 140" role="img" aria-label="LIF流程：脉冲输入经泄漏积分与阈值判定，输出脉冲序列" style="width:100%;height:auto;color:var(--ink-2)">
+          <g stroke="currentColor" stroke-width="1.6" fill="none">
+            <path d="M10 30 h40 M18 30 v-9 M30 30 v-9 M44 30 v-9"/>
+            <path d="M10 65 h40 M22 65 v-9 M38 65 v-9"/>
+            <path d="M10 100 h40 M15 100 v-9 M27 100 v-9 M35 100 v-9 M46 100 v-9"/>
+            <path d="M52 30 L92 55 M52 65 h40 M52 100 L92 75"/>
+          </g>
+          <rect x="95" y="40" width="80" height="52" rx="10" fill="none" stroke="var(--c-v)" stroke-width="2"/>
+          <text x="107" y="62" font-size="13" fill="currentColor">泄漏积分</text>
+          <text x="112" y="80" font-size="11" fill="var(--muted)">τ, E_L</text>
+          <path d="M135 92 q-4 10 -10 13" stroke="var(--c-k)" stroke-width="1.6" fill="none"/>
+          <text x="108" y="118" font-size="10" fill="var(--c-k)">一直在漏</text>
+          <path d="M175 66 h22" stroke="currentColor" stroke-width="1.6"/>
+          <polygon points="197,61 207,66 197,71" fill="currentColor"/>
+          <rect x="210" y="48" width="44" height="36" rx="8" fill="none" stroke="var(--c-na)" stroke-width="2"/>
+          <text x="222" y="71" font-size="14" font-style="italic" fill="var(--c-na)">≥ θ</text>
+          <path d="M254 66 h18" stroke="currentColor" stroke-width="1.6"/>
+          <g stroke="var(--c-v)" stroke-width="2">
+            <path d="M274 66 h48 M282 66 v-14 M298 66 v-14 M312 66 v-14"/>
+          </g>
+          <text x="272" y="90" font-size="11" fill="var(--muted)">事件序列</text>
+        </svg>
+        <div class="eq" style="font-size:.95rem;padding:10px 14px;margin:10px 0 0"><i>τ</i>·d<i>V</i>/d<i>t</i> = −(<i>V</i>−<i>E</i><sub>L</sub>) + <i>R</i>·<i>I</i>(<i>t</i>)，<i>V</i>≥<i>θ</i> → 脉冲</div>
+      </div>
+      <div class="panel">
+        <h4>人工神经元（1943 至今）</h4>
+        <svg viewBox="0 0 330 140" role="img" aria-label="人工神经元：加权求和后过激活函数输出实数" style="width:100%;height:auto;color:var(--ink-2)">
+          <g font-size="13" fill="currentColor">
+            <text x="12" y="35" font-style="italic">x₁</text>
+            <text x="12" y="70" font-style="italic">x₂</text>
+            <text x="12" y="105" font-style="italic">x₃</text>
+          </g>
+          <g stroke="currentColor" stroke-width="1.6">
+            <path d="M34 30 L100 58"/><path d="M34 66 h66"/><path d="M34 101 L100 74"/>
+          </g>
+          <g font-size="11" fill="var(--accent)">
+            <text x="58" y="36" font-style="italic">w₁</text>
+            <text x="58" y="61" font-style="italic">w₂</text>
+            <text x="58" y="98" font-style="italic">w₃</text>
+          </g>
+          <circle cx="122" cy="66" r="22" fill="none" stroke="var(--c-v)" stroke-width="2"/>
+          <text x="114" y="73" font-size="17" fill="currentColor">Σ</text>
+          <path d="M144 66 h22" stroke="currentColor" stroke-width="1.6"/>
+          <polygon points="166,61 176,66 166,71" fill="currentColor"/>
+          <rect x="180" y="44" width="52" height="44" rx="8" fill="none" stroke="var(--c-na)" stroke-width="2"/>
+          <path d="M188 78 h16 l16 -22" stroke="var(--c-na)" stroke-width="2" fill="none"/>
+          <text x="196" y="103" font-size="11" fill="var(--muted)">φ = ReLU</text>
+          <path d="M232 66 h24" stroke="currentColor" stroke-width="1.6"/>
+          <text x="262" y="71" font-size="14" font-style="italic" fill="currentColor">y ∈ ℝ</text>
+        </svg>
+        <div class="eq" style="font-size:.95rem;padding:10px 14px;margin:10px 0 0"><i>y</i> = <i>φ</i>(Σ <i>w</i><sub>i</sub><i>x</i><sub>i</sub> + <i>b</i>)</div>
+      </div>
+    </div>
+
+    <div class="cmp-scroll">
+      <table class="cmp-table">
+        <thead><tr><th></th><th>生物神经元</th><th>人工神经元</th></tr></thead>
+        <tbody>
+          <tr><td>输入</td><td>数千路脉冲，<strong>时间连续</strong></td><td>一个向量，<strong>没有时间</strong></td></tr>
+          <tr><td>整合</td><td>泄漏积分——旧证据不断折旧</td><td>一次性加权求和</td></tr>
+          <tr><td>非线性</td><td>阈值 + 重置 + 不应期</td><td>ReLU / sigmoid / GELU</td></tr>
+          <tr><td>输出</td><td>离散事件（0/1 脉冲），信息在频率与时机里</td><td>连续实数</td></tr>
+          <tr><td>能耗</td><td><strong>事件驱动：不发放 ≈ 不花钱</strong></td><td>每次前向，所有单元全额计算</td></tr>
+          <tr><td>学习</td><td>局部可塑性规则（下一讲开始回答）</td><td>全局反向传播</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>两张遗失清单</h3>
+    <p>诚实的对照要写两份清单——不只是「ANN 扔了什么」，也包括「LIF 本身已经扔了什么」。</p>
+    <div class="duel">
+      <div class="panel">
+        <h4 style="color:var(--ink-2)">从 LIF 到 ANN，被扔掉的</h4>
+        <ul style="font-size:.92rem;margin:0">
+          <li><strong>时间</strong>——积分变成了一次求和</li>
+          <li><strong>脉冲</strong>——事件变成了浮点数</li>
+          <li><strong>稀疏与事件驱动</strong>——20 瓦的秘密（下一节）</li>
+          <li><strong>不应期与重置</strong>——输出失去了「历史」</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h4 style="color:var(--ink-2)">从真实神经元到 LIF，早已扔掉的</h4>
+        <ul style="font-size:.92rem;margin:0">
+          <li><strong>树突计算</strong>——树突不是被动电线，自带非线性运算</li>
+          <li><strong>适应</strong>——同样的输入，响应会随时间衰减</li>
+          <li><strong>随机性</strong>——通道开关本质上是抛硬币</li>
+          <li><strong>神经调质</strong>——多巴胺等信号在改写全网参数</li>
+        </ul>
+        <p class="small" style="margin:10px 0 0">这不是遗憾清单，是<strong>后续讲次的目录</strong>——每一讲捡回一件。</p>
+      </div>
+    </div>
+
+    <p>顺带回答一个你可能已经想问的问题：既然大脑这么好，为什么不直接用脉冲神经元做深度学习？——有人在做（脉冲神经网络 SNN、神经形态芯片如 Loihi），难点恰恰是：<strong>脉冲不可导，反向传播用不上</strong>。这句话值得记住，它是第二讲的门票。</p>
+
+    <details class="think">
+      <summary><span class="q-tag">思考</span>大脑在做反向传播吗？</summary>
+      <div class="a"><p>反向传播要求每个突触知道「全局误差对我的导数」，这需要一条与前向权重对称的反向通路——生物学上从未找到。但大脑显然在高效地学习。它用的是什么？1949 年 Hebb 给出了第一个候选答案，我们下一讲见。</p></div>
+    </details>
+  </div>
+</section>
+
+<!-- ============ 8 · 收束 ============ -->
+<section class="scene" id="s8" data-title="8 · 一句话与三个问题">
+  <div class="wrap">
+    <div class="kicker">第 8 节 <span class="k-time">第二课时 · 约 5 分钟</span></div>
+    <h2>回到 20 瓦，然后下课</h2>
+    <p class="lede">开场留了一个问题：同样做智能，大脑凭什么只要 20 瓦？现在你有零件把答案拼出来了。</p>
+
+    <div class="tiles">
+      <div class="tile"><div class="t-label">皮层信号能耗占比</div><div class="t-num">~75%</div><div class="t-sub">大部分花在钠钾泵上——把每个脉冲、每次突触传递搬进来的离子再搬回去</div></div>
+      <div class="tile"><div class="t-label">单个脉冲的价格</div><div class="t-num">~10⁹ ATP</div><div class="t-sub">发放很贵，静默近乎免费</div></div>
+      <div class="tile"><div class="t-label">皮层平均发放率</div><div class="t-num">&lt; 1 Hz</div><div class="t-sub">你的神经元绝大多数时间保持沉默</div></div>
+      <div class="tile"><div class="t-label">同时活跃的神经元</div><div class="t-num">~1%</div><div class="t-sub">而 GPU 上每次前向，几乎所有单元全额参与</div></div>
+    </div>
+
+    <p>把这一讲的零件串起来：<strong>脉冲很贵</strong>（泵要把离子搬回去）→ 所以进化把发放率压到极低 → 所以编码必须<strong>稀疏、事件驱动</strong>——泄漏负责遗忘噪声，阈值负责把关，只有凑齐证据才值得说一次话。<strong>「只在有事时开口」，就是 20 瓦的秘密。</strong>这也是脉冲神经网络和神经形态芯片真正的野心：不是模仿生物的情怀，是抄袭它的电费单。</p>
+
+    <div class="thesis">
+      <span class="t-mark">一句话带走</span>
+      神经元是一个带泄漏的积分器，外加一个阈值——泄漏定义了遗忘，阈值定义了值得，脉冲把连续的世界变成离散的、便宜的事件。
+    </div>
+
+    <div class="recap-row">
+      <span class="gained">✓ E_L · 电导拔河</span>
+      <span class="gained">✓ θ · 阈值狩猎</span>
+      <span class="gained">✓ 重置与静默 · 不应期</span>
+      <span class="gained">✓ τ · 时间求和</span>
+      <span class="gained">✓ f–I ≈ ReLU · 亲手拟合</span>
+    </div>
+
+    <p class="note"><strong>诚实的边界：</strong>今天回答的是「神经元如何计算」的最粗粒度版本。树突的非线性计算、放电的适应与随机性、毫秒级的时机编码——都被我们有意扔掉了，并将在后面的讲次里逐一捡回。抽象不是终点，是可控的起点。</p>
+
+    <h3>带回去的三个问题</h3>
+    <details class="think">
+      <summary><span class="q-tag">问题一</span>一个生物神经元，抵得上多大的人工神经网络？</summary>
+      <div class="a"><p>2021 年有人做了这个实验（Beniaguev 等）：要在毫秒精度上复现单个皮层锥体神经元的输入输出，需要一个<strong>约 7 层的时序卷积网络</strong>。「一个神经元 ≈ 一个 ReLU」是我们今天为了讲透骨架而选的近似——现在你知道它有多粗，也知道粗在哪里。</p></div>
+    </details>
+    <details class="think">
+      <summary><span class="q-tag">问题二</span>如果没有不应期，脉冲编码会失去什么？</summary>
+      <div class="a"><p>至少三样：脉冲的离散性（事件会糊成连续波形）、频率上限（编码动态范围失去锚点）、单向传播（脉冲会在轴突上来回反弹）。用实验 A 的仪器想一想每一条。</p></div>
+    </details>
+    <details class="think">
+      <summary><span class="q-tag">问题三</span>ANN 把时间整个扔掉了，却如此强大。什么任务会让「没有时间」露馅？</summary>
+      <div class="a"><p>开放问题。提示：想想需要毫秒级时序的场景——声源定位（两耳时差 10 微秒级）、运动控制的实时闭环、能耗受限的边缘设备。也想想 Transformer 是怎么用位置编码「赎回」被扔掉的时间的。</p></div>
+    </details>
+
+    <div class="next-teaser">
+      <div class="nt-tag">下一讲预告</div>
+      <div class="nt-title">突触：学习发生的地方</div>
+      <p style="margin:.4em 0 0;font-size:.95rem">今天的神经元自始至终没有「学」任何东西——因为学习不发生在神经元里，发生在它们的<strong>连接</strong>上。1949 年，Donald Hebb 用一句话猜中了后来五十年的实验：「一起放电的细胞，连在一起。」下一讲你会亲手训练一小群 Hebbian 神经元，看它们在没有任何监督信号的情况下自己长出特征检测器——并回答那个悬而未决的问题：不靠反向传播，到底怎么学？</p>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer class="colophon">
+  《神经科学导论》第一讲 · 南京大学人工智能学院 · 自包含交互网页讲义（无外部依赖，可离线打开）· 键盘 ← → 切换小节
+</footer>
+<script>
+'use strict';
+/* ================= 基础设施 ================= */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+
+/* 画布：处理 DPR 与响应式宽度；逻辑坐标 = CSS 像素 */
+function fitCanvas(cv) {
+  if (!cv.dataset.h) cv.dataset.h = cv.getAttribute('height') || 240;
+  const hCss = +cv.dataset.h;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.style.height = hCss + 'px';
+  const wCss = cv.clientWidth || (cv.parentElement ? cv.parentElement.clientWidth : 600) || 600;
+  const W = Math.max(50, Math.round(wCss * dpr)), H = Math.round(hCss * dpr);
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w: wCss, h: hCss };
+}
+
+/* 主题变化与窗口尺寸变化时，重画所有注册过的图 */
+const redraws = new Set();
+function requestRedrawAll() { redraws.forEach(f => { try { f(); } catch (e) {} }); }
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => setTimeout(requestRedrawAll, 30));
+new MutationObserver(() => setTimeout(requestRedrawAll, 30))
+  .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+let resizeTimer = null;
+addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(requestRedrawAll, 120); });
+
+/* 仅当元素可见时运行动画循环 */
+function visibilityFlag(el) {
+  const state = { visible: false };
+  new IntersectionObserver(es => es.forEach(e => { state.visible = e.isIntersecting; }), { rootMargin: '80px' }).observe(el);
+  return state;
+}
+
+/* 仪器面板固定配色（两种主题下都是深色面板） */
+const RIG = {
+  bg: '#10141C', grid: '#1E2531', axis: '#3A4254', text: '#7C8598',
+  v: '#BFA3EF', na: '#E07A50', k: '#5F9FD8', i: '#C9A43F',
+  good: '#7BE3A5', bad: '#E8A0A0', dim: 'rgba(191,163,239,0.35)'
+};
+
+/* 浅色图表：颜色跟随主题 */
+function chartColors() {
+  return {
+    ink: cssVar('--ink'), muted: cssVar('--muted'), line: cssVar('--line'),
+    v: cssVar('--c-v'), na: cssVar('--c-na'), k: cssVar('--c-k'), i: cssVar('--c-i'), ref: cssVar('--c-ref'),
+    accent: cssVar('--accent'), surface: cssVar('--surface')
+  };
+}
+
+/* 通用坐标轴（暗面板） */
+function rigAxes(ctx, w, h, pad, xr, yr, xlabel, ylabel, xticks, yticks) {
+  ctx.fillStyle = RIG.bg; ctx.fillRect(0, 0, w, h);
+  const X = x => pad.l + (x - xr[0]) / (xr[1] - xr[0]) * (w - pad.l - pad.r);
+  const Y = y => h - pad.b - (y - yr[0]) / (yr[1] - yr[0]) * (h - pad.t - pad.b);
+  ctx.strokeStyle = RIG.grid; ctx.lineWidth = 1; ctx.beginPath();
+  (xticks || []).forEach(t => { ctx.moveTo(X(t), pad.t); ctx.lineTo(X(t), h - pad.b); });
+  (yticks || []).forEach(t => { ctx.moveTo(pad.l, Y(t)); ctx.lineTo(w - pad.r, Y(t)); });
+  ctx.stroke();
+  ctx.strokeStyle = RIG.axis; ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, h - pad.b); ctx.lineTo(w - pad.r, h - pad.b); ctx.stroke();
+  ctx.fillStyle = RIG.text; ctx.font = '11px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  (xticks || []).forEach(t => ctx.fillText(t, X(t), h - pad.b + 5));
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  (yticks || []).forEach(t => ctx.fillText(t, pad.l - 6, Y(t)));
+  if (xlabel) { ctx.textAlign = 'right'; ctx.textBaseline = 'bottom'; ctx.fillText(xlabel, w - pad.r, h - 4); }
+  if (ylabel) { ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillText(ylabel, 6, 4); }
+  return { X, Y };
+}
+
+function drawTrace(ctx, X, Y, ts, vs, color, lw) {
+  ctx.strokeStyle = color; ctx.lineWidth = lw || 2; ctx.lineJoin = 'round'; ctx.beginPath();
+  for (let i = 0; i < ts.length; i++) {
+    const x = X(ts[i]), y = Y(vs[i]);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+
+/* ================= 导航 ================= */
+(function nav() {
+  const scenes = $$('.scene');
+  const links = $$('#rail a');
+  const sel = $('#tb-select');
+  scenes.forEach((s, i) => {
+    const o = document.createElement('option');
+    o.value = s.id; o.textContent = s.dataset.title || s.id;
+    sel.appendChild(o);
+  });
+  const byId = id => scenes.findIndex(s => s.id === id);
+  let current = 0;
+  const io = new IntersectionObserver(es => {
+    es.forEach(e => {
+      if (e.isIntersecting) {
+        current = byId(e.target.id);
+        links.forEach(a => a.classList.toggle('active', a.dataset.sec === e.target.id));
+        sel.value = e.target.id;
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  scenes.forEach(s => io.observe(s));
+
+  const go = i => { const s = scenes[clamp(i, 0, scenes.length - 1)]; if (s) s.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' }); };
+  sel.addEventListener('change', () => go(byId(sel.value)));
+  $('#tb-prev').addEventListener('click', () => go(current - 1));
+  $('#tb-next').addEventListener('click', () => go(current + 1));
+  addEventListener('keydown', e => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(current + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(current - 1); }
+  });
+
+  addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const p = doc.scrollTop / (doc.scrollHeight - doc.clientHeight || 1);
+    $('#progress').style.width = (p * 100).toFixed(2) + '%';
+  }, { passive: true });
+
+  const rio = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); rio.unobserve(e.target); } }), { threshold: 0.2 });
+  $$('.reveal').forEach(el => rio.observe(el));
+})();
+
+/* ================= 预测-投票组件 ================= */
+$$('.predict').forEach(p => {
+  p.querySelectorAll('.opts button').forEach(b => b.addEventListener('click', () => {
+    if (p.classList.contains('revealed')) return;
+    b.classList.add('chosen');
+    p.classList.add('revealed');
+    const right = p.dataset.answer;
+    p.querySelectorAll('.opts button').forEach(x => { if (x.dataset.i === right) x.classList.add('right'); });
+  }));
+});
+
+/* ================= 时间轴 ================= */
+$$('.lane-evt').forEach(ev => {
+  const toggle = () => ev.classList.toggle('open');
+  ev.addEventListener('click', toggle);
+  ev.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+});
+
+/* ================= 解剖图 + 配对游戏 ================= */
+(function anatomy() {
+  const info = $('#anat-info');
+  const DATA = {
+    dendrite: { name: '树突', en: 'dendrite', body: '一棵接收天线树：收集来自上万个上游神经元的信号电流。',
+      role: '<b>对应「加权输入 w·x」。</b>但有两个伏笔：权重的物理实体在<b>突触</b>上（下一讲主角）；且树突并非被动电线——它自带非线性运算，本身就像一个小网络（后面讲次回收）。',
+      num: '一个皮层锥体神经元约有 10,000 路突触输入。' },
+    soma: { name: '胞体', en: 'soma', body: '细胞的代谢与整合中心：所有树突电流在这里汇合，共同决定膜电位。',
+      role: '<b>对应「求和 Σ」。</b>更准确说是<b>带泄漏的连续求和</b>——第 3 节你会看到求和的物理实现。',
+      num: '直径约 10–50 µm；一粒芝麻里能塞下几千个。' },
+    hillock: { name: '轴丘', en: 'axon hillock', body: '胞体与轴突的交界处，电压敏感通道密度全细胞最高——脉冲在这里起爆。',
+      role: '<b>对应「非线性 φ」。</b>膜电位过阈值，这里点火；不过，则全体沉默。第 4 节你会亲手找这个阈值。',
+      num: '通道密度可达胞体膜的数十倍。' },
+    axon: { name: '轴突与突触末梢', en: 'axon & terminals', body: '输出电缆：把脉冲无衰减地送到远方，在末梢交给下一个神经元。髓鞘是绝缘层，让信号跳跃前进。',
+      role: '<b>对应「输出 y → 下一层」。</b>注意：送出去的不是实数，是离散的脉冲事件。',
+      num: '人体最长的轴突约 1 米（脊髓到脚趾）；髓鞘让传导快 ~50 倍。' }
+  };
+  const show = key => {
+    const d = DATA[key]; if (!d) return;
+    info.innerHTML = '<div class="ai-name">' + d.name + '</div><div class="ai-en">' + d.en + '</div>' +
+      '<div style="font-size:.92rem">' + d.body + '</div><div class="ai-role">' + d.role + '</div>' +
+      '<div class="ai-num">' + d.num + '</div>';
+  };
+  $$('.anat-part').forEach(g => {
+    const act = () => { $$('.anat-part').forEach(x => x.classList.remove('sel')); g.classList.add('sel'); show(g.dataset.part); };
+    g.addEventListener('click', act);
+    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); } });
+  });
+
+  /* 配对 */
+  const CARD_LABEL = { dendrite: 'w·x', soma: 'Σ', hillock: 'φ', axon: '输出 y' };
+  const SLOT_LABEL = { dendrite: '① 树突（含突触）', soma: '② 胞体', hillock: '③ 轴丘', axon: '④ 轴突 → 末梢' };
+  let selected = null, matched = 0;
+  const msg = $('#match-msg');
+  $$('.match-card').forEach(c => c.addEventListener('click', () => {
+    if (c.classList.contains('done')) return;
+    $$('.match-card').forEach(x => x.classList.remove('selected'));
+    selected = c; c.classList.add('selected');
+    msg.textContent = '已选「' + c.textContent + '」——现在点击图中它对应的虚线框';
+    msg.className = 'match-msg';
+  }));
+  $$('.anat-slot').forEach(slot => {
+    const act = () => {
+      if (slot.classList.contains('filled')) return;
+      if (!selected) { msg.textContent = '先在上面选一张卡片'; msg.className = 'match-msg'; return; }
+      if (selected.dataset.target === slot.dataset.slot) {
+        slot.classList.add('filled');
+        slot.querySelector('text').textContent = SLOT_LABEL[slot.dataset.slot].replace(/^[①②③④]\s*/, '') + ' = ' + CARD_LABEL[slot.dataset.slot];
+        selected.classList.remove('selected'); selected.classList.add('done');
+        selected = null; matched++;
+        if (matched === 4) {
+          msg.textContent = '✓ 全部配对成功——你和 1943 年的 McCulloch & Pitts 想到一起了。但注意右侧信息栏里的两个伏笔：这个对应从哪里开始失真，才是这门课的正菜。';
+          msg.className = 'match-msg ok'; show('dendrite'); $$('.anat-part')[0].classList.add('sel');
+        } else {
+          msg.textContent = '✓ 正确！还差 ' + (4 - matched) + ' 张。';
+          msg.className = 'match-msg ok';
+        }
+      } else {
+        slot.classList.add('shake'); setTimeout(() => slot.classList.remove('shake'), 350);
+        msg.textContent = '✗ 不对——弹回去了。再想想：信号在神经元里的旅程是从哪到哪？';
+        msg.className = 'match-msg no';
+      }
+    };
+    slot.addEventListener('click', act);
+    slot.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); } });
+  });
+})();
+
+/* ================= 电导拔河 ================= */
+(function tug() {
+  const svg = $('#tug-svg'); if (!svg) return;
+  const EK = -89, ENA = +61;
+  const X = v => 46 + (v + 100) / 175 * 548;
+  let html = '';
+  html += '<line x1="46" y1="108" x2="594" y2="108" stroke="var(--line)" stroke-width="2"/>';
+  for (let v = -100; v <= 75; v += 25) {
+    html += '<line x1="' + X(v) + '" y1="104" x2="' + X(v) + '" y2="112" stroke="var(--muted)" stroke-width="1.4"/>';
+    html += '<text x="' + X(v) + '" y="128" font-size="10.5" fill="var(--muted)" text-anchor="middle" font-family="var(--mono)">' + v + '</text>';
+  }
+  html += '<text x="594" y="145" font-size="10.5" fill="var(--muted)" text-anchor="end">膜电位 (mV)</text>';
+  html += '<line x1="' + X(EK) + '" y1="40" x2="' + X(EK) + '" y2="108" stroke="var(--c-k)" stroke-width="2" stroke-dasharray="4 3"/>';
+  html += '<text x="' + X(EK) + '" y="32" font-size="12" fill="var(--c-k)" text-anchor="middle" font-weight="600">E_K −89</text>';
+  html += '<line x1="' + X(ENA) + '" y1="40" x2="' + X(ENA) + '" y2="108" stroke="var(--c-na)" stroke-width="2" stroke-dasharray="4 3"/>';
+  html += '<text x="' + X(ENA) + '" y="32" font-size="12" fill="var(--c-na)" text-anchor="middle" font-weight="600">E_Na +61</text>';
+  html += '<rect id="tug-bar-k" x="0" y="68" height="9" rx="4" fill="var(--c-k)" opacity=".85"/>';
+  html += '<rect id="tug-bar-na" x="0" y="68" height="9" rx="4" fill="var(--c-na)" opacity=".85"/>';
+  html += '<polygon id="tug-marker" points="0,0" fill="var(--c-v)"/>';
+  html += '<text id="tug-vm" x="0" y="0" font-size="15" font-weight="700" fill="var(--c-v)" text-anchor="middle" font-family="var(--mono)"></text>';
+  svg.innerHTML = html;
+  const slider = $('#tug-slider'), ratioEl = $('#tug-ratio');
+  const bk = $('#tug-bar-k'), bna = $('#tug-bar-na'), mk = $('#tug-marker'), vmEl = $('#tug-vm');
+  function update() {
+    const r = Math.pow(10, +slider.value);           // gNa/gK
+    const wk = 1 / (1 + r), wna = r / (1 + r);
+    const V = wk * EK + wna * ENA;
+    const x = X(V);
+    ratioEl.textContent = (r < 0.095 ? r.toFixed(3) : r.toFixed(2)) + ' : 1';
+    mk.setAttribute('points', (x - 8) + ',102 ' + (x + 8) + ',102 ' + x + ',88');
+    vmEl.setAttribute('x', clamp(x, 80, 560)); vmEl.setAttribute('y', 58);
+    vmEl.textContent = 'V_m = ' + V.toFixed(1) + ' mV';
+    const maxLen = 110;
+    const wkLen = Math.max(3, wk * maxLen), wnaLen = Math.max(3, wna * maxLen);
+    const kx = Math.max(46, x - 10 - wkLen);
+    bk.setAttribute('width', Math.max(3, x - 10 - kx)); bk.setAttribute('x', kx);
+    bna.setAttribute('width', Math.min(wnaLen, 594 - (x + 10))); bna.setAttribute('x', Math.min(x + 10, 592));
+  }
+  slider.addEventListener('input', update);
+  $$('[data-tug]').forEach(b => b.addEventListener('click', () => { slider.value = b.dataset.tug; update(); }));
+  update();
+})();
+
+/* ================= Nernst ================= */
+(function nernst() {
+  const s = $('#nernst-slider'); if (!s) return;
+  const update = () => {
+    const ko = +s.value;
+    const ek = 61.5 * Math.log10(ko / 140);
+    $('#nernst-val').textContent = ko.toFixed(1);
+    $('#nernst-ek').textContent = (ek < 0 ? '−' : '+') + Math.abs(ek).toFixed(1) + ' mV';
+  };
+  s.addEventListener('input', update); update();
+})();
+</script>
+<script>
+'use strict';
+/* ================= Hodgkin–Huxley 引擎 ================= */
+function hhNew() { return { V: -65, m: 0.0529, h: 0.596, n: 0.3177, gNa: 0, gK: 0 }; }
+function hhStep(s, I, dt, blockNa, blockK) {
+  const V = s.V;
+  const vt = (x, y) => Math.abs(x / y) < 1e-6 ? y * (1 - x / (2 * y)) : x / Math.expm1(x / y);
+  const aM = 0.1 * vt(-(V + 40), 10), bM = 4 * Math.exp(-(V + 65) / 18);
+  const aH = 0.07 * Math.exp(-(V + 65) / 20), bH = 1 / (1 + Math.exp(-(V + 35) / 10));
+  const aN = 0.01 * vt(-(V + 55), 10), bN = 0.125 * Math.exp(-(V + 65) / 80);
+  const gNa = blockNa ? 0 : 120 * s.m * s.m * s.m * s.h;
+  const gK = blockK ? 0 : 36 * s.n * s.n * s.n * s.n;
+  s.V += dt * (I - gNa * (V - 50) - gK * (V + 77) - 0.3 * (V + 54.387));
+  s.m += dt * (aM * (1 - s.m) - bM * s.m);
+  s.h += dt * (aH * (1 - s.h) - bH * s.h);
+  s.n += dt * (aN * (1 - s.n) - bN * s.n);
+  s.gNa = gNa; s.gK = gK;
+}
+const HH_DT = 0.01;
+function hhRun(T, Ifn, opts = {}) {
+  const s = hhNew();
+  for (let t = 0; t < 30; t += HH_DT) hhStep(s, 0, HH_DT);
+  const every = opts.every || 5;                      // 每 every 步记录一次
+  const rec = { t: [], V: [], m: [], h: [], n: [], gNa: [], gK: [], I: [], spikes: [] };
+  let prev = s.V, k = 0;
+  const steps = Math.round(T / HH_DT);
+  for (let i = 0; i < steps; i++) {
+    const t = i * HH_DT;
+    hhStep(s, Ifn(t), HH_DT, opts.blockNa, opts.blockK);
+    if (prev < 0 && s.V >= 0) rec.spikes.push(t);
+    prev = s.V;
+    if (k++ % every === 0) {
+      rec.t.push(t); rec.V.push(s.V); rec.m.push(s.m); rec.h.push(s.h); rec.n.push(s.n);
+      rec.gNa.push(s.gNa); rec.gK.push(s.gK); rec.I.push(Ifn(t));
+    }
+  }
+  return rec;
+}
+const pulseFn = (t0, dur, amp) => t => (t >= t0 && t < t0 + dur) ? amp : 0;
+let _th1 = null;
+function hhThresh1ms() {                               // 1ms 脉冲的阈值电流
+  if (_th1) return _th1;
+  let lo = 1, hi = 30;
+  for (let i = 0; i < 14; i++) {
+    const mid = (lo + hi) / 2;
+    hhRun(25, pulseFn(2, 1, mid)).spikes.length ? hi = mid : lo = mid;
+  }
+  return (_th1 = hi);
+}
+
+/* ================= 封面：脉冲动画 + 悬念图 ================= */
+(function cover() {
+  const cv = $('#cover-canvas'); if (!cv) return;
+  const rec = hhRun(30, pulseFn(3, 1, 12));
+  const vis = visibilityFlag(cv);
+  let phase = 0;
+  function draw(prog) {
+    const { ctx, w, h } = fitCanvas(cv);
+    const C = chartColors();
+    ctx.clearRect(0, 0, w, h);
+    const X = t => t / 30 * w, Y = v => h - 8 - (v + 95) / 150 * (h - 16);
+    ctx.strokeStyle = C.line; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, Y(-65)); ctx.lineTo(w, Y(-65)); ctx.stroke();
+    const nPts = Math.max(2, Math.floor(rec.t.length * prog));
+    ctx.strokeStyle = C.v; ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.beginPath();
+    for (let i = 0; i < nPts; i++) {
+      const x = X(rec.t[i]), y = Y(rec.V[i]);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    if (prog < 1) {
+      const i = nPts - 1;
+      ctx.fillStyle = C.v; ctx.beginPath();
+      ctx.arc(X(rec.t[i]), Y(rec.V[i]), 4, 0, 7); ctx.fill();
+    }
+    ctx.fillStyle = C.muted; ctx.font = '11px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('一次动作电位 · 由 Hodgkin–Huxley 方程实时算出', 4, 2);
+  }
+  if (REDUCED) { draw(1); redraws.add(() => draw(1)); return; }
+  let last = 0;
+  (function loop(now) {
+    requestAnimationFrame(loop);
+    if (!vis.visible) return;
+    if (now - last < 30) return;
+    last = now;
+    phase = (phase + 0.006) % 1.25;
+    draw(Math.min(1, phase));
+  })(0);
+})();
+
+(function mystery() {
+  const cv = $('#mystery-fi'); if (!cv) return;
+  function lifF(I) {                                    // τ=20 R=10 θ−E_L=20 Vreset−E_L=5 tref=4
+    const d = 10 * I;
+    if (d <= 20.01) return 0;
+    return 1000 / (4 + 20 * Math.log((d - 5) / (d - 20)));
+  }
+  function draw() {
+    const { ctx, w, h } = fitCanvas(cv);
+    const C = chartColors();
+    ctx.clearRect(0, 0, w, h);
+    const pad = { l: 46, r: 16, t: 18, b: 34 };
+    const X = i => pad.l + i / 6 * (w - pad.l - pad.r);
+    const Y = f => h - pad.b - f / 110 * (h - pad.t - pad.b);
+    ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.beginPath();
+    [0, 25, 50, 75, 100].forEach(f => { ctx.moveTo(pad.l, Y(f)); ctx.lineTo(w - pad.r, Y(f)); });
+    ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.font = '11px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    [0, 50, 100].forEach(f => ctx.fillText(f, pad.l - 6, Y(f)));
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    [0, 2, 4, 6].forEach(i => ctx.fillText(i, X(i), h - pad.b + 6));
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    ctx.fillText('输入电流 →', w - pad.r, h - 2);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('发放率 (Hz)', 4, 2);
+    ctx.strokeStyle = C.ref; ctx.lineWidth = 2; ctx.setLineDash([6, 5]); ctx.beginPath();
+    ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(2.15), Y(0)); ctx.lineTo(X(6), Y(25.2 * (6 - 2.15))); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = C.v;
+    for (let i = 0; i <= 30; i++) {
+      const I = i / 5;
+      const jitter = Math.sin(i * 127.13) * 3.2;
+      const f = lifF(I);
+      const fv = f > 0 ? Math.max(0.5, f + jitter) : (I > 1.9 ? 0 : Math.abs(jitter) * 0.15);
+      ctx.beginPath(); ctx.arc(X(I), Y(fv), 3.4, 0, 7); ctx.fill();
+    }
+  }
+  draw(); redraws.add(draw);
+})();
+
+/* ================= 第4节 · 实时膜片钳 ================= */
+const spikeOverlays = [];                              // 供「对齐仪」使用
+(function patchClamp() {
+  const cv = $('#hh-scope'); if (!cv) return;
+  const vis = visibilityFlag(cv);
+  const s = hhNew();
+  let simT = 0, speed = 1;
+  const buf = { t: [], V: [], I: [] };
+  let stims = [];                                      // {t0}
+  let pending = null;                                  // {start, maxV}
+  let capture = null;                                  // {t0}
+  const amp = () => +$('#hh-amp').value;
+  $('#hh-amp').addEventListener('input', () => $('#hh-amp-val').textContent = (+$('#hh-amp').value).toFixed(1));
+  $$('#rig-hh [data-amp]').forEach(b => b.addEventListener('click', () => {
+    $('#hh-amp').value = b.dataset.amp; $('#hh-amp-val').textContent = (+b.dataset.amp).toFixed(1);
+  }));
+  $$('#rig-hh [data-speed]').forEach(b => b.addEventListener('click', () => {
+    speed = +b.dataset.speed;
+    $$('#rig-hh [data-speed]').forEach(x => x.classList.toggle('on', x === b));
+  }));
+  const outcomeEl = $('#hh-outcome'), logEl = $('#hh-log');
+  $('#hh-stim').addEventListener('click', () => {
+    stims.push({ t0: simT, amp: amp() });
+    pending = { start: simT, amp: amp(), maxV: -100 };
+    outcomeEl.textContent = '…'; outcomeEl.className = 'outcome idle';
+  });
+  function Inow(t) {
+    let v = 0;
+    for (const st of stims) if (t >= st.t0 && t < st.t0 + 1) v += st.amp;
+    return v;
+  }
+  function logTry(amp, ok) {
+    const chip = document.createElement('span');
+    chip.className = 'outcome ' + (ok ? 'spike' : 'fail');
+    chip.style.fontSize = '.72rem';
+    chip.textContent = amp.toFixed(1) + (ok ? ' ✓' : ' ✗');
+    logEl.appendChild(chip);
+    while (logEl.children.length > 12) logEl.removeChild(logEl.firstChild);
+  }
+  let lastNow = 0, acc = 0;
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (!vis.visible) { lastNow = now; return; }
+    const dtReal = clamp((now - lastNow) / 1000, 0, 0.06);
+    lastNow = now;
+    const advance = dtReal * 1000 * 0.028 * speed;      // 1 真实秒 ≈ 28 模拟 ms（1×）
+    acc += advance;
+    let prevV = s.V;
+    while (acc >= HH_DT) {
+      acc -= HH_DT;
+      hhStep(s, Inow(simT), HH_DT);
+      if (prevV < 0 && s.V >= 0 && !capture) capture = { t0: simT };
+      prevV = s.V;
+      if (pending && simT >= pending.start && simT <= pending.start + 22) pending.maxV = Math.max(pending.maxV, s.V);
+      simT += HH_DT;
+      if (Math.round(simT / HH_DT) % 10 === 0) {        // 每 0.1ms 采样
+        buf.t.push(simT); buf.V.push(s.V); buf.I.push(Inow(simT));
+        if (buf.t.length > 1200) { buf.t.shift(); buf.V.shift(); buf.I.shift(); }
+      }
+    }
+    if (pending && simT > pending.start + 22) {
+      const ok = pending.maxV > 0;
+      outcomeEl.textContent = ok ? '脉冲！' : '无脉冲';
+      outcomeEl.className = 'outcome ' + (ok ? 'spike' : 'fail');
+      logTry(pending.amp, ok); pending = null;
+    }
+    if (capture && simT > capture.t0 + 8) {
+      const t0 = capture.t0; capture = null;
+      const seg = { dts: [], vs: [] };
+      let peakV = -100, peakT = t0;
+      for (let i = 0; i < buf.t.length; i++) {
+        if (buf.t[i] >= t0 - 3 && buf.t[i] <= t0 + 8) {
+          if (buf.V[i] > peakV) { peakV = buf.V[i]; peakT = buf.t[i]; }
+        }
+      }
+      for (let i = 0; i < buf.t.length; i++) {
+        if (buf.t[i] >= peakT - 4 && buf.t[i] <= peakT + 7) { seg.dts.push(buf.t[i] - peakT); seg.vs.push(buf.V[i]); }
+      }
+      if (seg.dts.length > 20) {
+        spikeOverlays.push(seg);
+        if (spikeOverlays.length > 14) spikeOverlays.shift();
+        drawOverlay();
+      }
+    }
+    stims = stims.filter(st => simT - st.t0 < 30);
+    draw();
+  }
+  function draw() {
+    const { ctx, w, h } = fitCanvas(cv);
+    const xr = [simT - 70, simT];
+    const { X, Y } = rigAxes(ctx, w, h, { l: 44, r: 10, t: 10, b: 40 }, xr, [-95, 55],
+      'ms', 'V (mV)', [], [-80, -40, 0, 40]);
+    ctx.fillStyle = RIG.text; ctx.font = '11px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (let t = Math.ceil(xr[0] / 20) * 20; t <= xr[1]; t += 20) ctx.fillText(Math.round(t - simT), X(t), h - 36);
+    const yI = v => h - 14 - clamp(v, 0, 22) * 0.9;      // 电流小道
+    ctx.strokeStyle = RIG.i; ctx.lineWidth = 1.6; ctx.beginPath();
+    for (let i = 0; i < buf.t.length; i++) {
+      const x = X(buf.t[i]); if (x < 44) continue;
+      const y = yI(buf.I[i]);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.fillStyle = RIG.i; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText('I(t)', 48, h - 16);
+    ctx.save(); ctx.beginPath(); ctx.rect(44, 10, w - 54, h - 50); ctx.clip();
+    const ts = [], vsv = [];
+    for (let i = 0; i < buf.t.length; i++) { if (X(buf.t[i]) >= 44) { ts.push(buf.t[i]); vsv.push(buf.V[i]); } }
+    drawTrace(ctx, X, Y, ts, vsv, RIG.v, 2.2);
+    ctx.restore();
+  }
+  function drawOverlay() {
+    const ov = $('#hh-overlay'); if (!ov) return;
+    const { ctx, w, h } = fitCanvas(ov);
+    const { X, Y } = rigAxes(ctx, w, h, { l: 44, r: 10, t: 8, b: 26 }, [-4, 7], [-95, 55], 'ms（峰值对齐）', 'V', [-2, 0, 2, 4, 6], [-80, 0, 40]);
+    spikeOverlays.forEach(seg => {
+      ctx.globalAlpha = 0.6;
+      drawTrace(ctx, X, Y, seg.dts, seg.vs, RIG.v, 1.8);
+    });
+    ctx.globalAlpha = 1;
+    if (spikeOverlays.length) {
+      const led = $('#ov-led'); if (led) led.classList.add('on');
+      const peaks = spikeOverlays.map(sg => Math.max(...sg.vs));
+      const spread = peaks.length > 1 ? (Math.max(...peaks) - Math.min(...peaks)) : 0;
+      $('#ov-note').textContent = '已捕获 ' + spikeOverlays.length + ' 个脉冲。峰值彼此相差 < ' +
+        Math.max(1, Math.ceil(spread)) + ' mV——无论触发它们的电流差几倍。';
+    }
+  }
+  drawOverlay();
+  redraws.add(drawOverlay);
+  requestAnimationFrame(frame);
+})();
+
+/* ================= 第5节 · 慢镜头解剖 ================= */
+(function apAnatomy() {
+  const cv = $('#ap-canvas'); if (!cv) return;
+  const rec = hhRun(25, pulseFn(2, 1, 12), { every: 2 });   // 0.02ms 分辨率
+  const N = rec.t.length;
+  let iPeak = 0;
+  for (let i = 0; i < N; i++) if (rec.V[i] > rec.V[iPeak]) iPeak = i;
+  let b1 = rec.t.findIndex((t, i) => rec.V[i] >= -60 && t > 2); if (b1 < 0) b1 = Math.floor(N * 0.1);
+  let b3 = iPeak; while (b3 < N - 1 && rec.V[b3] > -65) b3++;
+  const phaseOf = i => i < b1 ? 0 : i < iPeak ? 1 : i < b3 ? 2 : 3;
+  const STORY = [
+    '<b>① 静息。</b>拔河里 K⁺ 掌权：n 门温开、m 门紧闭、h 闸抬起待命，V 安静地趴在 −65 mV。绿色游标处即将注入 1 ms 电流。',
+    '<b>② 雪崩去极化。</b>电流把 V 推过临界点 → m 门（快手）唰地全开 → g<b>Na</b> 暴涨、Na⁺ 涌入 → V 更高 → m 开得更大。<b>正反馈失控</b>，V 直冲 E_Na。留意 h 闸此刻已在缓缓下落。',
+    '<b>③ 反转复极化。</b>两个慢动作到位：h 闸落下掐断 Na⁺（g_Na 崩塌）；n 门全开，K⁺ 拔河队大举增援（g_K 达峰）——V 被迅速拽回。',
+    '<b>④ 超极化恢复。</b>n 门迟迟不关，K⁺ 矫枉过正，V 一度跌破静息线；随后各门复位。这段「发动机冷却时间」，就是下一个实验的主角：不应期。'
+  ];
+  const chan = $('#chan-svg');
+  chan.innerHTML = [
+    '<text x="10" y="20" font-size="12" fill="#7C8598">胞外（Na⁺ 多）</text>',
+    '<text x="10" y="292" font-size="12" fill="#7C8598">胞内（K⁺ 多）</text>',
+    '<rect x="0" y="128" width="320" height="10" fill="#2A3140"/>',
+    '<rect x="0" y="162" width="320" height="10" fill="#2A3140"/>',
+    // Na 通道
+    '<rect x="70" y="118" width="18" height="64" rx="5" fill="#3A4254"/>',
+    '<rect x="112" y="118" width="18" height="64" rx="5" fill="#3A4254"/>',
+    '<line id="na-flow" x1="100" y1="76" x2="100" y2="212" stroke="#E07A50" stroke-width="4" marker-end="url(#arr-na)" opacity="0"/>',
+    '<rect id="m-flap-l" x="88" y="112" width="12" height="6" rx="2" fill="#E07A50"/>',
+    '<rect id="m-flap-r" x="100" y="112" width="12" height="6" rx="2" fill="#E07A50"/>',
+    '<line id="h-chain" x1="79" y1="184" x2="70" y2="212" stroke="#E07A50" stroke-width="2"/>',
+    '<circle id="h-ball" cx="70" cy="215" r="9" fill="#E07A50"/>',
+    '<text x="100" y="66" font-size="12" fill="#E07A50" text-anchor="middle" font-weight="600">Na⁺</text>',
+    '<text x="100" y="248" font-size="11.5" fill="#7C8598" text-anchor="middle">Na⁺ 通道：m 门 + h 闸</text>',
+    // K 通道
+    '<rect x="200" y="118" width="18" height="64" rx="5" fill="#3A4254"/>',
+    '<rect x="242" y="118" width="18" height="64" rx="5" fill="#3A4254"/>',
+    '<line id="k-flow" x1="230" y1="212" x2="230" y2="76" stroke="#5F9FD8" stroke-width="4" marker-end="url(#arr-k)" opacity="0"/>',
+    '<rect id="n-flap" x="218" y="112" width="24" height="6" rx="2" fill="#5F9FD8"/>',
+    '<text x="230" y="66" font-size="12" fill="#5F9FD8" text-anchor="middle" font-weight="600">K⁺</text>',
+    '<text x="230" y="248" font-size="11.5" fill="#7C8598" text-anchor="middle">K⁺ 通道：n 门</text>',
+    '<defs><marker id="arr-na" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#E07A50"/></marker>',
+    '<marker id="arr-k" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#5F9FD8"/></marker></defs>'
+  ].join('');
+  const el = id => chan.querySelector('#' + id);
+  const scrub = $('#ap-scrub'), tval = $('#ap-t-val'), story = $('#ap-story');
+  function setIdx(idx) {
+    idx = clamp(Math.round(idx), 0, N - 1);
+    const t = rec.t[idx];
+    tval.textContent = t.toFixed(1) + ' ms';
+    const m = rec.m[idx], hh = rec.h[idx], n = rec.n[idx];
+    el('m-flap-l').setAttribute('transform', 'rotate(' + (-78 * m) + ' 88 115)');
+    el('m-flap-r').setAttribute('transform', 'rotate(' + (78 * m) + ' 112 115)');
+    const p = 1 - hh;                                   // h 低 = 闸塞住孔
+    const bx = 70 + 30 * p, by = 215 - 37 * p;
+    el('h-ball').setAttribute('cx', bx); el('h-ball').setAttribute('cy', by);
+    el('h-chain').setAttribute('x2', bx); el('h-chain').setAttribute('y2', by);
+    el('n-flap').setAttribute('transform', 'rotate(' + (-78 * n) + ' 218 115)');
+    el('na-flow').setAttribute('opacity', clamp(rec.gNa[idx] / 30, 0, 1));
+    el('k-flow').setAttribute('opacity', clamp(rec.gK[idx] / 14, 0, 1));
+    $('#g-m').style.width = (m * 100).toFixed(0) + '%'; $('#g-m-v').textContent = m.toFixed(2);
+    $('#g-h').style.width = (hh * 100).toFixed(0) + '%'; $('#g-h-v').textContent = hh.toFixed(2) + (hh < 0.25 ? ' · 闸已落下' : '');
+    $('#g-n').style.width = (n * 100).toFixed(0) + '%'; $('#g-n-v').textContent = n.toFixed(2);
+    const ph = phaseOf(idx);
+    $$('#ap-phases .phase').forEach(x => x.classList.toggle('on', +x.dataset.ph === ph));
+    if (story.dataset.ph !== String(ph)) { story.dataset.ph = ph; story.innerHTML = STORY[ph]; }
+    draw(idx);
+  }
+  function draw(idx) {
+    const { ctx, w, h } = fitCanvas(cv);
+    ctx.fillStyle = RIG.bg; ctx.fillRect(0, 0, w, h);
+    const pad = { l: 46, r: 12 };
+    const X = t => pad.l + t / 25 * (w - pad.l - pad.r);
+    const hTop = h * 0.60, hBot = h - hTop - 24;
+    const Yv = v => 8 + (1 - (v + 95) / 150) * (hTop - 16);
+    const Yg = g => hTop + 8 + (1 - g / 45) * (hBot - 8);
+    ctx.strokeStyle = RIG.grid; ctx.lineWidth = 1; ctx.beginPath();
+    [-80, -40, 0, 40].forEach(v => { ctx.moveTo(pad.l, Yv(v)); ctx.lineTo(w - pad.r, Yv(v)); });
+    ctx.stroke();
+    ctx.fillStyle = RIG.text; ctx.font = '10.5px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    [-80, -40, 0, 40].forEach(v => ctx.fillText(v, pad.l - 5, Yv(v)));
+    ctx.textAlign = 'left'; ctx.fillText('V (mV)', 4, 10);
+    ctx.fillText('电导', 4, hTop + 12);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    [0, 5, 10, 15, 20, 25].forEach(t => ctx.fillText(t, X(t), h - 16));
+    // 刺激标记
+    ctx.fillStyle = RIG.i; ctx.fillRect(X(2), Yv(-93), X(3) - X(2), 4);
+    drawTrace(ctx, X, Yv, rec.t, rec.V, RIG.v, 2.2);
+    drawTrace(ctx, X, Yg, rec.t, rec.gNa, RIG.na, 1.8);
+    drawTrace(ctx, X, Yg, rec.t, rec.gK, RIG.k, 1.8);
+    ctx.font = '11px "IBM Plex Mono", monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = RIG.na; ctx.fillText('g_Na', X(4.2), Yg(34));
+    ctx.fillStyle = RIG.k; ctx.fillText('g_K', X(11.5), Yg(13));
+    const xc = X(rec.t[idx]);
+    ctx.strokeStyle = '#57D08A'; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(xc, 6); ctx.lineTo(xc, h - 18); ctx.stroke();
+  }
+  scrub.max = N - 1;
+  scrub.addEventListener('input', () => { stopPlay(); setIdx(+scrub.value); });
+  $$('#ap-phases .phase').forEach(p => {
+    p.style.cursor = 'pointer';
+    p.addEventListener('click', () => {
+      stopPlay();
+      const target = [0, b1 + 5, iPeak + 5, b3 + 40][+p.dataset.ph] || 0;
+      scrub.value = target; setIdx(target);
+    });
+  });
+  let playing = false, playRaf = null;
+  const playBtn = $('#ap-play'), led = $('#ap-led');
+  function stopPlay() { playing = false; playBtn.textContent = '▶ 慢放'; led.classList.remove('on'); if (playRaf) cancelAnimationFrame(playRaf); }
+  playBtn.addEventListener('click', () => {
+    if (playing) { stopPlay(); return; }
+    playing = true; playBtn.textContent = '⏸ 暂停'; led.classList.add('on');
+    if (+scrub.value >= N - 2) scrub.value = 0;
+    let last = 0;
+    (function step(now) {
+      if (!playing) return;
+      playRaf = requestAnimationFrame(step);
+      if (now - last < 16) return;
+      last = now;
+      const idx = +scrub.value + N / 640;               // 全程约 10 秒
+      if (idx >= N - 1) { scrub.value = N - 1; setIdx(N - 1); stopPlay(); return; }
+      scrub.value = idx; setIdx(idx);
+    })(0);
+  });
+  setIdx(0);
+  redraws.add(() => setIdx(+scrub.value));
+})();
+</script>
+<script>
+'use strict';
+/* ================= 声音 ================= */
+let AC = null;
+function clicksPlay(times01, dur) {
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    const t0 = AC.currentTime + 0.06;
+    times01.slice(0, 90).forEach(x => {
+      const t = t0 + x * dur;
+      const osc = AC.createOscillator(), g = AC.createGain();
+      osc.type = 'square'; osc.frequency.value = 880;
+      g.gain.setValueAtTime(0.09, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.02);
+      osc.connect(g); g.connect(AC.destination);
+      osc.start(t); osc.stop(t + 0.03);
+    });
+  } catch (e) {}
+}
+
+/* ================= 实验 A · 不应期 ================= */
+(function refract() {
+  const cv = $('#refract-canvas'); if (!cv) return;
+  const gapEl = $('#refract-gap'), gapVal = $('#refract-gap-val'), outcome = $('#refract-outcome');
+  function go() {
+    const gap = +gapEl.value;
+    gapVal.textContent = gap.toFixed(1);
+    const A = 1.8 * hhThresh1ms();
+    const rec = hhRun(55, t => pulseFn(8, 1, A)(t) + pulseFn(8 + gap, 1, A)(t), { every: 5 });
+    const ok = rec.spikes.length >= 2;
+    outcome.textContent = ok ? '第二针：成功' : '第二针：失败';
+    outcome.className = 'outcome ' + (ok ? 'spike' : 'fail');
+    const { ctx, w, h } = fitCanvas(cv);
+    const { X, Y } = rigAxes(ctx, w, h, { l: 44, r: 10, t: 10, b: 30 }, [0, 55], [-95, 55],
+      'ms', 'V (mV)', [0, 10, 20, 30, 40, 50], [-80, -40, 0, 40]);
+    [8, 8 + gap].forEach((t0, i) => {
+      ctx.fillStyle = RIG.i;
+      ctx.beginPath(); ctx.moveTo(X(t0) - 5, h - 30); ctx.lineTo(X(t0) + 5, h - 30); ctx.lineTo(X(t0), h - 38); ctx.fill();
+      ctx.font = '10px "IBM Plex Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText(i === 0 ? '针1' : '针2', X(t0), h - 40);
+    });
+    drawTrace(ctx, X, Y, rec.t, rec.V, RIG.v, 2.2);
+  }
+  gapEl.addEventListener('input', go);
+  $$('[data-gap]').forEach(b => b.addEventListener('click', () => { gapEl.value = b.dataset.gap; go(); }));
+  redraws.add(go);
+  go();
+})();
+
+/* ================= 实验 B · 时间求和 ================= */
+(function summation() {
+  const cv = $('#sum-canvas'); if (!cv) return;
+  const gapEl = $('#sum-gap'), gapVal = $('#sum-gap-val'), outcome = $('#sum-outcome');
+  function go() {
+    const gap = +gapEl.value;
+    gapVal.textContent = gap.toFixed(2);
+    const A = 0.75 * hhThresh1ms();
+    const rec = hhRun(30, t => pulseFn(6, 1, A)(t) + pulseFn(6 + gap, 1, A)(t), { every: 3 });
+    const ok = rec.spikes.length >= 1;
+    outcome.textContent = ok ? '合伙成功：脉冲！' : '各自为战：无脉冲';
+    outcome.className = 'outcome ' + (ok ? 'spike' : 'fail');
+    const { ctx, w, h } = fitCanvas(cv);
+    const { X, Y } = rigAxes(ctx, w, h, { l: 44, r: 10, t: 10, b: 30 }, [0, 30], [-95, 55],
+      'ms', 'V (mV)', [0, 5, 10, 15, 20, 25, 30], [-80, -40, 0, 40]);
+    [6, 6 + gap].forEach(t0 => {
+      ctx.fillStyle = RIG.i;
+      ctx.beginPath(); ctx.moveTo(X(t0) - 5, h - 30); ctx.lineTo(X(t0) + 5, h - 30); ctx.lineTo(X(t0), h - 38); ctx.fill();
+    });
+    ctx.fillStyle = RIG.text; ctx.font = '10.5px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('▲ 两针均为 0.75 × 阈值电流', 50, 14);
+    drawTrace(ctx, X, Y, rec.t, rec.V, RIG.v, 2.2);
+  }
+  gapEl.addEventListener('input', go);
+  $$('[data-sgap]').forEach(b => b.addEventListener('click', () => { gapEl.value = b.dataset.sgap; go(); }));
+  redraws.add(go);
+  go();
+})();
+
+/* ================= 实验 C · f–I 频率编码 ================= */
+(function fiLab() {
+  const trainCv = $('#fi-train-canvas'), fiCv = $('#fi-canvas'); if (!trainCv) return;
+  const slider = $('#fi-i'), ival = $('#fi-i-val'), rateEl = $('#fi-rate');
+  const points = new Map();
+  let lastRun = null, timer = null;
+  function compute(I) {
+    const rec = hhRun(700, () => I, { every: 12 });
+    const sp = rec.spikes.filter(t => t > 200);
+    return { rec, rate: sp.length / 0.5, sp };
+  }
+  function drawTrain() {
+    const { ctx, w, h } = fitCanvas(trainCv);
+    const { X, Y } = rigAxes(ctx, w, h, { l: 44, r: 10, t: 10, b: 28 }, [200, 700], [-95, 55],
+      'ms', 'V', [300, 400, 500, 600, 700], [-80, 0, 40]);
+    if (!lastRun) return;
+    const ts = [], vs = [];
+    for (let i = 0; i < lastRun.rec.t.length; i++) {
+      if (lastRun.rec.t[i] >= 200) { ts.push(lastRun.rec.t[i]); vs.push(lastRun.rec.V[i]); }
+    }
+    drawTrace(ctx, X, Y, ts, vs, RIG.v, 1.6);
+    ctx.strokeStyle = RIG.good; ctx.lineWidth = 2;
+    lastRun.sp.forEach(t => { ctx.beginPath(); ctx.moveTo(X(t), 12); ctx.lineTo(X(t), 22); ctx.stroke(); });
+  }
+  function drawFI() {
+    const { ctx, w, h } = fitCanvas(fiCv);
+    const { X, Y } = rigAxes(ctx, w, h, { l: 46, r: 12, t: 14, b: 34 }, [0, 100], [0, 140],
+      '持续电流 I (µA/cm²)', 'f (Hz)', [0, 20, 40, 60, 80, 100], [0, 50, 100]);
+    const arr = [...points.entries()].sort((a, b) => a[0] - b[0]);
+    ctx.strokeStyle = RIG.dim; ctx.lineWidth = 1.4; ctx.beginPath();
+    arr.forEach(([I, f], i) => { i === 0 ? ctx.moveTo(X(I), Y(f)) : ctx.lineTo(X(I), Y(f)); });
+    if (arr.length > 1) ctx.stroke();
+    ctx.fillStyle = RIG.v;
+    arr.forEach(([I, f]) => { ctx.beginPath(); ctx.arc(X(I), Y(f), 3.6, 0, 7); ctx.fill(); });
+    const blocked = arr.some(([I, f]) => I > 40 && f === 0) && arr.some(([, f]) => f > 60);
+    if (blocked) {
+      ctx.fillStyle = RIG.text; ctx.font = '11.5px "IBM Plex Mono", monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('→ 去极化阻滞：电流太大，反而哑火', X(70), Y(75));
+    }
+    const jumped = arr.some(([, f]) => f > 45) && arr.some(([I, f]) => f === 0 && I > 2);
+    if (jumped) {
+      ctx.fillStyle = RIG.text; ctx.font = '11.5px "IBM Plex Mono", monospace';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.fillText('↑ 跳变起步 (Type II)', X(9), Y(38));
+    }
+  }
+  function runCurrent(playSound) {
+    const I = +slider.value;
+    ival.textContent = I;
+    const r = compute(I);
+    lastRun = { ...r, I };
+    rateEl.textContent = r.rate.toFixed(0) + ' Hz';
+    rateEl.className = 'outcome ' + (r.rate > 0 ? 'spike' : 'idle');
+    drawTrain();
+    if (playSound && $('#fi-sound').checked && r.sp.length) {
+      clicksPlay(r.sp.map(t => (t - 200) / 500), 1.4);
+    }
+  }
+  slider.addEventListener('input', () => {
+    ival.textContent = slider.value;
+    clearTimeout(timer); timer = setTimeout(() => runCurrent(true), 180);
+  });
+  $('#fi-sound').addEventListener('change', () => { if ($('#fi-sound').checked) runCurrent(true); });
+  $('#fi-add').addEventListener('click', () => {
+    if (!lastRun) runCurrent(false);
+    points.set(lastRun.I, lastRun.rate);
+    drawFI();
+  });
+  const sweepBtn = $('#fi-sweep');
+  sweepBtn.addEventListener('click', () => {
+    sweepBtn.disabled = true; sweepBtn.textContent = '扫描中…';
+    const Is = []; for (let I = 0; I <= 100; I += 2.5) Is.push(I);
+    let k = 0;
+    (function chunk() {
+      const until = Math.min(k + 4, Is.length);
+      for (; k < until; k++) points.set(Is[k], compute(Is[k]).rate);
+      drawFI();
+      if (k < Is.length) setTimeout(chunk, 0);
+      else { sweepBtn.disabled = false; sweepBtn.textContent = '自动扫描 0 → 100'; }
+    })();
+  });
+  redraws.add(() => { drawTrain(); drawFI(); });
+  runCurrent(false); drawFI();
+})();
+
+/* ================= 实验 D · 药理（课后） ================= */
+(function pharma() {
+  const cv = $('#pharma-canvas'); if (!cv) return;
+  const vis = visibilityFlag(cv);
+  const s = hhNew();
+  let simT = 0, nextStim = 30;
+  const buf = { t: [], V: [], I: [] };
+  const ttx = $('#btn-ttx'), tea = $('#btn-tea');
+  [ttx, tea].forEach(b => b.addEventListener('click', () => {
+    b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+  }));
+  let lastNow = 0, acc = 0;
+  function Inow(t) { return (t >= nextStim - 1 && t < nextStim) ? 1.8 * hhThresh1ms() : 0; }
+  (function frame(now) {
+    requestAnimationFrame(frame);
+    if (!vis.visible) { lastNow = now; return; }
+    const dtReal = clamp((now - lastNow) / 1000, 0, 0.06);
+    lastNow = now;
+    acc += dtReal * 1000 * 0.05;                        // 1 真实秒 ≈ 50 模拟 ms
+    const bNa = ttx.getAttribute('aria-pressed') === 'true';
+    const bK = tea.getAttribute('aria-pressed') === 'true';
+    while (acc >= HH_DT) {
+      acc -= HH_DT;
+      hhStep(s, Inow(simT), HH_DT, bNa, bK);
+      simT += HH_DT;
+      if (simT > nextStim) nextStim += 80;
+      if (Math.round(simT / HH_DT) % 10 === 0) {
+        buf.t.push(simT); buf.V.push(s.V); buf.I.push(Inow(simT));
+        if (buf.t.length > 1800) { buf.t.shift(); buf.V.shift(); buf.I.shift(); }
+      }
+    }
+    const { ctx, w, h } = fitCanvas(cv);
+    const xr = [simT - 170, simT];
+    const { X, Y } = rigAxes(ctx, w, h, { l: 44, r: 10, t: 10, b: 28 }, xr, [-95, 55],
+      'ms', 'V (mV)', [], [-80, -40, 0, 40]);
+    ctx.fillStyle = RIG.i;
+    for (let i = 1; i < buf.t.length; i++) {
+      if (buf.I[i] > 0 && buf.I[i - 1] === 0 && X(buf.t[i]) > 46) {
+        ctx.beginPath(); ctx.moveTo(X(buf.t[i]) - 4, h - 28); ctx.lineTo(X(buf.t[i]) + 4, h - 28); ctx.lineTo(X(buf.t[i]), h - 36); ctx.fill();
+      }
+    }
+    ctx.save(); ctx.beginPath(); ctx.rect(44, 10, w - 54, h - 38); ctx.clip();
+    const ts = [], vs = [];
+    for (let i = 0; i < buf.t.length; i++) { if (X(buf.t[i]) >= 44) { ts.push(buf.t[i]); vs.push(buf.V[i]); } }
+    drawTrace(ctx, X, Y, ts, vs, RIG.v, 2);
+    ctx.restore();
+    ctx.font = '11px "IBM Plex Mono", monospace'; ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+    ctx.fillStyle = bNa ? '#F0A08C' : RIG.text;
+    if (bNa) ctx.fillText('TTX 生效中：无 Na⁺，点不了火', w - 14, 14);
+    ctx.fillStyle = bK ? '#8FBCE8' : RIG.text;
+    if (bK && !bNa) ctx.fillText('TEA 生效中：无 K⁺，灭不了火', w - 14, bNa ? 30 : 14);
+  })(0);
+})();
+
+/* ================= 第6节 · LIF 实验台 ================= */
+function lifRun(P, Ifn, T, dt) {
+  T = T || 300; dt = dt || 0.1;
+  let V = P.EL, tLast = -1e9;
+  const ts = [], Vs = [], Is = [], sp = [];
+  for (let t = 0; t < T; t += dt) {
+    const I = Ifn(t);
+    if (t - tLast < P.tref) { V = P.Vr; }
+    else {
+      V += dt * (-(V - P.EL) + P.R * I) / P.tau;
+      if (V >= P.th) { sp.push(t); V = P.Vr; tLast = t; }
+    }
+    ts.push(t); Vs.push(V); Is.push(I);
+  }
+  return { ts, Vs, Is, sp };
+}
+const lifParams = () => ({
+  tau: clamp(+$('#p-tau').value || 20, 0.5, 10000),
+  EL: clamp(+$('#p-el').value || -70, -100, -40),
+  R: clamp(+$('#p-r').value || 10, 0.1, 1000),
+  th: clamp(+$('#p-theta').value || -50, -80, 20),
+  Vr: clamp(+$('#p-vreset').value || -65, -100, -40),
+  tref: clamp(+$('#p-tref').value || 4, 0, 100)
+});
+(function lifLab() {
+  const cv = $('#lif-canvas'); if (!cv) return;
+  let mode = 'const';
+  const I0 = () => +$('#code-i').value;
+  function Ifn(t) {
+    const a = I0();
+    if (mode === 'const') return t > 20 ? a : 0;
+    if (mode === 'pulses') { const A = 3.2 * a; return ((t >= 40 && t < 43) || (t >= 52 && t < 55)) ? A : 0; }
+    if (mode === 'noise') return t > 20 ? Math.max(0, a * (1 + 1.1 * (Math.random() * 2 - 1))) : 0;
+    if (mode === 'sine') return t > 20 ? a * (1 + Math.sin(2 * Math.PI * (t - 20) / 80)) : 0;
+    return 0;
+  }
+  function drawResult(ts, Vs, sp, Is, P) {
+    const { ctx, w, h } = fitCanvas(cv);
+    ctx.fillStyle = RIG.bg; ctx.fillRect(0, 0, w, h);
+    const pad = { l: 46, r: 10 };
+    const T = ts.length ? ts[ts.length - 1] : 300;
+    const X = t => pad.l + t / T * (w - pad.l - pad.r);
+    const hRaster = 26, hI = 44, hV = h - hRaster - hI - 30;
+    const Yv = v => hRaster + 6 + (1 - (v + 90) / 55) * (hV - 10);
+    const maxI = Math.max(4, ...Is);
+    const Yi = v => h - 24 - (v / maxI) * (hI - 10);
+    ctx.strokeStyle = RIG.grid; ctx.lineWidth = 1; ctx.beginPath();
+    [-80, -70, -60, -50].forEach(v => { ctx.moveTo(pad.l, Yv(v)); ctx.lineTo(w - pad.r, Yv(v)); });
+    ctx.stroke();
+    ctx.fillStyle = RIG.text; ctx.font = '10.5px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    [-80, -70, -60, -50].forEach(v => ctx.fillText(v, pad.l - 5, Yv(v)));
+    ctx.textAlign = 'left';
+    ctx.fillText('脉冲', 4, hRaster - 8);
+    ctx.fillText('V (mV)', 4, hRaster + 16);
+    ctx.fillText('I(t)', 4, h - 40);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    [0, T / 3, 2 * T / 3, T].forEach(t => ctx.fillText(Math.round(t), X(t), h - 16));
+    // 阈值虚线
+    if (P) {
+      ctx.strokeStyle = RIG.na; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.moveTo(pad.l, Yv(P.th)); ctx.lineTo(w - pad.r, Yv(P.th)); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = RIG.na; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+      ctx.fillText('θ', pad.l + 4, Yv(P.th) - 2);
+    }
+    drawTrace(ctx, X, Yv, ts, Vs.map(v => clamp(v, -90, -35)), RIG.v, 1.8);
+    ctx.strokeStyle = RIG.good; ctx.lineWidth = 2;
+    sp.forEach(t => { ctx.beginPath(); ctx.moveTo(X(t), 8); ctx.lineTo(X(t), 8 + hRaster - 12); ctx.stroke(); });
+    drawTrace(ctx, X, Yi, ts, Is, RIG.i, 1.4);
+    const rate = ts.length ? (sp.length / (ts[ts.length - 1] / 1000)) : 0;
+    $('#lif-stats').textContent = sp.length + ' 个脉冲 · 平均 ' + rate.toFixed(1) + ' Hz';
+    $('#lif-stats').className = 'outcome ' + (sp.length ? 'spike' : 'idle');
+  }
+  let timer = null;
+  function rerun() {
+    const P = lifParams();
+    const r = lifRun(P, Ifn);
+    drawResult(r.ts, r.Vs, r.sp, r.Is, P);
+  }
+  window.__lifRerun = rerun;                            // 供拟合图使用参数一致性提示
+  $$('.cnum').forEach(inp => {
+    inp.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(rerun, 200); });
+    inp.addEventListener('focus', () => inp.select());
+  });
+  $('#code-i').addEventListener('input', () => {
+    $('#code-i-val').textContent = (+$('#code-i').value).toFixed(1);
+    clearTimeout(timer); timer = setTimeout(rerun, 120);
+  });
+  $$('#code-inputs .mini').forEach(b => b.addEventListener('click', () => {
+    mode = b.dataset.inp;
+    $$('#code-inputs .mini').forEach(x => x.classList.toggle('on', x === b));
+    rerun();
+  }));
+  /* 自由编辑模式 */
+  let EVAL_OK = true;
+  try { new Function('return 1')(); } catch (e) { EVAL_OK = false; }
+  const freeBtn = $('#code-free-btn'), freeRow = $('#code-free-row'), ta = $('#code-free'), msg = $('#code-msg');
+  const TEMPLATE = [
+    '// 整段随便改。跑完记得调用 plot(ts, Vs, spikes, Is) 画图。',
+    'const dt = 0.1, T = 300;',
+    'const tau = 20, E_L = -70, R = 10;',
+    'const theta = -50, Vreset = -65, t_ref = 4;',
+    'function I(t) { return t > 20 ? 2.5 : 0; }   // 换成你想要的输入',
+    '',
+    'let V = E_L, tLast = -1e9;',
+    'const ts = [], Vs = [], Is = [], spikes = [];',
+    'for (let t = 0; t < T; t += dt) {',
+    '  if (t - tLast < t_ref) { V = Vreset; }',
+    '  else {',
+    '    V += dt * ( -(V - E_L) + R * I(t) ) / tau;',
+    '    if (V >= theta) { spikes.push(t); V = Vreset; tLast = t; }',
+    '  }',
+    '  ts.push(t); Vs.push(V); Is.push(I(t));',
+    '}',
+    'plot(ts, Vs, spikes, Is);'
+  ].join('\n');
+  freeBtn.addEventListener('click', () => {
+    if (!EVAL_OK) {
+      freeBtn.textContent = '此环境禁止动态执行代码';
+      freeBtn.disabled = true;
+      msg.textContent = '（安全策略所限。改黄色数字同样是在改这份真实运行的程序。）';
+      return;
+    }
+    freeRow.hidden = !freeRow.hidden;
+    if (!freeRow.hidden && !ta.value) ta.value = TEMPLATE;
+  });
+  $('#code-run').addEventListener('click', () => {
+    msg.textContent = ''; msg.className = 'run-msg';
+    try {
+      const fn = new Function('plot', ta.value);
+      let called = false;
+      fn((ts, Vs, sp, Is) => { called = true; drawResult(ts, Vs, sp || [], Is || ts.map(() => 0), null); });
+      msg.textContent = called ? '✓ 运行完成' : '代码跑完了，但没有调用 plot(...)';
+    } catch (e) {
+      msg.textContent = '✗ ' + e.message; msg.className = 'run-msg err';
+    }
+  });
+  rerun();
+  redraws.add(rerun);
+})();
+
+/* ================= 第6节 · f–I 拟合 ================= */
+(function fitChart() {
+  const cv = $('#fit-canvas'); if (!cv) return;
+  let pts = [];                                         // {I, f}
+  let x0 = 1.1, k = 14;
+  const X2 = 5.6;                                       // 斜率手柄固定横坐标
+  const relu = I => Math.max(0, k * (I - x0));
+  function draw() {
+    const { ctx, w, h } = fitCanvas(cv);
+    const C = chartColors();
+    ctx.clearRect(0, 0, w, h);
+    const pad = { l: 50, r: 16, t: 16, b: 40 };
+    const X = i => pad.l + i / 6 * (w - pad.l - pad.r);
+    const Y = f => h - pad.b - clamp(f, 0, 125) / 125 * (h - pad.t - pad.b);
+    ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.beginPath();
+    [0, 25, 50, 75, 100, 125].forEach(f => { ctx.moveTo(pad.l, Y(f)); ctx.lineTo(w - pad.r, Y(f)); });
+    [0, 1, 2, 3, 4, 5, 6].forEach(i => { ctx.moveTo(X(i), pad.t); ctx.lineTo(X(i), h - pad.b); });
+    ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.font = '11px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    [0, 50, 100].forEach(f => ctx.fillText(f, pad.l - 6, Y(f)));
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    [0, 1, 2, 3, 4, 5, 6].forEach(i => ctx.fillText(i, X(i), h - pad.b + 6));
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    ctx.fillText('输入电流 I →', w - pad.r, h - 4);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('f (Hz)', 6, 2);
+    if (!pts.length) {
+      ctx.fillStyle = C.muted; ctx.font = '13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('先点下面的「扫描」按钮，测出你的 f–I 数据点', (pad.l + w - pad.r) / 2, h / 2 - 10);
+    }
+    if ($('#fit-softplus').checked) {
+      ctx.strokeStyle = C.ref; ctx.setLineDash([5, 5]); ctx.lineWidth = 1.8; ctx.beginPath();
+      const sSm = 0.4;
+      for (let px = 0; px <= 120; px++) {
+        const I = px / 20;
+        const f = k * sSm * Math.log(1 + Math.exp((I - x0) / sSm));
+        px === 0 ? ctx.moveTo(X(I), Y(f)) : ctx.lineTo(X(I), Y(f));
+      }
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    // ReLU
+    ctx.strokeStyle = C.accent; ctx.lineWidth = 2.5; ctx.beginPath();
+    ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(clamp(x0, 0, 6)), Y(0)); ctx.lineTo(X(6), Y(relu(6))); ctx.stroke();
+    // 数据点
+    ctx.fillStyle = C.v;
+    pts.forEach(p => { ctx.beginPath(); ctx.arc(X(p.I), Y(p.f), 3.6, 0, 7); ctx.fill(); });
+    // 手柄
+    const hs = [[x0, 0, '拐点'], [X2, relu(X2), '斜率']];
+    hs.forEach(([hx, hy, lb]) => {
+      ctx.beginPath(); ctx.arc(X(hx), Y(hy), 8, 0, 7);
+      ctx.fillStyle = C.surface; ctx.fill();
+      ctx.lineWidth = 2.5; ctx.strokeStyle = C.accent; ctx.stroke();
+      ctx.fillStyle = C.muted; ctx.font = '10.5px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(lb, X(hx), Y(hy) + 11);
+    });
+    // RMSE
+    const el = $('#fit-rmse');
+    if (pts.length) {
+      const rmse = Math.sqrt(pts.reduce((a, p) => a + (relu(p.I) - p.f) ** 2, 0) / pts.length);
+      el.textContent = '拟合误差 ' + rmse.toFixed(1) + ' Hz' + (rmse < 5 ? ' ✓ 达标' : '');
+      el.style.color = rmse < 5 ? cssVar('--good') : '';
+    }
+    return { X, Y };
+  }
+  let axes = draw();
+  const sweepBtn = $('#fit-sweep');
+  sweepBtn.addEventListener('click', () => {
+    sweepBtn.disabled = true; sweepBtn.textContent = '扫描中…';
+    const P = lifParams();
+    pts = [];
+    let I = 0;
+    (function chunk() {
+      for (let c = 0; c < 5 && I <= 6.001; c++, I += 0.25) {
+        const r = lifRun(P, () => I, 1100, 0.1);
+        pts.push({ I, f: r.sp.filter(t => t > 100).length / 1.0 });
+      }
+      axes = draw();
+      if (I <= 6.001) setTimeout(chunk, 0);
+      else { sweepBtn.disabled = false; sweepBtn.textContent = '扫描：用当前 LIF 参数测 f–I'; }
+    })();
+  });
+  $('#fit-softplus').addEventListener('change', () => { axes = draw(); });
+  let dragging = null;
+  const pos = e => {
+    const r = cv.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  };
+  cv.addEventListener('pointerdown', e => {
+    if (!axes) return;
+    const { x, y } = pos(e);
+    const d1 = Math.hypot(x - axes.X(x0), y - axes.Y(0));
+    const d2 = Math.hypot(x - axes.X(X2), y - axes.Y(relu(X2)));
+    if (Math.min(d1, d2) < 20) {
+      dragging = d1 < d2 ? 'x0' : 'k';
+      cv.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    }
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!dragging || !axes) return;
+    const { x, y } = pos(e);
+    const rect = cv.getBoundingClientRect();
+    const Iat = clamp((x - 50) / (rect.width - 66) * 6, 0, 6);
+    const fat = clamp((rect.height - 40 - y) / (rect.height - 56) * 125, 0, 125);
+    if (dragging === 'x0') x0 = clamp(Iat, 0, 5);
+    else k = clamp(fat / Math.max(0.3, X2 - x0), 0.5, 80);
+    axes = draw();
+  });
+  ['pointerup', 'pointercancel'].forEach(ev => cv.addEventListener(ev, () => { dragging = null; }));
+  cv.style.touchAction = 'none';
+  redraws.add(() => { axes = draw(); });
+})();
+</script>
