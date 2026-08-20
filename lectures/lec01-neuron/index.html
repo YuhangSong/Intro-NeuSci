@@ -671,7 +671,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
   <div class="rail-course">神经科学导论</div>
   <div class="rail-lec">第一讲<br>神经元如何计算</div>
   <div class="rail-group">第一课时 · 真实的神经元</div>
-  <a href="#s0" data-sec="s0">开场 · 二十瓦的机器</a>
+  <a href="#s0" data-sec="s0">引言 · 二十瓦的机器</a>
   <a href="#s1" data-sec="s1">1 · 为什么要回头看大脑</a>
   <a href="#s2" data-sec="s2">2 · 认识神经元</a>
   <a href="#s3" data-sec="s3">3 · 电从哪里来</a>
@@ -696,9 +696,9 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
 <main>
 
 <!-- ============ 封面 ============ -->
-<section class="scene cover" id="s0" data-title="开场 · 二十瓦的机器">
+<section class="scene cover" id="s0" data-title="引言 · 二十瓦的机器">
   <div class="wrap">
-    <div class="c-course">神经科学导论 · 南京大学人工智能学院 · 第一讲 · 开场约 10 分钟</div>
+    <div class="c-course">神经科学导论 · 南京大学人工智能学院 · 第一讲</div>
     <h1>神经元如何计算</h1>
     <p class="c-sub">从离子到脉冲，再到人工神经元</p>
     <div class="cover-spark" aria-hidden="true"><canvas id="cover-canvas" height="120"></canvas></div>
@@ -735,23 +735,23 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
     </div>
 
     <div class="chart-card" style="max-width:720px">
-      <div class="chart-title">开场悬念 · 一条曲线的两个身份</div>
+      <div class="chart-title">一条曲线的两个身份</div>
       <canvas id="mystery-fi" height="300"></canvas>
       <div class="legend">
         <span class="li"><span class="sw" style="background:var(--c-v)"></span>一个皮层神经元的「输入电流 → 输出频率」（由本页的神经元模型生成，加了点噪声）</span>
         <span class="li"><span class="sw" style="background:var(--c-ref)"></span>你天天在用的 ReLU</span>
       </div>
-      <p class="note" style="margin-bottom:0">紫色的点来自神经元模型——形状与电生理学家在真实细胞上反复测到的一致；灰色的折线来自深度学习。它们为什么长得像？——先记下这个问题。<strong>100 分钟后，这张图上的每一个数据点，都会由你亲手测出来。</strong></p>
+      <p class="note" style="margin-bottom:0">紫色的点来自神经元模型——形状与电生理学家在真实细胞上反复测到的一致；灰色的折线来自深度学习。它们为什么长得像？——先记下这个问题。<strong>下课前，这张图上的每一个数据点，都会由你亲手测出来。</strong></p>
     </div>
 
-    <p style="max-width:60ch">最后说清楚这门课和高中生物的关系：你在高中见过「静息电位」「动作电位」「Na⁺ 内流」——<strong>那些是现象的名字</strong>。今天你会得到高中没给过的东西：<strong>机制、方程，和一段 15 行、你可以亲手改坏再改好的代码</strong>。</p>
+    <p style="max-width:60ch">这门课和高中生物的关系也说在前面：你在高中见过「静息电位」「动作电位」「Na⁺ 内流」——<strong>那些是现象的名字</strong>。今天你会得到高中没给过的东西：<strong>机制、方程，和一段 15 行、可以亲手改坏再改好的代码</strong>。</p>
   </div>
 </section>
 
 <!-- ============ 1 · 为什么要回头看大脑 ============ -->
 <section class="scene" id="s1" data-title="1 · 为什么要回头看大脑">
   <div class="wrap wide">
-    <div class="kicker">第 1 节 <span class="k-time">第一课时 · 约 3 分钟</span></div>
+    <div class="kicker">第 1 节 <span class="k-time">第一课时</span></div>
     <h2>为什么做 AI 的人要回头看大脑</h2>
     <p class="lede">不是情怀。人工智能历史上几乎每一次架构级的跃迁，上游都有一个神经科学的发现。下面这张图是<strong>整门课的地图</strong>——今天只讲它的第一格：单个神经元。</p>
 
@@ -792,14 +792,14 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
     </div>
     <p class="note">点击任意事件卡片可展开细节。箭头表示思想的流向：神经科学 → AI，或反向。</p>
 
-    <p style="margin-top:2em">课堂上只讲两个故事就够了：<strong>Hubel &amp; Wiesel 的猫 → 卷积网络</strong>；<strong>多巴胺神经元 ⇄ TD 误差</strong>（理论先行了九年，然后被生物学证实——两个学科对上了暗号）。其余节点留给你课后点开。</p>
+    <p style="margin-top:2em">这条线上有两个故事特别值得展开：<strong>Hubel &amp; Wiesel 的猫 → 卷积网络</strong>；<strong>多巴胺神经元 ⇄ TD 误差</strong>——后者理论先行了九年，然后被生物学证实，两个学科对上了暗号。其余节点，课后自己点开看。</p>
     <p>注意反复出现的模式：<strong>神经科学提供「原理性发现」，AI 把它变成「可扩展的算法」</strong>；而最近十年，箭头第一次掉头向上。这门课接下来的每一讲，都对应地图上的一个节点。今天，回到一切的起点——<strong>单个神经元</strong>。</p>
   </div>
 </section>
 <!-- ============ 2 · 认识神经元 ============ -->
 <section class="scene" id="s2" data-title="2 · 认识神经元">
   <div class="wrap wide">
-    <div class="kicker">第 2 节 <span class="k-time">第一课时 · 约 10 分钟</span></div>
+    <div class="kicker">第 2 节 <span class="k-time">第一课时</span></div>
     <h2>认识神经元：你其实见过它的漫画版</h2>
     <p class="lede">你写过 <code style="font-family:var(--mono);font-size:.9em">y = φ(Σ wᵢxᵢ + b)</code>。这行代码的每个零件，都是从下面这个细胞身上抄来的——问题是：<strong>哪个零件对应哪个部位？</strong></p>
 
@@ -883,7 +883,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
 <!-- ============ 3 · 电从哪里来 ============ -->
 <section class="scene" id="s3" data-title="3 · 电从哪里来">
   <div class="wrap">
-    <div class="kicker">第 3 节 <span class="k-time">第一课时 · 约 10 分钟</span></div>
+    <div class="kicker">第 3 节 <span class="k-time">第一课时</span></div>
     <h2>电从哪里来：一场拔河</h2>
     <p class="lede">神经元是一块被「浓度差」充上电的电池。先用一张表看电池怎么充，再用一个你认识的公式看电压落在哪里。</p>
 
@@ -904,7 +904,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
         <div class="p-title">谁来维持浓度差？</div>
         <p style="margin-top:0;font-size:.95rem">钠钾泵<span class="term">Na⁺/K⁺-ATPase</span> 日夜不停：每消耗 1 个 ATP，泵出 3 个 Na⁺、泵进 2 个 K⁺。</p>
         <p style="font-size:.95rem"><strong>记一句话：泵负责充电池（烧 ATP），通道的开与关决定电压落在哪里。</strong></p>
-        <p class="small">伏笔：维持离子梯度是大脑最大的一笔电费——第 8 节我们用它回答开场的「为什么只要 20 瓦」。</p>
+        <p class="small">维持离子梯度是大脑最大的一笔电费。这句话先记下——最后一节用它回答开头的「为什么只要 20 瓦」。</p>
       </div>
     </div>
 
@@ -937,10 +937,9 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
         <button data-i="2">停在两个平衡电位的正中间附近</button>
       </div>
       <div class="p-reveal">用上面的拔河模拟验证：点「Na⁺ 门全开」。膜电位瞬间冲向 +50 mV 以上。<strong>记住这个动作——它就是动作电位的上升支。</strong>下一节，你会看到细胞亲自表演这一手。</div>
-      <div class="p-hint">课堂：先举手表决，再拖滑杆揭晓。</div>
     </div>
 
-    <div class="gained">✓ 已测得论点零件 <span class="g-eq">E_L（泄漏平衡点）</span>：没有输入时，膜电位总被拔河拽回这里</div>
+    <div class="gained">✓ 已测得 <span class="g-eq">E_L（泄漏平衡点）</span>：没有输入时，膜电位总被拔河拽回这里</div>
 
     <details class="deep">
       <summary>想深入？平衡电位是算出来的：Nernst 方程</summary>
@@ -963,10 +962,10 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
 <!-- ============ 4 · 动作电位 ============ -->
 <section class="scene" id="s4" data-title="4 · 动作电位的诞生">
   <div class="wrap wide">
-    <div class="kicker">第 4 节 <span class="k-time">第一课时 · 约 15 分钟</span></div>
+    <div class="kicker">第 4 节 <span class="k-time">第一课时</span></div>
     <h2>动作电位：把电极插进去，亲手找阈值</h2>
     <p class="lede">下面是一台虚拟电流钳<span class="term">current clamp</span>：注入电流，记录电压。它背后跑的不是动画，而是 Hodgkin 与 Huxley 1952 年写下的那组方程，实时数值求解——和拿了诺贝尔奖的是同一套数学。</p>
-    <p class="note">两点交代：① 体内的神经元接收的是上万路突触的脉冲轰击；实验室里我们用微电极直接注入电流方波——这是电生理学一百年来的标准抽象，本讲全程沿用。② 从这里起换了动物：仪器跑的是 6.3 ℃ 枪乌贼（鱿鱼）巨轴突的经典参数——静息约 −65 mV、E<sub>Na</sub>=+50、E<sub>K</sub>=−77，和上一节 37 ℃ 哺乳动物的数字不同。浓度和温度一变，电池电压就变——这正是 Nernst 方程的用途。</p>
+    <p class="note">体内的神经元接收的是上万路突触的脉冲轰击；实验室里用微电极直接注入电流方波——这是电生理学一百年来的标准做法，本讲沿用。另外注意，从这里起换了动物：仪器跑的是 6.3 ℃ 枪乌贼（鱿鱼）巨轴突的经典参数（静息约 −65 mV、E<sub>Na</sub>=+50、E<sub>K</sub>=−77），和上一节 37 ℃ 哺乳动物的数字不同——浓度和温度一变，电池电压就变，这正是 Nernst 方程说的事。</p>
 
     <div class="rig" id="rig-hh">
       <div class="rig-head">
@@ -1002,7 +1001,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
       </div>
     </div>
 
-    <div class="task"><span class="task-tag">目标任务</span><span><strong>阈值狩猎：</strong>用尽量少的尝试，找出能触发脉冲的<strong>最小</strong>电流幅度，精确到 0.5 µA/cm²。提示：像调超参数一样做二分搜索。找到后把这个数字记在纸上——第 6 节它会以「死区边界」的身份重新登场。</span></div>
+    <div class="task"><span class="task-tag">目标任务</span><span><strong>阈值狩猎：</strong>用尽量少的尝试，找出能触发脉冲的<strong>最小</strong>电流幅度，精确到 0.5 µA/cm²。提示：像调超参数一样做二分搜索。把找到的数字记下来——第 6 节还要用它。</span></div>
 
     <div class="predict" data-predict="p-allornone" data-answer="1">
       <div class="pq"><span class="p-tag">先投票</span>你已经找到了「刚好能触发」的电流。现在把电流<strong>加倍</strong>——脉冲的<strong>高度</strong>会怎样？</div>
@@ -1012,7 +1011,6 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
         <button data-i="2">反而变矮——通道来不及开</button>
       </div>
       <div class="p-reveal"><strong>全或无</strong><span class="term">all-or-none</span>：只要过了阈值，脉冲的形状就几乎与输入无关。去上面把 5 和 15 各注入几次，然后看下面这台「波形对齐仪」——你触发过的所有脉冲，被按峰值对齐叠放在一起。</div>
-      <div class="p-hint">课堂：先举手表决，再动手揭晓。</div>
     </div>
 
     <div class="rig">
@@ -1024,29 +1022,29 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
     </div>
     <p>不同强度的输入，产出<strong>同一个波形</strong>。这意味着一件对做 AI 的你极其重要的事：<strong>脉冲的形状不携带信息。信息只藏在「发不发」和「何时发」里。</strong>神经元的输出不是模拟量，是事件。<span class="mlb"><span class="b">脉冲</span><span class="arr">⇄</span><span class="m">事件驱动的 1-bit 输出</span></span></p>
 
-    <p class="note">诚实脚注：如果你把滑杆调得足够细，会发现阈值附近有一个极窄的窗口，响应介于「有」和「无」之间——阈值其实是一个动力学现象，不是硬件开关。发现了这一点？你已经比大多数教科书插图更懂它了。另外，严格说你测到的是<strong>电流</strong>阈值；它是<strong>电压</strong>阈值 θ 透过膜电阻的投影（I<sub>min</sub> ≈ (θ−V<sub>rest</sub>)/R）——第 6 节装配方程时用的是电压版。</p>
+    <p class="note">脚注：如果你把滑杆调得足够细，会发现阈值附近有一个极窄的窗口，响应介于「有」和「无」之间——阈值其实是一个动力学现象，不是硬件开关。发现了这一点？你已经比大多数教科书插图更懂它了。另外，严格说你测到的是<strong>电流</strong>阈值；它是<strong>电压</strong>阈值 θ 透过膜电阻的投影（I<sub>min</sub> ≈ (θ−V<sub>rest</sub>)/R）——第 6 节装配方程时用的是电压版。</p>
 
-    <div class="gained">✓ 已测得论点零件 <span class="g-eq">θ（阈值）</span>：低于它，没动静；高于它，满额脉冲</div>
+    <div class="gained">✓ 已测得 <span class="g-eq">θ（阈值）</span>：低于它，没动静；高于它，满额脉冲</div>
   </div>
 </section>
 
 <!-- ============ 课间 ============ -->
 <section class="scene interlude" id="break" data-title="课间">
   <div class="wrap">
-    <div class="i-mark">第一课时完 · 课间 10 分钟</div>
-    <div class="i-text">悬念：为什么是全或无？<br>细胞里到底藏着一个什么样的开关？</div>
+    <div class="i-mark">第一课时完 · 课间休息</div>
+    <div class="i-text">课间想一想：为什么是全或无？<br>细胞里到底藏着一个什么样的开关？</div>
     <p class="small" style="margin-top:14px">你已亲手测出：拔河的平衡点 E<sub>L</sub>、阈值 θ。答案在引擎盖下面——回来就掀开它。</p>
   </div>
 </section>
 <!-- ============ 5 · 引擎盖之下 · 实验室 ============ -->
 <section class="scene" id="s5" data-title="5 · 引擎盖之下 · 实验室">
   <div class="wrap wide">
-    <div class="kicker">第 5 节 <span class="k-time">第二课时 · 约 20 分钟</span></div>
+    <div class="kicker">第 5 节 <span class="k-time">第二课时</span></div>
     <h2>掀开引擎盖，然后做实验</h2>
     <p class="lede">课间悬着的问题：细胞里藏着什么开关？答案是两种带「门」的蛋白质通道。掀开引擎盖之前，先认一个数学上的老朋友——你会发现门的方程你早就写过。</p>
 
     <div class="panel" style="margin:1.8em 0">
-      <div class="p-title">数学热身 · 30 秒</div>
+      <div class="p-title">数学热身</div>
       <div class="eq" style="font-size:1.15rem"><span class="frac"><span class="num">d<i>x</i></span><span class="den">d<i>t</i></span></span> = <span class="frac"><span class="num"><i>x</i><sub>∞</sub> − <i>x</i></span><span class="den"><i>τ</i></span></span> <span style="color:var(--muted);margin-left:1.2em">离散化后：</span> <i>x</i> ← <i>x</i> + <span class="frac"><span class="num">Δ<i>t</i></span><span class="den"><i>τ</i></span></span>(<i>x</i><sub>∞</sub> − <i>x</i>)</div>
       <p style="margin:.4em 0 0"><strong>这就是指数滑动平均。</strong>你在优化器的动量里、在 BatchNorm 的 running mean 里、在 RNN 的门控里写过它无数次：变量 x 以时间常数 τ 追赶目标值 x<sub>∞</sub>。<span class="mlb"><span class="b">门控动力学</span><span class="arr">⇄</span><span class="m">EMA / 一阶低通</span></span></p>
       <p class="small" style="margin-bottom:0">Hodgkin–Huxley 方程里所有的「门」都服从这一个方程——只是目标值 x<sub>∞</sub> 和快慢 τ 会随电压变化。整个引擎盖下面，没有比这更难的数学。</p>
@@ -1092,7 +1090,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
 
     <p>看明白开关了吗？<strong>全或无的秘密是一个正反馈：</strong>电压升 → m 门开 → Na⁺ 涌入 → 电压更高 → m 门开得更大……一旦点火就刹不住车，必然冲到顶。<strong>而收尾靠两个慢动作</strong>：h 闸落下（Na⁺ 断流）、n 门打开（K⁺ 拔河队增援）——把电位拽回去，甚至矫枉过正（超极化）。快门点火、慢门灭火，<strong>时间尺度分离</strong>是整台发动机的设计原理。</p>
 
-    <h3>四个实验（课上三个，最后一个课后做）</h3>
+    <h3>四个实验</h3>
 
     <!-- 实验 A · 不应期 -->
     <div class="rig" id="rig-refract">
@@ -1121,11 +1119,11 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
           </div>
           <span class="outcome idle" id="refract-outcome">—</span>
         </div>
-        <div class="chip-note" style="margin-top:10px">目标：找出第二针能成功的<strong>最小间隔</strong>，精确到 0.5 ms，把它记下来。<br>通关判据：你应该观察到——间隔大时两个满额脉冲；间隔太小时第二针只激起一个小水花。（本仪器两针幅度固定为阈值的 1.8 倍。想验证「相对不应期里加大电流能提前成功、绝对不应期里给多大都没用」？回到第 4 节的电流钳自己试。）</div>
+        <div class="chip-note" style="margin-top:10px">目标：找出第二针能成功的<strong>最小间隔</strong>，精确到 0.5 ms，把它记下来。<br>你应该看到：间隔大时两个满额脉冲；间隔太小时第二针只激起一个小水花。（本仪器两针幅度固定为阈值的 1.8 倍。想验证「相对不应期里加大电流能提前成功、绝对不应期里给多大都没用」？回到第 4 节的电流钳自己试。）</div>
       </div>
     </div>
     <p>不应期给了脉冲三样东西：<strong>离散性</strong>（两个脉冲永远不会糊在一起）、<strong>频率上限</strong>（间隔 ≳ 几毫秒 → 最高几百 Hz）、<strong>单向传播</strong>（脉冲身后是一片不应之地，回不了头）。<span class="mlb"><span class="b">不应期</span><span class="arr">⇄</span><span class="m">发放后的强制静默 / 重置</span></span></p>
-    <div class="gained">✓ 已测得论点零件 <span class="g-eq">重置 + 静默（不应期）</span></div>
+    <div class="gained">✓ 已测得 <span class="g-eq">重置 + 静默（不应期）</span></div>
 
     <!-- 实验 B · 时间求和 -->
     <div class="rig" id="rig-sum">
@@ -1154,11 +1152,11 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
           </div>
           <span class="outcome idle" id="sum-outcome">—</span>
         </div>
-        <div class="chip-note" style="margin-top:10px">目标：找出还能触发脉冲的<strong>最大间隔</strong>。这个毫秒数就是神经元「记得住上一个输入」的时间窗——膜时间常数 τ 的量级。<br>通关判据：间隔小 → 第二针踩着第一针的肩膀过阈；间隔大 → 两个孤零零的小鼓包，谁也过不了线。<br>你会发现这条枪乌贼轴突的记性短得惊人（τ ≈ 2 ms）——皮层神经元的 τ 通常有 10–30 ms，第 6 节的 LIF 用的就是 20 ms。</div>
+        <div class="chip-note" style="margin-top:10px">目标：找出还能触发脉冲的<strong>最大间隔</strong>。这个毫秒数就是神经元「记得住上一个输入」的时间窗——膜时间常数 τ 的量级。<br>你应该看到：间隔小时，第二针踩着第一针的肩膀过阈；间隔大时，两个孤零零的小鼓包谁也过不了线。<br>你会发现这条枪乌贼轴突的记性短得惊人（τ ≈ 2 ms）——皮层神经元的 τ 通常有 10–30 ms，第 6 节的 LIF 用的就是 20 ms。</div>
       </div>
     </div>
     <p>泄漏不是缺陷，是<strong>遗忘的机制</strong>：它让神经元只对「短时间窗内凑齐的证据」发言，天然过滤掉稀稀拉拉的噪声。<span class="mlb"><span class="b">泄漏</span><span class="arr">⇄</span><span class="m">EMA 的衰减因子 / 遗忘门</span></span></p>
-    <div class="gained">✓ 已测得论点零件 <span class="g-eq">τ（积分时间窗）</span>：泄漏的速度，也是证据的保质期</div>
+    <div class="gained">✓ 已测得 <span class="g-eq">τ（积分时间窗）</span>：泄漏的速度，也是证据的保质期</div>
 
     <!-- 实验 C · f-I -->
     <div class="rig" id="rig-fi">
@@ -1193,7 +1191,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
         </div>
       </div>
     </div>
-    <div class="gained">✓ 已测得论点零件 <span class="g-eq">f–I（输入 → 输出频率关系）</span>：封面悬念里「点」的那一半，你刚亲手测完</div>
+    <div class="gained">✓ 已测得 <span class="g-eq">f–I（输入 → 输出频率关系）</span>：封面那张图里「点」的那一半，你刚亲手测完</div>
 
     <!-- 实验 D · 药理（课后） -->
     <div class="rig homework" id="rig-pharma">
@@ -1226,7 +1224,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
 <!-- ============ 6 · 抽象的艺术：LIF ============ -->
 <section class="scene" id="s6" data-title="6 · 抽象的艺术：LIF">
   <div class="wrap wide">
-    <div class="kicker">第 6 节 <span class="k-time">第二课时 · 约 15 分钟</span></div>
+    <div class="kicker">第 6 节 <span class="k-time">第二课时</span></div>
     <h2>抽象的艺术：四维方程，一维骨架</h2>
     <p class="lede">HH 方程有四个变量（V、m、h、n），精确但昂贵。现在做一件 AI 工程师最擅长的事：<strong>有原则地扔东西</strong>。扔完剩下的，就是你两节课以来一直在测量的那个模型。</p>
 
@@ -1354,7 +1352,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
     <p class="note">单位说明：LIF 是「点模型」，输入电流的单位是 nA——与 HH 仪器的膜面电流密度（µA/cm²）不能直接比数值。另外这里的 R、I 取了便于读数的玩具量纲；真实皮层神经元的输入电阻约再大一个数量级（100–300 MΩ）、阈值电流约再小一个数量级（0.05–0.3 nA）。</p>
     <div class="task"><span class="task-tag">代码任务 ③</span><span><strong>拉长记忆：</strong>输入切到「双亚阈值脉冲」（两针间隔固定 12 ms），确认求和失败；然后把 τ 改成 40，<strong>同时</strong>把 R 改成 20，重跑。判据：同样的两针，求和成功。为什么要同时改 R？因为电容 C = τ/R——只改 τ 等于偷偷换了细胞的电容，两针各自的冲高也会变矮。保持 C 不变，τ 的含义才纯粹：<strong>记忆窗口的长度</strong>，正是实验 B 里你测到的那个毫秒数。</span></div>
 
-    <h3>收官：把封面的悬念亲手做完</h3>
+    <h3>收官：把封面那张图亲手做完</h3>
     <p>点「扫描」，用你当前的 LIF 参数逐点测出 f–I 曲线——和你在实验 C 里对真实模型做的事一模一样。然后<strong>拖动图上的两个圆形手柄</strong>（拐点、斜率），把一条 ReLU 拟合到你自己的数据上。</p>
 
     <div class="chart-card">
@@ -1379,7 +1377,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
 <!-- ============ 7 · 两种神经元的对话 ============ -->
 <section class="scene" id="s7" data-title="7 · 两种神经元的对话">
   <div class="wrap">
-    <div class="kicker">第 7 节 <span class="k-time">第二课时 · 约 8 分钟</span></div>
+    <div class="kicker">第 7 节 <span class="k-time">第二课时</span></div>
     <h2>两种神经元的对话</h2>
     <p class="lede">现在把它们并排放在桌上。相同之处解释了深度学习为什么行得通；不同之处，是这门课接下来所有讲次的目录。</p>
 
@@ -1455,7 +1453,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
     </div>
 
     <h3>两张遗失清单</h3>
-    <p>诚实的对照要写两份清单——不只是「ANN 扔了什么」，也包括「LIF 本身已经扔了什么」。</p>
+    <p>把对照写全，需要两份清单——不只是「ANN 扔了什么」，也包括「LIF 本身已经扔了什么」。</p>
     <div class="duel">
       <div class="panel">
         <h4 style="color:var(--ink-2)">从 LIF 到 ANN，被扔掉的</h4>
@@ -1490,9 +1488,9 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
 <!-- ============ 8 · 收束 ============ -->
 <section class="scene" id="s8" data-title="8 · 一句话与三个问题">
   <div class="wrap">
-    <div class="kicker">第 8 节 <span class="k-time">第二课时 · 约 5 分钟</span></div>
+    <div class="kicker">第 8 节 <span class="k-time">第二课时</span></div>
     <h2>回到 20 瓦，然后下课</h2>
-    <p class="lede">开场留了一个问题：同样做智能，大脑凭什么只要 20 瓦？现在你有零件把答案拼出来了。</p>
+    <p class="lede">开头留了一个问题：同样做智能，大脑凭什么只要 20 瓦？现在你有零件把答案拼出来了。</p>
 
     <div class="tiles">
       <div class="tile"><div class="t-label">皮层信号能耗占比</div><div class="t-num">~75%</div><div class="t-sub">大部分花在钠钾泵上——把每个脉冲、每次突触传递搬进来的离子再搬回去</div></div>
@@ -1517,7 +1515,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
       <span class="gained">✓ f–I · 实验 C 测得，第 6 节拟成 ReLU</span>
     </div>
 
-    <p class="note"><strong>诚实的边界：</strong>今天回答的是「神经元如何计算」的最粗粒度版本。树突的非线性计算、放电的适应与随机性、毫秒级的时机编码——都被我们有意扔掉了，并将在后面的讲次里逐一捡回。抽象不是终点，是可控的起点。</p>
+    <p class="note">今天回答的是「神经元如何计算」的<strong>最粗粒度版本</strong>。树突的非线性计算、放电的适应与随机性、毫秒级的时机编码——都被我们有意扔掉了，后面的讲次逐一捡回。抽象不是终点，是可控的起点。</p>
 
     <h3>带回去的三个问题</h3>
     <details class="think">
@@ -1543,7 +1541,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
 
 </main>
 <footer class="colophon">
-  《神经科学导论》第一讲 · 南京大学人工智能学院 · 自包含交互网页讲义（除网络字体外无外部依赖，离线打开自动回退系统字体，功能不受影响）· 键盘 ← → 切换小节
+  《神经科学导论》第一讲 · 南京大学人工智能学院 · 键盘 ← → 切换小节
 </footer>
 <script>
 'use strict';
@@ -1746,7 +1744,7 @@ $$('.lane-evt').forEach(ev => {
   const info = $('#anat-info');
   const DATA = {
     dendrite: { name: '树突', en: 'dendrite', body: '一棵接收天线树：收集来自上万个上游神经元的信号电流。',
-      role: '<b>对应「加权输入 w·x」。</b>但有两个伏笔：权重的物理实体在<b>突触</b>上（下一讲主角）；且树突并非被动电线——它自带非线性运算，本身就像一个小网络（后面讲次回收）。',
+      role: '<b>对应「加权输入 w·x」。</b>但注意两点：权重的物理实体在<b>突触</b>上（下一讲的主角）；且树突并非被动电线——它自带非线性运算，本身就像一个小网络（后面的讲次会展开）。',
       num: '一个皮层锥体神经元约有 10,000 路突触输入。' },
     soma: { name: '胞体', en: 'soma', body: '细胞的代谢与整合中心：所有树突电流在这里汇合，共同决定膜电位。',
       role: '<b>对应「求和 Σ」。</b>更准确说是<b>带泄漏的连续求和</b>——第 3 节你会看到求和的物理实现。',
@@ -1792,7 +1790,7 @@ $$('.lane-evt').forEach(ev => {
         selected.classList.remove('selected'); selected.classList.add('done');
         selected = null; matched++;
         if (matched === 4) {
-          msg.textContent = '✓ 全部配对成功——你和 1943 年的 McCulloch & Pitts 想到一起了。但注意右侧信息栏里的两个伏笔：这个对应从哪里开始失真，才是这门课的正菜。';
+          msg.textContent = '✓ 全部配对成功——你和 1943 年的 McCulloch & Pitts 想到一起了。再看看右侧信息栏：这个对应从哪里开始失真，才是这门课的正菜。';
           msg.className = 'match-msg ok'; show('dendrite'); $$('.anat-part')[0].classList.add('sel');
         } else {
           msg.textContent = '✓ 正确！还差 ' + (4 - matched) + ' 张。';
