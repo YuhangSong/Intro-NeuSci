@@ -31,5 +31,5 @@
 
 - **唯一的人工配置**：仓库 secret `CLOUDFLARE_API_TOKEN`（用 Cloudflare 官方模板「Edit Cloudflare Workers」创建）。account id、workers.dev 子域、KV namespace 全部由流水线自动发现或创建。
 - **触发发布**：修改 `.deploy/request.json` 的 `nonce` 并 push，等 Actions 全绿（含线上冒烟测试）才算上线成功。
-- **管理密钥**：首次部署时自动生成并持久化在 KV，只在那一次的 Actions 日志里明文显示——请保存；重部署不换密钥。
+- **管理密钥**：自动生成并持久化在 Cloudflare KV（重部署不换密钥），**日志中永不显示明文**（本仓库公开，日志人人可见）。查看：dash.cloudflare.com → Storage &amp; Databases → KV → `INTRO_NEUSCI_CFG` → `cfg:admin_key`。需要作废旧密钥时，在 `.deploy/request.json` 里临时加 `"rotate_admin_key": true` 触发一次部署，随后移除该标志再部署一次。
 - 目录：`worker/`（Worker 与静态资源配置）、`site/`（首页/控制台源码）、`scripts/build.mjs`（构建，产物在 `worker/dist/`，已 gitignore）、`.github/workflows/release.yml`（流水线）。

@@ -76,17 +76,19 @@ jobs:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           set -euo pipefail
+          # 本仓库是公开仓库，Actions 日志任何人可见——密钥永不在日志中显示。
+          # 查看密钥：dash.cloudflare.com → Storage & Databases → KV → INTRO_NEUSCI_CFG → cfg:admin_key
           API="https://api.cloudflare.com/client/v4"
           VAL_URL="$API/accounts/$ACCOUNT_ID/storage/kv/namespaces/$KV_ID/values/cfg%3Aadmin_key"
+          ROTATE=$(jq -r '.rotate_admin_key // false' .deploy/request.json)
           CODE=$(curl -sS -o /tmp/admin_key.txt -w '%{http_code}' -H "Authorization: Bearer $CF_TOKEN" "$VAL_URL")
-          if [ "$CODE" = "200" ] && [ -s /tmp/admin_key.txt ]; then
+          if [ "$ROTATE" != "true" ] && [ "$CODE" = "200" ] && [ -s /tmp/admin_key.txt ]; then
             KEY=$(cat /tmp/admin_key.txt)
             echo "沿用 KV 中已有的管理密钥（重部署不换密钥）。"
           else
             KEY=$(openssl rand -hex 24)
-            echo "首次生成管理密钥（仅此一次明文显示，请立刻保存到自己的密码管理器）："
-            echo "    ADMIN_KEY = $KEY"
             curl -sS -X PUT -H "Authorization: Bearer $CF_TOKEN" --data "$KEY" "$VAL_URL" | jq -e '.success' >/dev/null
+            echo "已生成/轮换管理密钥并存入 KV（日志不显示明文）。到 Cloudflare 后台 KV 的 INTRO_NEUSCI_CFG 里查看 cfg:admin_key。"
           fi
           echo "::add-mask::$KEY"
           echo "ADMIN_KEY=$KEY" >> "$GITHUB_ENV"
