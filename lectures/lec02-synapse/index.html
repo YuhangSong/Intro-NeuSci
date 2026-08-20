@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
 /* ============================================================
-   《神经科学导论》第一讲 · 神经元如何计算
+   《神经科学导论》第二讲 · 大脑如何学习
    设计语言：电生理实验室 —— 纸面讲义 + 深色仪器面板
    ============================================================ */
 
@@ -393,6 +393,7 @@ textarea.code-free {
 }
 .run-row { display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
 .run-row[hidden] { display: none; }
+[hidden] { display: none !important; }
 .run-msg { font-family: var(--mono); font-size: .76rem; color: var(--rig-muted); }
 .run-msg.err { color: #E08A8A; }
 
@@ -742,13 +743,13 @@ a.tb-home {
     <p class="c-sub">突触、Hebb 规则，与不用反向传播的学习</p>
     <div class="cover-spark" aria-hidden="true"><canvas id="cover-canvas" height="130"></canvas></div>
 
-    <p style="max-width:60ch">上一讲的神经元精密得像一台仪器，但它从头到尾<strong>没有学任何东西</strong>。而你会背的每一个单词、骑车时的每一个平衡动作，都得写在某个物理的地方。主流答案：写在神经元之间那道约 20 纳米缝隙的<strong>两侧</strong>。</p>
+    <p style="max-width:60ch">上一讲的神经元精密得像一台仪器，但它从头到尾<strong>没有学任何东西</strong>。而你会背的每一个单词、骑车时的每一个平衡动作，都得写在某个物理的地方。主流答案：写在神经元之间那道约 20 nm 缝隙的<strong>两侧</strong>。</p>
 
     <div class="tiles">
       <div class="tile">
         <div class="t-label">你的突触总数</div>
         <div class="t-num">~10¹⁴</div>
-        <div class="t-sub">每一个都是一台可调的机器——大脑真正的"参数量"</div>
+        <div class="t-sub">每一个都是一台可调的机器——大脑真正的「参数量」</div>
       </div>
       <div class="tile">
         <div class="t-label">突触间隙</div>
@@ -758,7 +759,7 @@ a.tb-home {
       <div class="tile">
         <div class="t-label">一次传递耗时</div>
         <div class="t-num">&lt;1 ms</div>
-        <div class="t-sub">化学信号过河，比电信号慢，但换来了"可调"</div>
+        <div class="t-sub">化学信号过河，比电信号慢，但换来了「可调」</div>
       </div>
       <div class="tile">
         <div class="t-label">一个突触</div>
@@ -769,11 +770,11 @@ a.tb-home {
 
     <div class="thesis reveal">
       <span class="t-mark">本讲唯一要讲透的一件事</span>
-      学习不发生在神经元里，发生在连接上：<strong>学习 = 突触权重的局部改写</strong>。Hebb（1949）：一起活跃的细胞，连在一起。<br>
+      学习不发生在神经元里，发生在连接上：<strong>学习 = 突触权重的局部改写</strong>。Hebb 1949 年的猜想，通行版本是：一起活跃的细胞，连在一起。<span class="small">（先记住这个版本——第 3 节我们回到他的原话，重新审一遍。）</span><br>
       <span class="small">今天把这句话变成机制、方程，和一小群你亲手训练的神经元——没有老师、没有损失函数、没有反向传播，它们会自己长出特征检测器。</span>
     </div>
 
-    <p style="max-width:60ch">上一讲带走的零件今天全要用：脉冲、阈值、求和、f–I ≈ ReLU。还有高中生物的账也一起算了：你背过突触小体、递质、受体——<strong>那些是名词</strong>。今天的问题换一个问法：<strong>当你的网络里有个 w = 0.3，这个数字物理上存在哪里？你调用 optimizer.step() 的时候，大脑里是谁在动手？</strong></p>
+    <p style="max-width:60ch">上一讲带走的零件今天全要用：脉冲、阈值、求和、f–I ≈ ReLU。还有高中生物的账也一起算了：你背过突触小体、递质、受体——<strong>那些是名词</strong>。今天的问题换一个问法：<strong>当你的网络里有个 w = 0.3，这个数字物理上写在哪里？你调用 optimizer.step() 的时候，大脑里是谁在动手？</strong></p>
   </div>
 </section>
 
@@ -787,7 +788,7 @@ a.tb-home {
     <div class="rig" id="rig-syn">
       <div class="rig-head">
         <span class="led" id="syn-led"></span>
-        <span class="rig-name">SYNAPSE REPLAY · 一次突触传递的慢镜头</span>
+        <span class="rig-name">SYNAPSE REPLAY · 一次突触传递（慢镜头）</span>
         <span class="rig-spacer"></span>
         <button class="btn" id="syn-play" style="padding:5px 14px;font-size:.8rem">▶ 播放</button>
       </div>
@@ -797,10 +798,10 @@ a.tb-home {
             <svg id="syn-svg" class="chan-svg" viewBox="0 0 340 330" role="img" aria-label="突触传递示意：脉冲到达、钙内流、囊泡释放、递质扩散、受体开门"></svg>
           </div>
           <div>
-            <div class="scope-frame"><canvas id="syn-canvas" height="220"></canvas></div>
+            <div class="scope-frame"><canvas id="syn-canvas" height="220" role="img" aria-label="示波器：突触前动作电位、钙电流与突触后电位随时间的曲线"></canvas></div>
             <div class="ctl" style="margin-top:12px">
               <span class="ctl-label"><span>时间游标</span><span class="ctl-val" id="syn-t-val">0.0 ms</span></span>
-              <input type="range" id="syn-scrub" min="0" max="1000" step="1" value="0">
+              <input type="range" id="syn-scrub" min="0" max="1000" step="1" value="0" aria-label="突触传递回放时间游标">
             </div>
             <div class="phase-strip" id="syn-phases">
               <span class="phase" data-ph="0">① 脉冲到达</span>
@@ -812,6 +813,7 @@ a.tb-home {
           </div>
         </div>
         <div class="story" id="syn-story" aria-live="polite"></div>
+        <div class="chip-note" style="margin-top:10px">时间轴为教学放大；真实的突触延迟约 0.5–1 ms，大头花在钙通道开门与囊泡融合上。</div>
       </div>
     </div>
 
@@ -824,34 +826,34 @@ a.tb-home {
           <div>
             <div class="ctl-row">
               <div class="ctl" style="flex:1;min-width:170px">
-                <span class="ctl-label"><span>n · 可释放囊泡数</span><span class="ctl-val" id="npq-n-val">5</span></span>
-                <input type="range" id="npq-n" min="1" max="10" step="1" value="5">
+                <span class="ctl-label"><span>n · 释放位点数（≈备好的囊泡）</span><span class="ctl-val" id="npq-n-val">5</span></span>
+                <input type="range" id="npq-n" min="1" max="10" step="1" value="5" aria-label="n 释放位点数">
               </div>
               <div class="ctl" style="flex:1;min-width:170px">
                 <span class="ctl-label"><span>p · 释放概率</span><span class="ctl-val" id="npq-p-val">0.40</span></span>
-                <input type="range" id="npq-p" min="0.05" max="0.95" step="0.05" value="0.4">
+                <input type="range" id="npq-p" min="0.05" max="0.95" step="0.05" value="0.4" aria-label="p 释放概率">
               </div>
               <div class="ctl" style="flex:1;min-width:170px">
                 <span class="ctl-label"><span>q · 受体数量（相对）</span><span class="ctl-val" id="npq-q-val">1.00</span></span>
-                <input type="range" id="npq-q" min="0.2" max="2" step="0.05" value="1">
+                <input type="range" id="npq-q" min="0.2" max="2" step="0.05" value="1" aria-label="q 受体数量">
               </div>
             </div>
             <div class="ctl-row" style="align-items:baseline">
-              <span class="outcome idle" id="npq-w" style="font-size:1rem">w ∝ n·p·q = 2.00</span>
-              <span class="chip-note">基线（n=5, p=0.4, q=1）定为 EPSP ≈ 0.5 mV</span>
+              <span class="outcome idle" id="npq-w" style="font-size:1rem">n·p·q = 2.00（∝ w）</span>
+              <span class="chip-note">基线（n=5, p=0.4, q=1）定为 EPSP ≈ 0.5 mV；q 是单份递质引起的响应大小，主要由受体数量决定</span>
             </div>
           </div>
           <div>
-            <div class="scope-frame"><canvas id="npq-canvas" height="200"></canvas></div>
+            <div class="scope-frame"><canvas id="npq-canvas" height="200" role="img" aria-label="EPSP 波形：幅度随 n、p、q 变化"></canvas></div>
           </div>
         </div>
-        <div class="chip-note" style="margin-top:12px">拧任何一个旋钮，EPSP 都变——<strong>改 n、改 p、改 q，都是在改 w</strong>。真实的突触也是这么被改的：LTP 主要往突触后加受体（q↑），有些突触改释放概率（p↑）。</div>
+        <div class="chip-note" style="margin-top:12px">拧任何一个旋钮，EPSP 都变——<strong>改 n、改 p、改 q，都是在改 w</strong>。真实的突触也是这么被改的：最常见是往突触后加受体（q↑），有的突触改释放概率（p↑）——下一节你会亲手做这件事。</div>
       </div>
     </div>
 
-    <div class="task"><span class="task-tag">动手</span><span>把三个旋钮都拧到最大，EPSP 也不过 4–5 mV；而从静息（约 −65 mV）到阈值（约 −51 mV，第一讲你亲手测的）差着约 14 mV——<strong>单枪匹马永远不够</strong>。约 28 路输入同时到达才凑得齐，这正是第一讲「时间求和」的另一半：一个神经元的每次发放，都是几十路突触投票的结果。</span></div>
+    <div class="task"><span class="task-tag">动手</span><span>把三个旋钮都拧到最大，EPSP 也不过 4–5 mV；而从静息（第一讲 LIF 里的 E_L ≈ −70 mV）到阈值（θ ≈ −50 mV，你在代码里拧过的那个数）差着约 20 mV——<strong>单枪匹马永远不够</strong>。约 40 路输入同时到达才凑得齐（真实树突的求和还是亚线性的，实际只多不少）。这正是第一讲「时间求和」的另一半：一个神经元的每次发放，都是几十路突触投票的结果。</span></div>
 
-    <p>顺带补上负权重：谷氨酸<span class="term">glutamate</span>突触投赞成票（EPSP），GABA 突触投反对票（IPSP，把膜电位往下拽）——<strong>抑制也有自己的物理实体</strong>。<span class="mlb"><span class="b">突触强度</span><span class="arr">⇄</span><span class="m">权重 w（含正负）</span></span><span class="mlb"><span class="b">树突汇流</span><span class="arr">⇄</span><span class="m">Σ wᵢxᵢ</span></span></p>
+    <p>顺带补上负权重：谷氨酸<span class="term">glutamate</span>突触投赞成票——兴奋性突触后电位<span class="term">excitatory postsynaptic potential, EPSP</span>；GABA 突触投反对票——抑制性突触后电位<span class="term">IPSP</span>：把膜电位往下拽，或把它钳在原地（增大漏电导，让 EPSP 更难抬起来）。<strong>抑制也有自己的物理实体</strong>。<span class="mlb"><span class="b">突触强度</span><span class="arr">⇄</span><span class="m">权重 w（含正负）</span></span><span class="mlb"><span class="b">树突汇流</span><span class="arr">⇄</span><span class="m">Σ wᵢxᵢ</span></span></p>
 
     <div class="gained">✓ 已测得 <span class="g-eq">w 的物理实体：n·p·q</span>——三个都是可拧的旋钮</div>
   </div>
@@ -870,15 +872,15 @@ a.tb-home {
       </div>
       <div class="rig-body">
         <div class="predict" data-predict="p2-ltp" data-answer="1">
-          <div class="pq"><span class="p-tag">先投票</span>给一条突触通路来一串高频刺激（100 Hz、持续 1 秒），停下来之后再用单发测试脉冲量它的响应。会看到什么？</div>
+          <div class="pq"><span class="p-tag">先投票</span>给一条突触通路来一串高频刺激（100 Hz，持续 1 s），停下来之后再用单发测试脉冲量它的响应。会看到什么？</div>
           <div class="opts">
             <button data-i="0">和原来一样——刺激过去就过去了</button>
             <button data-i="1">持久增大——这条通路被写强了</button>
             <button data-i="2">反而变小——用狠了会疲劳</button>
           </div>
-          <div class="p-reveal">「疲劳」不是瞎想——高频轰炸<b>期间</b>囊泡确实会耗竭，但停下几秒就恢复。持久的方向是<b>增强</b>：EPSP 幅度跳上一个新台阶并停在那里，几小时、在活体动物里甚至几个月都量得到。这就是长时程增强<span style="font-style:italic;color:var(--rig-muted)"> LTP</span>——用下面的仪器亲手做一遍。</div>
+          <div class="p-reveal">「疲劳」不是瞎想——高频轰炸<b>期间</b>囊泡确实会耗竭，但停下几秒就恢复。持久的方向是<b>增强</b>：EPSP 幅度跳上一个新台阶并停在那里，几小时、在活体动物里甚至几个月都量得到。这就是长时程增强<span style="font-style:italic;color:var(--rig-muted)"> long-term potentiation, LTP</span>——用下面的仪器亲手做一遍。</div>
         </div>
-        <div class="scope-frame"><canvas id="ltp-canvas" height="260"></canvas></div>
+        <div class="scope-frame"><canvas id="ltp-canvas" height="260" role="img" aria-label="可塑性实验记录：EPSP 幅度（% 基线）随时间变化，标注刺激事件"></canvas></div>
         <div class="ctl-row">
           <button class="btn ghost" id="ltp-test">单发测试 ×10</button>
           <button class="btn" id="ltp-hfs">⚡ 高频刺激 100 Hz × 1 s</button>
@@ -888,9 +890,9 @@ a.tb-home {
         </div>
         <div class="ctl-row" style="align-items:baseline">
           <span class="outcome idle" id="ltp-state">突触强度：100%（基线）</span>
-          <span class="chip-note" id="ltp-note">先打一组测试脉冲建立基线，再动手改写它。</span>
+          <span class="chip-note" id="ltp-note" aria-live="polite">先打一组测试脉冲建立基线，再动手改写它。</span>
         </div>
-        <div class="chip-note" style="margin-top:8px">协议出处：高频→LTP = Bliss &amp; Lømo 1973（麻醉兔在体齿状回，场电位，这里理想化为单条通路）；低频→LTD = Dudek &amp; Bear 1992（海马 CA1 脑片）。</div>
+        <div class="chip-note" style="margin-top:8px">协议出处：高频→LTP 首见于 Bliss &amp; Lømo 1973（麻醉兔在体齿状回，100 Hz 数秒的强直；本仪器的 100 Hz × 1 s 是后来标准化的教学协议，并理想化为单条通路）；低频→LTD（长时程抑制 long-term depression）= Dudek &amp; Bear 1992（海马 CA1 脑片）。</div>
       </div>
     </div>
 
@@ -902,13 +904,13 @@ a.tb-home {
       <div class="panel">
         <ul style="margin:0;font-size:.95rem">
           <li><strong>Mg²⁺ 塞子</strong>：通道平时被一颗镁离子堵死；只有膜已去极化，塞子才被推开（阻断随电压连续减弱，不是硬开关）。</li>
-          <li><strong>符合检测</strong>：所以开门要<strong>两件事同时成立</strong>——谷氨酸在（突触前刚放过电）+ 膜已去极化（突触后正活跃）。缺一不可。</li>
+          <li><strong>符合检测</strong><span class="term">coincidence detection</span>：所以开门要<strong>两件事同时成立</strong>——谷氨酸在（突触前刚放过电）+ 膜已去极化（突触后正活跃）。缺一不可。</li>
           <li><strong>Ca²⁺ 扳机</strong>：门一开，Ca²⁺ 涌入；<strong>大而快的钙信号 → 往膜上加受体（LTP）；小而慢的 → 往下撤受体（LTD）</strong>。同一个扳机，两个方向。</li>
         </ul>
         <p class="small" style="margin:10px 0 0">这解释了你刚做的两个实验：高频轰炸 = 前后都猛烈活跃 → 大钙 → LTP；低频哼唧 = 弱符合 → 小而慢的钙 → LTD；AP5 把扳机整个卸了 → 怎么刺激都写不动。</p>
       </div>
       <div class="panel">
-        <div class="p-title">NMDA 受体：前 × 后 的符合检测</div>
+        <div class="p-title">NMDA 受体：前 × 后的符合检测</div>
         <svg viewBox="0 0 320 180" role="img" aria-label="NMDA开门条件真值表：仅当突触前活跃且突触后去极化时钙才进入" style="width:100%;height:auto;color:var(--ink-2)">
           <g font-size="12" fill="currentColor">
             <text x="96" y="28" text-anchor="middle" font-weight="600">后端安静</text>
@@ -934,9 +936,9 @@ a.tb-home {
       </div>
     </div>
 
-    <p>写入还有形态上的痕迹：LTP 之后，接收端的树突棘<span class="term">dendritic spine</span>会随之变大（Matsuzaki 2004，双光子显微镜下直接看到）。你的记忆最强的候选载体，就是全脑 10¹⁴ 个这样的可写位点。<span class="small">（最强候选，不是已判决——最后一节还有一桩悬案。）</span></p>
+    <p>写入还有形态上的痕迹：LTP 之后，接收端的树突棘<span class="term">dendritic spine</span>会随之变大（Matsuzaki 2004，双光子显微镜下直接看到）。你的记忆最强的候选载体，就是全脑 10¹⁴ 个这样的可写位点。<span class="small">（最强候选，不是已判决——第 6 节还有一桩悬案。）</span></p>
 
-    <div class="gained">✓ 已测得 <span class="g-eq">权重可写（LTP / LTD）</span>，且改写的条件是「前后同时活跃」</div>
+    <div class="gained">✓ 已测得 <span class="g-eq">权重可写（LTP / LTD）</span>：改写条件是「前后同时活跃」</div>
   </div>
 </section>
 
@@ -950,7 +952,7 @@ a.tb-home {
     <div class="thesis" style="font-size:1.02rem;max-width:680px">
       <span class="t-mark">HEBB 1949 · 原文大意</span>
       「当细胞 A 的轴突<strong>反复或持续地参与激发</strong>细胞 B……A 对 B 的效能就会增强。」<br>
-      <span class="small">注意两点：原话是<strong>因果的、有方向的</strong>——A 帮着点燃了 B，不是"恰好同时"；而且只讲了增强，没讲削弱。「一起放电，一起相连」是几十年后的顺口溜（Carla Shatz），把因果抹平成了相关。</span>
+      <span class="small">注意两点：原话是<strong>因果的、有方向的</strong>——A 帮着点燃了 B，不是「恰好同时」；而且只讲了增强，没讲削弱。「一起放电，一起相连」是几十年后的顺口溜（Carla Shatz），把因果抹平成了相关。</span>
     </div>
 
     <p>大脑记得这个方向吗？1998 年 Bi 与 Poo 在培养的海马神经元上直接问了：让突触前后各发一个脉冲，<strong>就差几毫秒</strong>，权重会怎么变？下面的仪器让你把他们的曲线自己做出来。</p>
@@ -959,26 +961,26 @@ a.tb-home {
       <div class="rig-head"><span class="led" id="stdp-led"></span><span class="rig-name">STDP BENCH · 把 Bi &amp; Poo 曲线做出来</span></div>
       <div class="rig-body">
         <div class="predict" data-predict="p2-stdp" data-answer="0">
-          <div class="pq"><span class="p-tag">先投票</span>让突触<strong>前</strong>神经元先放电、10 ms 之后<strong>后</strong>神经元放电，如此配对 60 次。这根突触会怎样？</div>
+          <div class="pq"><span class="p-tag">先投票</span>让突触<strong>前</strong>神经元先放电，10 ms 后突触<strong>后</strong>神经元再放电，如此配对 60 次。这个突触会怎样？</div>
           <div class="opts">
-            <button data-i="0">增强——"你抢在我前面，可能是我的因"</button>
+            <button data-i="0">增强——「你抢在我前面，可能是我的因」</button>
             <button data-i="1">削弱——后来者居上，先到的被惩罚</button>
             <button data-i="2">不变——差 10 ms 太短，突触感觉不到</button>
           </div>
           <div class="p-reveal">用下面的仪器验证：选好 Δt，打 60 次配对，看落下来的点。再把 Δt 反过来（后先于前）试试——<b>方向不同，命运相反</b>。</div>
         </div>
-        <div class="scope-frame"><canvas id="stdp-canvas" height="280"></canvas></div>
+        <div class="scope-frame"><canvas id="stdp-canvas" height="280" role="img" aria-label="STDP 散点图：权重变化 Δw 对配对时差 Δt"></canvas></div>
         <div class="ctl-row">
           <div class="ctl" style="flex:1;max-width:340px">
             <span class="ctl-label"><span>Δt = 后放电时刻 − 前放电时刻 (ms)</span><span class="ctl-val" id="stdp-dt-val">+10</span></span>
-            <input type="range" id="stdp-dt" min="-50" max="50" step="2" value="10">
+            <input type="range" id="stdp-dt" min="-60" max="60" step="2" value="10" aria-label="配对时差 Δt 毫秒">
           </div>
           <button class="btn" id="stdp-pair">配对刺激 ×60</button>
           <button class="btn ghost" id="stdp-fit">显示拟合曲线</button>
           <button class="btn ghost" id="stdp-reset">清空</button>
           <span class="outcome idle" id="stdp-out">—</span>
         </div>
-        <div class="chip-note" style="margin-top:10px">目标：在 Δt 轴上多选几个点（正的、负的、远的、近的），各打一轮配对，让曲线从你自己的数据里浮现。<br>出处与边界：Bi &amp; Poo 1998，培养海马神经元，约 60 次配对；窗口约 ±20–40 ms（τ₊≈17 ms、τ₋≈34 ms）。<strong>曲线形状随突触类型、发放频率、神经调质而变——这是一类现象，不是大脑的通用常数。</strong></div>
+        <div class="chip-note" style="margin-top:10px">目标：在 Δt 轴上多选几个点（正的、负的、远的、近的），各打一轮配对，让曲线从你自己的数据里浮现。严格同时（Δt≈0）也试一下——结果会很散。<br>出处与边界：Bi &amp; Poo 1998，培养海马神经元，约 60 次配对；τ₊≈17 ms、τ₋≈34 ms——增强窗约 +20 ms 以内，削弱窗更宽、可伸到约 −60 ms，<strong>窗口本身就不对称。曲线形状还随突触类型、发放频率、神经调质而变——这是一类现象，不是大脑的通用常数。</strong></div>
       </div>
     </div>
 
@@ -992,7 +994,7 @@ a.tb-home {
 <section class="scene interlude" id="break" data-title="课间">
   <div class="wrap">
     <div class="i-mark">第一课时完 · 课间休息</div>
-    <div class="i-text">课间想一想：这条规则只看得见一根突触两端的活动，<br>连隔壁的突触都看不见。这么"目光短浅"，真能学出什么有用的东西吗？</div>
+    <div class="i-text">课间想一想：这条规则只看得见一个突触两端的活动，<br>连隔壁的突触都看不见。这么「目光短浅」，真能学出什么有用的东西吗？</div>
     <p class="small" style="margin-top:14px">你已亲手测出：w 的三个旋钮、LTP/LTD、STDP 的方向。答案在第二课时——你会亲手训练它。</p>
   </div>
 </section>
@@ -1039,7 +1041,7 @@ a.tb-home {
     <p class="lede">一个神经元，一团二维数据（已中心化），规则就是上面那一行。它一次只看一个点，没有损失函数、没有标签、没有 backward。</p>
 
     <div class="predict" data-predict="p2-pca" data-answer="0">
-      <div class="pq"><span class="p-tag">先投票</span>把它丢进数据云里训练足够久，权重向量 w（图上会画成一支箭头）的<strong>方向</strong>会怎样？</div>
+      <div class="pq"><span class="p-tag">先投票</span>把它丢进数据云里训练足够久，权重向量 w（图上会画成一个箭头）的<strong>方向</strong>会怎样？</div>
       <div class="opts">
         <button data-i="0">转向某个由数据决定的特定方向，然后停住</button>
         <button data-i="1">永远打转，不会安定下来</button>
@@ -1054,16 +1056,16 @@ a.tb-home {
         <span class="rig-name">HEBB TRAINER · 一个神经元的无监督训练台</span>
         <span class="rig-spacer"></span>
         <div class="presets" role="group" aria-label="学习规则">
-          <button class="mini on" id="rule-hebb">纯 Hebb</button>
-          <button class="mini" id="rule-oja">Hebb − y²w（修好的）</button>
+          <button class="mini on" id="rule-hebb" aria-pressed="true">纯 Hebb</button>
+          <button class="mini" id="rule-oja" aria-pressed="false">Hebb − y²w（修好的）</button>
         </div>
       </div>
       <div class="code-lab">
         <div class="code-pane">
           <pre class="code" id="oja-code"><span class="cm">// 一个 Hebb 神经元，如假包换</span>
-<span class="kw">const</span> eta = <input class="cnum" id="oja-eta" value="0.04">;  <span class="cm">// 学习率</span>
+<span class="kw">const</span> eta = <input class="cnum" id="oja-eta" value="0.04" aria-label="学习率 eta">;  <span class="cm">// 学习率</span>
 <span class="kw">let</span> w = 随机小向量();
-<span class="kw">for</span> (<span class="kw">let</span> t = 0; t &lt; <input class="cnum" id="oja-steps" value="600" style="width:6ch">; t++) {
+<span class="kw">for</span> (<span class="kw">let</span> t = 0; t &lt; <input class="cnum" id="oja-steps" value="600" style="width:6ch" aria-label="训练步数">; t++) {
   <span class="kw">const</span> x = 随机取一个数据点();  <span class="cm">// 在线：一次只看一个</span>
   <span class="kw">const</span> y = w[0]*x[0] + w[1]*x[1]; <span class="cm">// 前向：发放率</span>
   w[0] += eta * y * x[0];  <span class="cm">// Hebb：前 × 后</span>
@@ -1075,11 +1077,11 @@ a.tb-home {
           <div class="ctl-row">
             <div class="ctl" style="flex:1;min-width:150px">
               <span class="ctl-label"><span>数据方向 (°)</span><span class="ctl-val" id="oja-ang-val">25</span></span>
-              <input type="range" id="oja-ang" min="0" max="180" step="5" value="25">
+              <input type="range" id="oja-ang" min="0" max="180" step="5" value="25" aria-label="数据主方向（度）">
             </div>
             <div class="ctl" style="flex:1;min-width:150px">
               <span class="ctl-label"><span>数据伸长比</span><span class="ctl-val" id="oja-ecc-val">3.2</span></span>
-              <input type="range" id="oja-ecc" min="1.5" max="5" step="0.1" value="3.2">
+              <input type="range" id="oja-ecc" min="1.5" max="5" step="0.1" value="3.2" aria-label="数据伸长比">
             </div>
           </div>
           <div class="run-row">
@@ -1090,35 +1092,34 @@ a.tb-home {
           </div>
         </div>
         <div class="result-pane">
-          <div class="scope-frame"><canvas id="oja-canvas" height="340"></canvas></div>
+          <div class="scope-frame"><canvas id="oja-canvas" height="340" role="img" aria-label="数据散点与权重向量 w：训练中 w 的方向与长度实时变化"></canvas></div>
           <div class="ctl-row" style="justify-content:space-between">
             <span class="outcome idle" id="oja-norm">|w| = —</span>
             <span class="outcome idle" id="oja-angle">与主轴夹角：—</span>
           </div>
-          <div class="story" id="oja-story" style="min-height:3.6em">先押完票再动手。「单步观察」会点亮一个数据点，并把这一步的 Δw 画成接在 w 箭头上的绿色小段——注意哪些点推得狠、哪些点推不动。</div>
+          <div class="story" id="oja-story" style="min-height:3.6em" aria-live="polite">先押完票再动手。「单步观察」会点亮一个数据点，并把这一步的 Δw 画成接在 w 箭头上的绿色小段——注意哪些点推得狠、哪些点推不动。</div>
         </div>
       </div>
     </div>
 
-    <div class="task" id="hebb-crash" hidden><span class="task-tag">撞上了</span><span><strong>方向稳了，长度爆了。</strong>y 越大 → w 越大 → y 更大……正反馈没有刹车，|w| 在指数爆炸（第一讲的积分器没有泄漏时也是这个下场）。修法：给更新减去一项 <strong>η·y²·w</strong>——活动越猛、收得越紧。<button class="btn" id="oja-fix" style="margin-left:8px">在方程里加上 −y²·w（Oja 1982）</button></span></div>
+    <div class="task" id="hebb-crash" hidden><span class="task-tag">撞上了</span><span><strong>方向稳了，长度爆了。</strong>y 越大 → w 越大 → y 更大……正反馈没有刹车，|w| 在指数爆炸（第一讲删掉泄漏项的 LIF 也是只积不刹——好在它还有重置兜底，这里连重置都没有）。修法：给更新减去一项 <strong>η·y²·w</strong>——活动越猛，收得越紧。<button class="btn" id="oja-fix" style="margin-left:8px">在方程里加上 −y²·w（Oja 1982）</button></span></div>
 
     <p id="oja-payoff" hidden>现在可以说破了：w 停住的那个方向，就是数据方差最大的方向——<strong>第一主成分</strong>。你没有给它协方差矩阵，没有做特征分解，没有目标函数；它一次只看一个点，只用突触两端的信息，<strong>却算出了一个需要全局信息才能定义的量</strong>。点「对照：数据主轴」，看看它和数值解差几度。<span class="mlb"><span class="b">Oja 神经元</span><span class="arr">⇄</span><span class="m">在线 PCA</span></span></p>
 
     <details class="deep">
       <summary>为什么是必然：三行推导，把巧合变成定理</summary>
       <div class="deep-body">
-        <p style="margin-top:12px">对数据分布取期望（C = E[xxᵀ] 是相关矩阵）：</p>
+        <p style="margin-top:12px">对数据分布取期望（C = E[xxᵀ]，数据已中心化，所以就是协方差矩阵）：</p>
         <div class="eq" style="font-size:1.05rem">E[Δ<i>w</i>] = <i>η</i> · E[<i>x</i>(<i>x</i>ᵀ<i>w</i>)] = <i>η</i> · <i>C</i><i>w</i></div>
         <p><strong>纯 Hebb 的期望更新就是 w ← w + ηCw——没有归一化的幂迭代。</strong>数值课上你们用它求过最大特征向量：方向必然转向 C 的第一特征向量（可能差个正负号，都对），模长必然指数增长。你亲手撞上的爆炸不是 bug，是幂迭代的另一半。</p>
-        <p>Oja 那一项恰好补上缺的归一化：在 |w| = 1 处达到平衡。注意它和 weight decay 不是一回事——weight decay 把 w 拉向 0，Oja 项（y² 门控）把 |w| 拉向 1。生物学里对应的也不是这条方程本身，而是「突触缩放」一类稳态机制（Turrigiano）：细胞会整体调低过强的突触。</p>
+        <p>Oja 那一项恰好补上缺的归一化：在 |w| = 1 处达到平衡。注意它和 weight decay 不是一回事——weight decay 把 w 拉向 0，Oja 项（y² 门控）把 |w| 拉向 1。生物学里对应的也不是这条方程本身，而是突触缩放<span class="term">synaptic scaling</span>一类稳态机制（Turrigiano 1998）：细胞把全部突触按同一比例整体缩放——活动过猛时集体调低，长期沉默时集体调高，保住相对强弱。</p>
         <p class="small" style="margin-bottom:0">历史顺序值得记：Hebb 1949 年写下直觉，Oja 1982 年才证明这句话在算什么。大脑先有算法，数学家后补定理。</p>
       </div>
     </details>
-    <p class="note">脚注：数据在生成时已经中心化（减去均值）——这是「收敛到主成分」成立的前提；不去均值，w 会转向均值方向。PCA 课上的老规矩，在这里同样管用。</p>
-  </div>
-</section>
+    <p class="note">脚注：数据在生成时已经中心化（减去均值）——这是「收敛到主成分」成立的前提；不去均值，w 会转向均值方向。PCA 课上的老规矩，在这里同样管用。另外这里的 y 是「相对基线发放率的偏离」，可正可负——为了数学干净，把 ReLU 暂时拉直了；生物里负的半边由基线活动下调或抑制通路承担。</p>
+
     <h3>加一味竞争：一小群神经元</h3>
-    <p>一个神经元只能学一个方向。现在放<strong>四个</strong>神经元看同一路输入，加一条规则：<strong>谁响应最强，谁获得这次学习机会</strong>（赢者通吃——学过 k-means 的你会觉得眼熟，这就是在线聚类）。输入换成 5×5 像素的光条，四种朝向随机出现（位置固定、带噪声）。</p>
+    <p>一个神经元只能学一个方向。现在放<strong>四个</strong>神经元看同一路输入，加一条规则：<strong>谁的权重图和这次的输入最像（离它最近），谁获得这次学习机会</strong>——赢者通吃<span class="term">winner-take-all</span>。学过 k-means 的你会觉得眼熟：这就是在线聚类。<span class="small">（若把权重都归一化到单位长度，「最像」与「响应 w·x 最强」是同一回事——上一台仪器里 Oja 那一项干的正是这个归一化。）</span>输入换成 5×5 像素的光条，四种朝向随机出现（位置固定、带噪声）。</p>
 
     <div class="predict" data-predict="p2-bars" data-answer="1">
       <div class="pq"><span class="p-tag">先投票</span>四个神经元的权重图开局是白纸。训练几百步之后，四张图会变成什么样？</div>
@@ -1135,17 +1136,17 @@ a.tb-home {
         <span class="led" id="bars-led"></span>
         <span class="rig-name">FEATURE FARM · 四个神经元 · 竞争学习</span>
         <span class="rig-spacer"></span>
-        <span class="chip-note">随机种子 <input class="cnum" id="bars-seed" value="42" style="width:6ch"></span>
+        <span class="chip-note">随机种子 <input class="cnum" id="bars-seed" value="42" style="width:6ch" aria-label="随机种子"></span>
       </div>
       <div class="rig-body">
         <div class="ap-grid">
           <div>
             <div class="stim-wrap">
               <div class="wmap-item">
-                <div class="wmap" id="bars-stim" aria-label="当前刺激"></div>
+                <div class="wmap" id="bars-stim" role="img" aria-label="当前刺激"></div>
                 <div class="wmap-label">当前刺激</div>
               </div>
-              <div class="story" style="flex:1;min-width:220px;margin-top:0" id="bars-story">四张白纸，等待开训。训练中每一步：出一根光条 → 四个神经元比响应 → 赢家把自己的权重图往这根光条挪一点。</div>
+              <div class="story" style="flex:1;min-width:220px;margin-top:0" id="bars-story" aria-live="polite">四张白纸，等待开训。训练中每一步：出一根光条 → 四个神经元比谁的权重图最像它 → 最像的那个把自己的图再往光条挪一点。</div>
             </div>
             <div class="ctl-row">
               <button class="btn" id="bars-train">▶ 训练 ×800</button>
@@ -1176,14 +1177,14 @@ a.tb-home {
       </div>
     </div>
 
-    <p id="bars-payoff">四张白纸各自长成了一种朝向的检测器——<strong>整套代码里没有任何地方写过「朝向」两个字</strong>。规则只有两条：局部的 Hebb 挪动，和赢者通吃。第一讲 Hubel &amp; Wiesel 在猫皮层里找到的朝向细胞，长的就是这种脸。</p>
+    <p id="bars-payoff">四张白纸各自长成了一种朝向的检测器——<strong>整套代码里没有任何地方写过「朝向」两个字</strong>。规则只有两条：赢家把权重图向刺激挪一小步（Hebb 项加一点遗忘），和赢者通吃。第一讲 Hubel &amp; Wiesel 在猫皮层里找到的朝向细胞，就是对这类朝向刺激最来电的细胞。</p>
 
-    <div class="task"><span class="task-tag">两个失败实验</span><span><strong>①</strong> 点「坏初始化」再训练：3 号神经元被扔得太远，一次都赢不了——<strong>死单元</strong>（k-means 的空簇、dead ReLU 的亲戚）。打开「输家也小步学习」再试：输家每步也向刺激挪一小步，慢慢挪回赛场。顺带一说：真实皮层也有这出戏——单眼被剥夺输入，它的地盘很快被另一只眼抢走（Hubel &amp; Wiesel 的剥夺实验）。<strong>②</strong> 打开「位置抖动」再训练：光条位置一变，学习就散了——同一朝向换个位置，在像素距离上比不同朝向还远。<strong>竞争学习不懂"平移不变"。这就是下一讲要解决的问题。</strong></span></div>
+    <div class="task"><span class="task-tag">两个失败实验</span><span><strong>①</strong> 点「坏初始化」再训练：3 号神经元被扔得太远，一次都赢不了——<strong>死单元</strong>（k-means 的空簇、dead ReLU 的亲戚）。打开「输家也小步学习」再试：输家每步也向刺激挪一小步，慢慢挪回赛场。顺带一说：真实皮层也有这出戏——单眼被剥夺输入，它的地盘很快被另一只眼抢走（Hubel &amp; Wiesel 的剥夺实验；只在幼年关键期内如此，成年后这扇窗基本关上——这也是弱视要早治的原因）。<strong>②</strong> 打开「位置抖动」再训练：光条位置一变，学习就散了——同一朝向换个位置，在像素距离上比不同朝向还远。<strong>竞争学习不懂「平移不变」。这就是下一讲要解决的问题。</strong></span></div>
 
     <div class="panel" style="margin:1.8em 0">
       <div class="p-title">把三张脸放在一起看</div>
       <div class="wmap-row" id="compare-maps" style="justify-content:space-around"></div>
-      <p class="small" style="margin:12px 0 0">左：这台仪器训练出的权重（示例）。中：真实 V1 简单细胞的感受野（示意，亮=兴奋区、暗=抑制区）。右：某个 CNN 第一层卷积核（示意）。<strong>你们天天训练出来的第一层滤波器，一条局部规则加一味竞争也能长出来。</strong></p>
+      <p class="small" style="margin:12px 0 0">左：这台仪器训练出的权重（示例）。中：真实 V1 简单细胞的感受野（示意，亮=兴奋区、暗=抑制区）。右：某个 CNN 第一层卷积核（示意）。注意左边只有亮条、没有暗的抑制亚区——要连兴奋/抑制的拮抗结构也长出来，还需要稀疏性等更多约束（Olshausen &amp; Field 1996）；但<strong>「局部规则 + 竞争足以分化出朝向」这一步，已经成立</strong>。</p>
     </div>
 
     <p>最后把话说到边界上。这个演示证明的是<strong>充分性</strong>：局部规则 + 竞争，<em>足以</em>长出朝向检测器——可能性证明，不是实然结论；而且喂给它的本来就是光条，答案有一半预装在数据里。真实的皮层更妙：雪貂、猴子<strong>睁眼之前</strong>就已有朝向选择性——如果经验来不及当老师，训练数据是什么？一个候选答案：视网膜在黑暗中自发放的<strong>活动波</strong>。把这个问题记下来：<strong>睁眼之前，皮层拿什么当训练数据？</strong>（下一讲。）</p>
@@ -1212,9 +1213,9 @@ a.tb-home {
         </tbody>
       </table>
     </div>
-    <p>第二行值得停一秒——第一讲结尾那个悬念「脉冲不可导，反向传播用不上，大脑怎么学」，今天有了正面回答：<strong>大脑的规则根本不求导。</strong></p>
+    <p>第二行值得停一秒——第一讲结尾留下的那个问题（脉冲不可导，反向传播用不上，大脑怎么学），今天有了正面回答：<strong>大脑的规则根本不求导。</strong></p>
 
-    <p>但代价也在桌上：Hebb 学得出特征，学不出「有目标的行为」。大脑的候选补丁是在局部两因子外再乘一个<strong>第三因子</strong>——多巴胺一类的全局调制信号（"刚才干得好/糟"）：Δw = η·x·y·<strong>D</strong>。这是强化学习那一讲的门票。</p>
+    <p>但代价也在桌上：Hebb 学得出特征，学不出「有目标的行为」。大脑的候选补丁是在局部两因子外再乘一个<strong>第三因子</strong>——多巴胺一类的全局调制信号（「刚才干得好/糟」）：Δw = η·(x·y 的痕迹)·<strong>D</strong>。严格说，x·y 要先存成一个几秒内衰减的资格迹<span class="term">eligibility trace</span>，等 D 来了再结账——这是强化学习那一讲的门票。</p>
 
     <div class="predict" data-predict="p2-bp" data-answer="2">
       <div class="pq"><span class="p-tag">下课前最后一票</span>那么——大脑在做反向传播吗？</div>
@@ -1223,16 +1224,16 @@ a.tb-home {
         <button data-i="1">不做，局部规则 + 调制就是全部答案</button>
         <button data-i="2">在近似某种梯度，但用的是别的机器</button>
       </div>
-      <div class="p-reveal">这道题没有标准答案——绿色只代表目前文献里声音最大的猜想：对称反向通路至今没找到（反传的硬要求），但「用反馈连接近似梯度」的理论一直活跃（feedback alignment、预测编码等），而三因子规则已有坚实证据。<b>记住你投的选项：强化学习那一讲我们重投一次，看看全班的分布挪了多少。</b></div>
+      <div class="p-reveal">这道题没有标准答案——绿色只代表目前文献里声音最大的猜想：对称反向通路至今没找到（反向传播的硬要求），但「用反馈连接近似梯度」的理论一直活跃（feedback alignment、预测编码等），而三因子规则已有坚实证据。<b>记住你投的选项：强化学习那一讲我们重投一次，看看全班的分布挪了多少。</b></div>
     </div>
 
     <details class="think">
       <summary><span class="q-tag">思考</span>STDP 只加强「可能是因」的连接——这和你学过的哪些思想暗合？</summary>
-      <div class="a"><p>提示：credit assignment 的时序版本；Granger 因果的"先行者才可能是因"；强化学习里的资格迹<span class="term">eligibility trace</span>。把「相关 ≠ 因果」这句统计课口号，对照突触用毫秒时序做的粗糙因果过滤。</p></div>
+      <div class="a"><p>提示：credit assignment 的时序版本；Granger 因果的「先行者才可能是因」；上面刚提过的资格迹。把「相关 ≠ 因果」这句统计课口号，对照突触用毫秒时序做的粗糙因果过滤。</p></div>
     </details>
     <details class="think">
       <summary><span class="q-tag">思考</span>记忆真的只写在突触权重里吗？</summary>
-      <div class="a"><p>一桩悬案：2015 年 Ryan 等人在小鼠上抑制蛋白合成、抹掉 LTP 之后，用光遗传直接激活当初的「印记细胞」，记忆仍能被唤起。突触权重是目前最强的候选载体，但载体之争没有完全落幕——连接的存在本身、细胞的内在状态，都还在候选名单上。</p></div>
+      <div class="a"><p>一桩悬案：2015 年 Ryan 等人在小鼠上抑制蛋白合成、抹掉 LTP 之后，用光遗传直接激活当初的印记细胞<span class="term">engram cell</span>，记忆仍能被唤起。突触权重是目前最强的候选载体，但载体之争没有完全落幕——连接的存在本身、细胞的内在状态，都还在候选名单上。</p></div>
     </details>
   </div>
 </section>
@@ -1632,7 +1633,7 @@ $$('.predict').forEach(p => {
     $('#npq-q-val').textContent = q.toFixed(2);
     const w = n * p * q;
     const amp = 0.5 * w / 2.0;                          // 基线 n·p·q=2 → 0.5 mV
-    $('#npq-w').textContent = 'w ∝ n·p·q = ' + w.toFixed(2) + '　（EPSP 峰值 ' + amp.toFixed(2) + ' mV）';
+    $('#npq-w').textContent = 'n·p·q = ' + w.toFixed(2) + '（∝ w）　EPSP 峰值 ' + amp.toFixed(2) + ' mV';
     $('#npq-w').className = 'outcome ' + (amp >= 0.5 ? 'spike' : 'idle');
     const { ctx, w: W, h } = fitCanvas(cv);
     const { X, Y } = rigAxes(ctx, W, h, { l: 46, r: 10, t: 12, b: 30 }, [0, 30], [0, 5],
@@ -1710,8 +1711,9 @@ $$('.predict').forEach(p => {
   $('#ltp-hfs').addEventListener('click', () => {
     curT += 1;
     if (ap5on()) {
+      transient = { amp: stable * 0.2, t0: curT, tau: 2.5 };
       events.push({ t: curT, type: 'hfs-ap5' });
-      $('#ltp-note').textContent = 'AP5 在场：高频轰炸打完，什么都没写上——扳机被卸了。打几发测试脉冲确认。';
+      $('#ltp-note').textContent = 'AP5 在场：开头照样短暂冲高（这段短时程增强不走 NMDA），但几分钟后会掉回基线——长期的台阶没写上。打测试脉冲跟踪它掉下来。';
     } else {
       stable = Math.min(2.3, stable * 1.6);
       transient = { amp: stable * 0.22, t0: curT, tau: 2.5 };
@@ -1724,12 +1726,12 @@ $$('.predict').forEach(p => {
     curT += 15;
     if (ap5on()) {
       events.push({ t: curT, type: 'lfs-ap5' });
-      $('#ltp-note').textContent = 'AP5 在场：低频磨了 15 分钟，也没写下去。';
+      $('#ltp-note').textContent = 'AP5 在场：低频磨了 15 min，也没写下去。';
     } else {
       stable = Math.max(0.45, stable * 0.7);
       transient = { amp: 0, t0: curT, tau: 2.5 };
       events.push({ t: curT, type: 'lfs' });
-      $('#ltp-note').textContent = '低频 15 分钟磨完：往下写了——这就是 LTD。打测试脉冲看新水平。';
+      $('#ltp-note').textContent = '低频 15 min 磨完：往下写了——这就是 LTD。打测试脉冲看新水平。';
     }
     draw();
   });
@@ -1747,12 +1749,12 @@ $$('.predict').forEach(p => {
 (function stdpBench() {
   const cv = $('#stdp-canvas'); if (!cv) return;
   const rng = makeRng(9182);
-  const curve = dt => { const d = dt === 0 ? 0.5 : dt; return d > 0 ? 100 * Math.exp(-d / 17) : -50 * Math.exp(d / 34); };
+  const curve = dt => { const d = dt === 0 ? 0.5 : dt; return d > 0 ? 80 * Math.exp(-d / 17) : -30 * Math.exp(d / 34); };
   let pts = [], fitOn = false;
   function draw() {
     const { ctx, w, h } = fitCanvas(cv);
-    const { X, Y } = rigAxes(ctx, w, h, { l: 52, r: 14, t: 16, b: 34 }, [-55, 55], [-70, 120],
-      'Δt (ms)', 'Δw (%)', [-40, -20, 0, 20, 40], [-50, 0, 50, 100]);
+    const { X, Y } = rigAxes(ctx, w, h, { l: 52, r: 14, t: 16, b: 34 }, [-65, 65], [-70, 120],
+      'Δt (ms)', 'Δw (%)', [-60, -40, -20, 0, 20, 40, 60], [-50, 0, 50, 100]);
     ctx.strokeStyle = RIG.axis; ctx.lineWidth = 1.2;
     ctx.beginPath(); ctx.moveTo(X(0), Y(-70)); ctx.lineTo(X(0), Y(120)); ctx.stroke();
     ctx.fillStyle = RIG.text; ctx.font = '11px "IBM Plex Mono", monospace';
@@ -1764,10 +1766,10 @@ $$('.predict').forEach(p => {
       ctx.strokeStyle = RIG.dim; ctx.lineWidth = 2;
       ctx.beginPath();
       let first = true;
-      for (let d = -55; d <= -0.5; d += 0.5) { const x = X(d), y = Y(curve(d)); first ? ctx.moveTo(x, y) : ctx.lineTo(x, y); first = false; }
+      for (let d = -60; d <= -2; d += 0.5) { const x = X(d), y = Y(curve(d)); first ? ctx.moveTo(x, y) : ctx.lineTo(x, y); first = false; }
       ctx.stroke();
       ctx.beginPath(); first = true;
-      for (let d = 0.5; d <= 55; d += 0.5) { const x = X(d), y = Y(curve(d)); first ? ctx.moveTo(x, y) : ctx.lineTo(x, y); first = false; }
+      for (let d = 2; d <= 60; d += 0.5) { const x = X(d), y = Y(curve(d)); first ? ctx.moveTo(x, y) : ctx.lineTo(x, y); first = false; }
       ctx.stroke();
     }
     pts.forEach(p => {
@@ -1786,7 +1788,7 @@ $$('.predict').forEach(p => {
   });
   $('#stdp-pair').addEventListener('click', () => {
     const dt = +$('#stdp-dt').value;
-    const dw = curve(dt) + 13 * (rng() * 2 - 1);
+    const dw = Math.abs(dt) < 2 ? 45 * (rng() * 2 - 1) : curve(dt) + 10 * (rng() * 2 - 1);
     pts.push({ dt, dw });
     const out = $('#stdp-out');
     out.textContent = 'Δt=' + (dt > 0 ? '+' : '') + dt + ' ms → Δw = ' + (dw >= 0 ? '+' : '') + dw.toFixed(0) + '%';
@@ -1846,6 +1848,8 @@ $$('.predict').forEach(p => {
     if (rule === 'hebb') { d0 = eta * y * x[0]; d1 = eta * y * x[1]; }
     else { d0 = eta * y * (x[0] - y * w[0]); d1 = eta * y * (x[1] - y * w[1]); }
     w[0] += d0; w[1] += d1;
+    const n = Math.hypot(w[0], w[1]);       // 纯 Hebb 会指数爆炸：封顶防溢出，方向不动
+    if (n > 1e12) { w[0] *= 1e12 / n; w[1] *= 1e12 / n; }
     if (record) last = { x, y, d: [d0, d1] };
   }
   function draw() {
@@ -1955,6 +1959,8 @@ $$('.predict').forEach(p => {
     rule = r;
     $('#rule-hebb').classList.toggle('on', r === 'hebb');
     $('#rule-oja').classList.toggle('on', r === 'oja');
+    $('#rule-hebb').setAttribute('aria-pressed', r === 'hebb');
+    $('#rule-oja').setAttribute('aria-pressed', r === 'oja');
     $('#oja-fix-line').innerHTML = r === 'oja'
       ? '\n  w[0] -= eta * y*y * w[0]; <span class="cm">// Oja：活动门控的归一化</span>\n  w[1] -= eta * y*y * w[1];'
       : '\n  <span class="cm">// （这里将来要发生点什么……）</span>';
@@ -2024,6 +2030,8 @@ $$('.predict').forEach(p => {
     const item = document.createElement('div');
     item.className = 'wmap-item';
     const m = buildMap(item);
+    m.setAttribute('role', 'img');
+    m.setAttribute('aria-label', k + ' 号神经元权重图');
     const lb = document.createElement('div');
     lb.className = 'wmap-label';
     lb.textContent = k + ' 号 · 胜 0';
@@ -2054,8 +2062,10 @@ $$('.predict').forEach(p => {
     labels.forEach((lb, k) => { lb.textContent = k + ' 号 · 胜 ' + wins[k]; });
   }
   function reset() {
+    remaining = 800;
     stopTrain();
-    const seed = Math.abs(parseInt($('#bars-seed').value) || 42);
+    const p = parseInt($('#bars-seed').value, 10);
+    const seed = Number.isFinite(p) ? Math.abs(p) : 42;
     rng = makeRng(seed * 7919 + 13);
     const bad = flag('#bars-bad');
     W = [];
@@ -2065,10 +2075,9 @@ $$('.predict').forEach(p => {
       W.push(w);
     }
     wins = [0, 0, 0, 0];
-    remaining = 800;
     $('#bars-story').innerHTML = flag('#bars-bad')
       ? '坏初始化就位：<b>3 号被扔到离所有刺激都很远的地方</b>。开训，看它的胜场。'
-      : '四张白纸，等待开训。训练中每一步：出一根光条 → 四个神经元比响应 → 赢家把自己的权重图往这根光条挪一点。';
+      : '四张白纸，等待开训。训练中每一步：出一根光条 → 四个神经元比谁的权重图最像它 → 最像的那个把自己的图再往光条挪一点。';
     $('#bars-probe-out').textContent = '—';
     $('#bars-probe-out').className = 'outcome idle';
     renderAll(new Array(25).fill(0));
@@ -2100,7 +2109,7 @@ $$('.predict').forEach(p => {
     $('#bars-story').innerHTML = dead
       ? '<b>训练完了，但 ' + dead + ' 个神经元一场都没赢——死单元。</b>它的图还是白纸。打开「输家也小步学习」再重置重训，看它怎么被救回赛场。'
       : (flag('#bars-jitter')
-        ? '<b>散了。</b>位置一抖，同一朝向的光条在像素距离上反而更远，热图学不出干净的朝向。这不是 bug——是"不懂平移不变"的病，下一讲开药。'
+        ? '<b>散了。</b>位置一抖，同一朝向的光条在像素距离上反而更远，热图学不出干净的朝向。这不是 bug——是「不懂平移不变」的病，下一讲开药。'
         : '<b>分家完成。</b>四张热图各占一种朝向——用下面的探针试试：出一根光条，猜谁最像它，再看谁真的赢。');
   }
   function train() {
