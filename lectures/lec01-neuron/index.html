@@ -664,10 +664,24 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
 .rig .p-live .pl-bar i { background: var(--rig-v); }
 .rig .p-live .pl-row.is-right .pl-bar i { background: #57D08A; }
 .rig .p-live .pl-n { color: var(--rig-ink); }
+
+/* ---------- 返回课程主页 ---------- */
+#rail a.rail-home {
+  display: inline-block; font-size: .76rem; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 2px 12px; margin: 0 0 14px;
+}
+#rail a.rail-home:hover { color: var(--accent); border-color: var(--accent); background: transparent; }
+a.tb-home {
+  font-size: .95rem; font-weight: 600; text-decoration: none;
+  padding: 5px 12px; border-radius: 9px;
+  border: 1px solid var(--accent); color: var(--accent);
+}
 </style>
 <div id="progress" role="presentation"></div>
 
 <nav id="rail" aria-label="课程目录">
+  <a class="rail-home" href="/">← 课程主页</a>
   <div class="rail-course">神经科学导论</div>
   <div class="rail-lec">第一讲<br>神经元如何计算</div>
   <div class="rail-group">第一课时 · 真实的神经元</div>
@@ -688,6 +702,7 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
 </nav>
 
 <div id="topbar">
+  <a class="tb-home" href="/" aria-label="课程主页">⌂</a>
   <button class="btn ghost" id="tb-prev" aria-label="上一节" style="padding:6px 12px">←</button>
   <select id="tb-select" aria-label="跳转到小节"></select>
   <button class="btn ghost" id="tb-next" aria-label="下一节" style="padding:6px 12px">→</button>

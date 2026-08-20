@@ -1,0 +1,2194 @@
+<title>大脑如何学习</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* ============================================================
+   《神经科学导论》第一讲 · 神经元如何计算
+   设计语言：电生理实验室 —— 纸面讲义 + 深色仪器面板
+   ============================================================ */
+
+:root {
+  /* 浅色主题（完整定义） */
+  --bg: #F5F6F8;
+  --surface: #FFFFFF;
+  --surface-2: #EDEFF3;
+  --ink: #1C222E;
+  --ink-2: #465062;
+  --muted: #7C8598;
+  --line: #D9DEE7;
+  --line-soft: #E6EAF0;
+  --accent: #6B4FA8;          /* 尼氏染色紫 cresyl violet */
+  --accent-soft: #EEE9F7;
+  --on-accent: #FFFFFF;
+  /* 数据色（浅色主题，已通过色觉安全验证） */
+  --c-v:  #5B3D99;   /* 膜电位 */
+  --c-na: #C94F2B;   /* Na+ */
+  --c-k:  #2E6FB0;   /* K+ */
+  --c-i:  #A0761F;   /* 刺激电流 */
+  --c-ref: #8A94A6;  /* 参考/理论曲线 */
+  --good: #2E7D4F;
+  --bad:  #C43D3D;
+  /* 仪器面板：两种主题下都保持深色（示波器传统） */
+  --rig-bg: #10141C;
+  --rig-panel: #171C27;
+  --rig-line: #2A3140;
+  --rig-ink: #C9D1E0;
+  --rig-muted: #7C8598;
+  --rig-v:  #BFA3EF;
+  --rig-na: #E07A50;
+  --rig-k:  #5F9FD8;
+  --rig-grid: #1E2531;
+  --shadow: 0 1px 2px rgba(15,20,30,.05), 0 8px 28px rgba(15,20,30,.07);
+  --sans: "IBM Plex Sans", -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+  --serif: "IBM Plex Serif", Georgia, "Songti SC", "Noto Serif CJK SC", serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151B;
+    --surface: #1A1E27;
+    --surface-2: #222835;
+    --ink: #E7EAF2;
+    --ink-2: #AEB7C9;
+    --muted: #8791A3;
+    --line: #2E3546;
+    --line-soft: #262D3C;
+    --accent: #A78BDA;
+    --accent-soft: #2A2440;
+    --on-accent: #14101F;
+    --c-v:  #8F6CCB;
+    --c-na: #D06336;
+    --c-k:  #3E86C7;
+    --c-i:  #A8842B;
+    --c-ref: #77839A;
+    --good: #4CAF79;
+    --bad:  #E06A6A;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 28px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12151B;
+  --surface: #1A1E27;
+  --surface-2: #222835;
+  --ink: #E7EAF2;
+  --ink-2: #AEB7C9;
+  --muted: #8791A3;
+  --line: #2E3546;
+  --line-soft: #262D3C;
+  --accent: #A78BDA;
+  --accent-soft: #2A2440;
+  --on-accent: #14101F;
+  --c-v:  #8F6CCB;
+  --c-na: #D06336;
+  --c-k:  #3E86C7;
+  --c-i:  #A8842B;
+  --c-ref: #77839A;
+  --good: #4CAF79;
+  --bad:  #E06A6A;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 28px rgba(0,0,0,.35);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .001s !important; transition-duration: .001s !important; }
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16.5px;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- 左侧导航栏 ---------- */
+#rail {
+  position: fixed; inset: 0 auto 0 0; width: 236px;
+  padding: 28px 18px 28px 26px;
+  border-right: 1px solid var(--line-soft);
+  background: var(--bg);
+  overflow-y: auto;
+  z-index: 40;
+  font-size: .85rem;
+}
+#rail .rail-course { font-size: .72rem; letter-spacing: .16em; color: var(--muted); margin-bottom: 4px; }
+#rail .rail-lec { font-weight: 700; font-size: .95rem; margin-bottom: 18px; line-height: 1.4; }
+#rail .rail-group { font-size: .7rem; letter-spacing: .14em; color: var(--muted); margin: 16px 0 6px; }
+#rail a {
+  display: block; padding: 5px 10px; margin: 1px 0;
+  color: var(--ink-2); text-decoration: none; border-radius: 7px;
+  line-height: 1.45;
+}
+#rail a:hover { background: var(--surface-2); color: var(--ink); }
+#rail a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+#rail .rail-hint { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--line-soft); color: var(--muted); font-size: .74rem; line-height: 1.7; }
+#rail kbd {
+  font-family: var(--mono); font-size: .72rem;
+  border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px;
+  padding: 0 4px; background: var(--surface);
+}
+
+/* 顶部进度条 */
+#progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); width: 0; z-index: 60; }
+
+/* 窄屏顶栏 */
+#topbar {
+  display: none;
+  position: sticky; top: 0; z-index: 50;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line-soft);
+  padding: 10px 16px;
+  align-items: center; gap: 10px;
+  font-size: .85rem;
+}
+#topbar select {
+  flex: 1; min-width: 0;
+  font: inherit; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  padding: 6px 8px;
+}
+
+main { margin-left: 236px; }
+@media (max-width: 1080px) {
+  #rail { display: none; }
+  #topbar { display: flex; }
+  main { margin-left: 0; }
+}
+
+/* ---------- 版面 ---------- */
+.scene { padding: 9vh 0 10vh; border-top: 1px solid var(--line-soft); scroll-margin-top: 40px; }
+.scene:first-of-type { border-top: none; }
+.wrap { max-width: 880px; margin: 0 auto; padding: 0 28px; }
+.wrap.wide { max-width: 1120px; }
+@media (max-width: 640px) { .wrap { padding: 0 18px; } }
+
+.kicker {
+  font-size: .76rem; letter-spacing: .15em; color: var(--accent);
+  font-weight: 600; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.kicker .k-time { color: var(--muted); font-weight: 400; letter-spacing: .08em; }
+h2 {
+  font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+  line-height: 1.28; margin: 0 0 6px; font-weight: 700;
+  text-wrap: balance;
+}
+h3 { font-size: 1.22rem; margin: 2.4em 0 .5em; font-weight: 700; }
+h4 { font-size: 1.02rem; margin: 1.8em 0 .4em; font-weight: 600; }
+.lede { font-size: 1.1rem; color: var(--ink-2); margin: 8px 0 0; max-width: 62ch; }
+p { margin: 1em 0; max-width: 68ch; }
+.scene ul, .scene ol { max-width: 66ch; padding-left: 1.4em; }
+li { margin: .35em 0; }
+strong { font-weight: 650; }
+.term { font-family: var(--serif); font-style: italic; color: var(--muted); font-size: .92em; }
+.small, .note { font-size: .84rem; color: var(--muted); line-height: 1.7; }
+.note { max-width: 62ch; }
+a { color: var(--accent); }
+::selection { background: var(--accent); color: var(--on-accent); }
+:is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
+}
+
+/* 高亮论点 */
+.thesis {
+  margin: 2em 0; padding: 22px 26px;
+  background: var(--surface); border: 1.5px solid var(--accent);
+  border-radius: 14px; box-shadow: var(--shadow);
+  font-size: 1.18rem; line-height: 1.7; font-weight: 500;
+  max-width: 640px;
+}
+.thesis .t-mark { display: block; font-size: .72rem; letter-spacing: .16em; color: var(--accent); font-weight: 700; margin-bottom: 6px; }
+
+/* 数字卡片 */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin: 1.6em 0; }
+.tile {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; padding: 16px 18px;
+}
+.tile .t-label { font-size: .76rem; color: var(--muted); letter-spacing: .06em; }
+.tile .t-num {
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: 1.65rem; font-weight: 600; line-height: 1.3; margin: 2px 0;
+}
+.tile .t-sub { font-size: .8rem; color: var(--ink-2); line-height: 1.5; }
+
+/* 思考卡片 */
+details.think {
+  margin: 1.8em 0; max-width: 66ch;
+  border: 1.5px dashed var(--line); border-radius: 12px;
+  background: var(--surface);
+}
+details.think summary {
+  cursor: pointer; padding: 14px 18px; font-weight: 600; list-style: none;
+  display: flex; gap: 10px; align-items: baseline;
+}
+details.think summary::-webkit-details-marker { display: none; }
+details.think summary .q-tag {
+  flex: none; font-size: .72rem; letter-spacing: .1em; color: var(--accent);
+  border: 1px solid var(--accent); border-radius: 999px; padding: 1px 9px;
+  font-weight: 700; transform: translateY(-1px);
+}
+details.think[open] summary { border-bottom: 1px dashed var(--line); }
+details.think .a { padding: 4px 18px 14px; color: var(--ink-2); }
+details.think .a p { margin: .7em 0; }
+
+/* 动手任务 */
+.task {
+  display: flex; gap: 12px; align-items: baseline;
+  margin: 1.4em 0; padding: 12px 16px; max-width: 66ch;
+  background: var(--accent-soft); border-radius: 10px;
+  font-size: .92rem; line-height: 1.7;
+}
+.task .task-tag { flex: none; font-size: .72rem; letter-spacing: .12em; font-weight: 700; color: var(--accent); }
+
+/* 公式 */
+.eq {
+  font-family: var(--serif); font-size: 1.28rem;
+  margin: 1.6em 0; padding: 18px 22px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  overflow-x: auto; white-space: nowrap;
+  display: flex; align-items: center; gap: .35em; width: fit-content; max-width: 100%;
+}
+.eq i { font-style: italic; }
+.eq .frac { display: inline-flex; flex-direction: column; text-align: center; vertical-align: middle; margin: 0 .15em; }
+.eq .frac .den { border-top: 1.2px solid currentColor; }
+.eq .frac span { padding: 0 .25em; line-height: 1.35; }
+.eq sub, .eq sup { font-size: .68em; }
+.eq-note { font-size: .84rem; color: var(--muted); margin-top: -.8em; }
+.hl-v { color: var(--c-v); font-weight: 600; }
+.hl-na { color: var(--c-na); font-weight: 600; }
+.hl-k { color: var(--c-k); font-weight: 600; }
+.hl-i { color: var(--c-i); font-weight: 600; }
+
+/* ---------- 仪器面板（两种主题下都是深色） ---------- */
+.rig {
+  background: var(--rig-bg); color: var(--rig-ink);
+  border: 1px solid var(--rig-line); border-radius: 16px;
+  margin: 1.8em 0; overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.rig-head {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 12px 18px; border-bottom: 1px solid var(--rig-line);
+  background: var(--rig-panel);
+}
+.rig-head .rig-name {
+  font-family: var(--mono); font-size: .8rem; letter-spacing: .12em;
+  color: var(--rig-ink); font-weight: 600;
+}
+.rig-head .led {
+  width: 8px; height: 8px; border-radius: 50%; background: #3A4254; flex: none;
+}
+.rig-head .led.on { background: #57D08A; box-shadow: 0 0 8px #57D08A88; }
+.rig-head .rig-spacer { flex: 1; }
+.rig-body { padding: 18px; }
+.rig canvas { display: block; width: 100%; border-radius: 8px; background: var(--rig-bg); }
+.rig .scope-frame { border: 1px solid var(--rig-line); border-radius: 10px; padding: 6px; background: var(--rig-bg); }
+
+/* 仪器上的控制件 */
+.ctl-row { display: flex; gap: 18px 26px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+.ctl { display: flex; flex-direction: column; gap: 4px; min-width: 150px; }
+.ctl .ctl-label { font-size: .74rem; letter-spacing: .06em; color: var(--rig-muted); display: flex; justify-content: space-between; gap: 8px; }
+.ctl .ctl-val { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--rig-ink); }
+.rig input[type="range"] { accent-color: var(--rig-v); width: 100%; margin: 0; }
+.light-ctl .ctl-label { color: var(--muted); }
+.light-ctl .ctl-val { color: var(--ink); }
+
+button.btn {
+  font: inherit; font-size: .88rem; font-weight: 600;
+  padding: 8px 18px; border-radius: 9px; cursor: pointer;
+  background: var(--accent); color: var(--on-accent);
+  border: 1px solid transparent;
+}
+button.btn:hover { filter: brightness(1.08); }
+button.btn:active { transform: translateY(1px); }
+button.btn.ghost {
+  background: transparent; color: var(--accent); border-color: var(--accent);
+}
+.rig button.btn { background: var(--rig-v); color: #14101F; }
+.rig button.btn.ghost { background: transparent; color: var(--rig-ink); border-color: var(--rig-line); }
+button.chip {
+  font: inherit; font-size: .8rem; font-weight: 600;
+  padding: 5px 14px; border-radius: 999px; cursor: pointer;
+  background: transparent; color: var(--rig-ink);
+  border: 1px solid var(--rig-line);
+}
+button.chip[aria-pressed="true"] { background: #3A2430; border-color: #B3574A; color: #F0A08C; }
+button.chip.chip-k[aria-pressed="true"] { background: #1E2C3E; border-color: #3E6EA0; color: #8FBCE8; }
+.chip-note { font-size: .74rem; color: var(--rig-muted); }
+
+/* 门控变量指示 */
+.gates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+.gate { border: 1px solid var(--rig-line); border-radius: 10px; padding: 10px 12px; }
+.gate .g-name { font-family: var(--mono); font-size: .74rem; color: var(--rig-muted); display: flex; justify-content: space-between; }
+.gate .g-name b { color: var(--rig-ink); }
+.gate .g-bar { height: 8px; border-radius: 4px; background: var(--rig-grid); margin-top: 6px; overflow: hidden; }
+.gate .g-bar i { display: block; height: 100%; border-radius: 4px; width: 0; }
+.gate .g-val { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: .78rem; margin-top: 4px; color: var(--rig-ink); }
+
+/* 相位标签 */
+.phase-strip { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.phase {
+  font-size: .78rem; padding: 3px 12px; border-radius: 999px;
+  border: 1px solid var(--rig-line); color: var(--rig-muted);
+}
+.phase.on { border-color: var(--rig-v); color: var(--rig-v); font-weight: 600; }
+
+/* 实验选项卡 */
+.exp-tabs { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 18px 0; }
+.exp-tabs button {
+  font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer;
+  padding: 7px 16px; border-radius: 9px 9px 0 0;
+  background: transparent; color: var(--rig-muted); border: 1px solid transparent;
+}
+.exp-tabs button[aria-selected="true"] {
+  background: var(--rig-bg); color: var(--rig-ink);
+  border-color: var(--rig-line); border-bottom-color: var(--rig-bg);
+  position: relative; top: 1px;
+}
+.exp-panel { border-top: 1px solid var(--rig-line); }
+
+/* ---------- 浅色图表卡 ---------- */
+.chart-card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px; margin: 1.6em 0; box-shadow: var(--shadow);
+}
+.chart-card canvas { display: block; width: 100%; }
+.chart-title { font-size: .85rem; font-weight: 600; color: var(--ink-2); margin-bottom: 10px; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: .8rem; color: var(--ink-2); margin-top: 10px; }
+.legend .li { display: flex; align-items: center; gap: 6px; }
+.legend .sw { width: 14px; height: 3px; border-radius: 2px; }
+
+/* ---------- 代码实验台 ---------- */
+.code-lab { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; }
+@media (max-width: 900px) { .code-lab { grid-template-columns: 1fr; } }
+.code-pane { padding: 18px; border-right: 1px solid var(--rig-line); min-width: 0; }
+@media (max-width: 900px) { .code-pane { border-right: none; border-bottom: 1px solid var(--rig-line); } }
+.result-pane { padding: 18px; min-width: 0; }
+pre.code {
+  font-family: var(--mono); font-size: .82rem; line-height: 1.75;
+  margin: 0; overflow-x: auto; color: #AEB9CE; tab-size: 4;
+}
+pre.code .cm { color: #5B6578; }
+pre.code .kw { color: #C792EA; }
+pre.code .fn { color: #82AAFF; }
+pre.code .st { color: #C3E88D; }
+input.cnum {
+  font-family: var(--mono); font-size: .82rem; font-weight: 600;
+  width: 5ch; text-align: center;
+  background: #232B3B; color: #F5D67B;
+  border: 1px solid #3A4254; border-radius: 5px; padding: 1px 2px;
+  -moz-appearance: textfield; appearance: textfield;
+}
+input.cnum::-webkit-inner-spin-button { display: none; }
+input.cnum:focus { border-color: var(--rig-v); outline: none; }
+textarea.code-free {
+  width: 100%; min-height: 380px; resize: vertical;
+  font-family: var(--mono); font-size: .8rem; line-height: 1.7;
+  background: #0C1017; color: #C8D2E4;
+  border: 1px solid var(--rig-line); border-radius: 8px; padding: 12px;
+}
+.run-row { display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+.run-row[hidden] { display: none; }
+.run-msg { font-family: var(--mono); font-size: .76rem; color: var(--rig-muted); }
+.run-msg.err { color: #E08A8A; }
+
+/* ---------- 时间轴（双车道） ---------- */
+.lanes-scroll { overflow-x: auto; margin: 1.8em 0; padding-bottom: 8px; }
+.lanes { display: grid; grid-auto-flow: column; gap: 0; min-width: 900px; }
+.lane-col { display: grid; grid-template-rows: 1fr 46px 1fr; min-width: 128px; }
+.lane-evt {
+  margin: 4px 6px; padding: 10px 12px; border-radius: 10px;
+  background: var(--surface); border: 1px solid var(--line);
+  font-size: .78rem; line-height: 1.55; cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+}
+.lane-evt:hover, .lane-evt.open { border-color: var(--accent); box-shadow: var(--shadow); }
+.lane-evt .y { font-family: var(--mono); font-weight: 600; color: var(--accent); font-size: .74rem; }
+.lane-evt .t { font-weight: 650; display: block; margin: 1px 0 2px; }
+.lane-evt .d { color: var(--muted); display: none; }
+.lane-evt.open .d { display: block; }
+.lane-evt.neu { align-self: end; }
+.lane-evt.ai { align-self: start; }
+.lane-axis { position: relative; }
+.lane-axis::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 50%;
+  border-top: 2px solid var(--line);
+}
+.lane-axis svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.lane-tags { display: flex; justify-content: space-between; max-width: 900px; font-size: .76rem; color: var(--muted); letter-spacing: .1em; }
+
+/* ---------- 解剖图 ---------- */
+.anat-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 20px; align-items: start; margin: 1.8em 0; }
+@media (max-width: 860px) { .anat-grid { grid-template-columns: 1fr; } }
+.anat-fig {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 14px; box-shadow: var(--shadow);
+}
+.anat-fig svg { width: 100%; height: auto; display: block; }
+.anat-part { cursor: pointer; }
+.anat-part .shape { transition: opacity .15s; }
+.anat-part:hover .shape { opacity: .75; }
+.anat-part.sel .halo { opacity: 1; }
+.anat-part .halo { opacity: 0; transition: opacity .2s; }
+.anat-info {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px 20px; position: sticky; top: 60px;
+}
+.anat-info .ai-name { font-weight: 700; font-size: 1.05rem; }
+.anat-info .ai-en { font-family: var(--serif); font-style: italic; color: var(--muted); font-size: .88rem; margin-bottom: 8px; }
+.anat-info .ai-role {
+  margin-top: 10px; padding: 10px 12px; border-radius: 9px;
+  background: var(--accent-soft); font-size: .86rem; line-height: 1.65;
+}
+.anat-info .ai-role b { color: var(--accent); }
+.anat-info .ai-num { font-size: .8rem; color: var(--muted); margin-top: 10px; }
+
+/* ---------- 离子 / 电位标尺 ---------- */
+.ion-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; margin: 1.8em 0; align-items: stretch; }
+@media (max-width: 860px) { .ion-grid { grid-template-columns: 1fr; } }
+.panel {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px; box-shadow: var(--shadow); min-width: 0;
+}
+.panel .p-title { font-size: .85rem; font-weight: 650; color: var(--ink-2); margin-bottom: 12px; }
+.ion-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.ion-table th, .ion-table td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--line-soft); font-variant-numeric: tabular-nums; }
+.ion-table th { font-size: .76rem; color: var(--muted); font-weight: 600; letter-spacing: .04em; }
+.ion-table td:first-child, .ion-table th:first-child { text-align: left; }
+.ion-table .mono { font-family: var(--mono); }
+
+/* ---------- 对照区 ---------- */
+.duel { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 1.8em 0; }
+@media (max-width: 780px) { .duel { grid-template-columns: 1fr; } }
+.duel .panel h4 { margin: 0 0 6px; }
+.cmp-scroll { overflow-x: auto; margin: 1.6em 0; }
+.cmp-table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: .9rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.cmp-table th, .cmp-table td { padding: 11px 14px; border-bottom: 1px solid var(--line-soft); text-align: left; vertical-align: top; line-height: 1.6; }
+.cmp-table thead th { background: var(--surface-2); font-size: .8rem; letter-spacing: .04em; }
+.cmp-table td:first-child { font-weight: 600; white-space: nowrap; color: var(--ink-2); }
+.cmp-table tr:last-child td { border-bottom: none; }
+
+/* ---------- 封面 ---------- */
+.cover { padding-top: 12vh; }
+.cover .c-course { font-size: .8rem; letter-spacing: .22em; color: var(--muted); margin-bottom: 14px; }
+.cover h1 {
+  font-size: clamp(2.5rem, 6vw, 4.3rem); line-height: 1.15;
+  margin: 0 0 10px; font-weight: 700; letter-spacing: .01em; text-wrap: balance;
+}
+.cover .c-sub { font-size: clamp(1rem, 2vw, 1.25rem); color: var(--ink-2); max-width: 56ch; }
+.cover-spark { margin: 26px 0 6px; }
+.cover-spark canvas { width: 100%; max-width: 720px; height: auto; display: block; }
+
+/* ---------- 课间 / 收尾 ---------- */
+.interlude { text-align: center; padding: 7vh 0; }
+.interlude .i-mark { font-size: .78rem; letter-spacing: .3em; color: var(--muted); }
+.interlude .i-text { font-size: 1.3rem; font-weight: 600; margin-top: 8px; }
+.next-teaser {
+  margin: 2em 0 0; padding: 20px 24px; max-width: 640px;
+  border: 1px solid var(--line); border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent-soft), var(--surface));
+}
+.next-teaser .nt-tag { font-size: .74rem; letter-spacing: .16em; color: var(--accent); font-weight: 700; }
+.next-teaser .nt-title { font-size: 1.2rem; font-weight: 700; margin: 4px 0; }
+footer.colophon {
+  margin-left: 0; padding: 26px 28px 40px; border-top: 1px solid var(--line-soft);
+  font-size: .78rem; color: var(--muted);
+}
+
+/* 揭示动画 */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal { opacity: 0; transform: translateY(14px); transition: opacity .55s ease, transform .55s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+}
+
+/* ---------- 预测-投票组件 ---------- */
+.predict {
+  margin: 1.6em 0; max-width: 66ch;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 16px 18px;
+}
+.predict .pq { font-weight: 650; margin-bottom: 10px; line-height: 1.7; }
+.predict .pq .p-tag { display: inline-block; font-size: .7rem; letter-spacing: .12em; color: var(--on-accent); background: var(--accent); border-radius: 999px; padding: 2px 10px; font-weight: 700; margin-right: 8px; transform: translateY(-2px); }
+.predict .opts { display: flex; flex-direction: column; gap: 8px; }
+.predict .opts button {
+  font: inherit; font-size: .92rem; text-align: left; cursor: pointer;
+  padding: 9px 14px; border-radius: 9px;
+  background: var(--surface-2); color: var(--ink); border: 1.5px solid transparent;
+  line-height: 1.55;
+}
+.predict .opts button:hover { border-color: var(--accent); }
+.predict .opts button.chosen { border-color: var(--accent); background: var(--accent-soft); }
+.predict.revealed .opts button.right { border-color: var(--good); background: var(--surface); background: color-mix(in srgb, var(--good) 12%, var(--surface)); }
+.predict.revealed .opts button.chosen:not(.right) { border-color: var(--bad); }
+.predict .p-reveal { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); color: var(--ink-2); font-size: .92rem; line-height: 1.7; }
+.predict.revealed .p-reveal { display: block; }
+.predict .p-hint { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+.rig .predict { background: var(--rig-panel); border-color: var(--rig-line); }
+.rig .predict .pq { color: var(--rig-ink); }
+.rig .predict .opts button { background: #202737; color: var(--rig-ink); }
+.rig .predict .p-reveal { color: var(--rig-ink); border-top-color: var(--rig-line); }
+.rig .predict .p-hint { color: var(--rig-muted); }
+
+/* ---------- 生物⇄ML 翻译胶囊 ---------- */
+.mlb {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: .78rem; line-height: 1.4; vertical-align: 2px;
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 2px 4px 2px 10px; margin: 0 3px;
+  background: var(--surface); white-space: nowrap;
+}
+.mlb .b { color: var(--ink-2); font-weight: 600; }
+.mlb .arr { color: var(--accent); font-weight: 700; }
+.mlb .m { font-family: var(--mono); font-size: .72rem; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 1px 9px; font-weight: 600; }
+.mlb-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 1.2em 0; }
+
+/* ---------- 配对游戏 ---------- */
+.match-cards { display: flex; gap: 10px; flex-wrap: wrap; margin: 1.2em 0; }
+.match-card {
+  font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer;
+  padding: 9px 16px; border-radius: 10px;
+  background: var(--accent-soft); color: var(--accent);
+  border: 1.5px solid var(--accent);
+  font-family: var(--mono);
+}
+.match-card.selected { background: var(--accent); color: var(--on-accent); }
+.match-card.done { opacity: .35; cursor: default; border-style: dashed; }
+.match-msg { min-height: 1.6em; font-size: .88rem; font-weight: 600; }
+.match-msg.ok { color: var(--good); }
+.match-msg.no { color: var(--bad); }
+.anat-slot { cursor: pointer; }
+.anat-slot rect { fill: transparent; stroke: var(--muted); stroke-dasharray: 5 4; transition: stroke .15s; }
+.anat-slot:hover rect { stroke: var(--accent); }
+.anat-slot text { fill: var(--muted); font-size: 12px; }
+.anat-slot.filled rect { stroke: var(--accent); stroke-dasharray: none; fill: var(--accent-soft); }
+.anat-slot.filled text { fill: var(--accent); font-weight: 700; }
+.anat-slot.shake { animation: slot-shake .3s; }
+@keyframes slot-shake { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+
+/* ---------- 想深入折叠块 ---------- */
+details.deep {
+  margin: 1.6em 0; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface-2);
+}
+details.deep summary {
+  cursor: pointer; padding: 12px 18px; font-weight: 600; font-size: .92rem;
+  color: var(--ink-2); list-style: none; display: flex; gap: 10px; align-items: baseline;
+}
+details.deep summary::-webkit-details-marker { display: none; }
+details.deep summary::before { content: "+"; font-family: var(--mono); color: var(--accent); font-weight: 700; }
+details.deep[open] summary::before { content: "−"; }
+details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); border-radius: 0 0 12px 12px; }
+
+/* ---------- 预设按钮 ---------- */
+.presets { display: flex; gap: 6px; flex-wrap: wrap; }
+button.mini {
+  font-family: var(--mono); font-size: .74rem; font-weight: 600; cursor: pointer;
+  padding: 3px 10px; border-radius: 7px;
+  background: transparent; color: var(--rig-ink); border: 1px solid var(--rig-line);
+}
+button.mini:hover { border-color: var(--rig-v); color: var(--rig-v); }
+button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--rig-v); }
+.panel button.mini, .chart-card button.mini { color: var(--ink-2); border-color: var(--line); }
+.panel button.mini:hover, .chart-card button.mini:hover { border-color: var(--accent); color: var(--accent); }
+.panel button.mini.on, .chart-card button.mini.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+
+/* ---------- 装配徽章 ---------- */
+.gained {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin: 1.6em 0 0; padding: 8px 16px;
+  border: 1.5px solid var(--good); border-radius: 999px;
+  color: var(--good); font-size: .86rem; font-weight: 650;
+  background: var(--surface);
+  background: color-mix(in srgb, var(--good) 8%, var(--surface));
+}
+.gained .g-eq { font-family: var(--mono); font-size: .82rem; }
+
+/* ---------- 结果徽标 ---------- */
+.outcome {
+  font-family: var(--mono); font-size: .84rem; font-weight: 600;
+  padding: 4px 12px; border-radius: 8px; display: inline-block;
+}
+.outcome.spike { color: #7BE3A5; background: #16301F; }
+.outcome.fail { color: #E8A0A0; background: #331C1C; }
+.outcome.idle { color: var(--rig-muted); background: var(--rig-panel); }
+
+/* 声音开关 */
+.snd-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: .8rem; color: var(--rig-muted); cursor: pointer; user-select: none; }
+.snd-toggle input { accent-color: var(--rig-v); }
+
+/* ---------- 引擎盖 / 实验布局 ---------- */
+.ap-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 920px) { .ap-grid { grid-template-columns: 1fr; } }
+.story {
+  background: var(--rig-panel); border: 1px solid var(--rig-line); border-radius: 10px;
+  padding: 12px 16px; font-size: .9rem; line-height: 1.75; color: var(--rig-ink);
+  min-height: 6.2em; margin-top: 12px;
+}
+.story b { color: var(--rig-v); }
+.chan-svg { width: 100%; height: auto; display: block; }
+.rig.homework { border-style: dashed; }
+.exp-badge {
+  font-size: .7rem; letter-spacing: .12em; color: var(--rig-muted);
+  border: 1px solid var(--rig-line); padding: 2px 10px; border-radius: 999px; font-family: var(--mono);
+}
+.surprise-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+@media (max-width: 720px) { .surprise-cards { grid-template-columns: 1fr; } }
+.s-card { border: 1px solid var(--rig-line); border-radius: 10px; padding: 12px 14px; font-size: .86rem; line-height: 1.7; color: var(--rig-ink); }
+.s-card b { color: var(--rig-v); }
+.recap-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 1.2em 0; }
+.recap-row .gained { margin: 0; font-size: .8rem; padding: 5px 13px; }
+.anat-part.sel { filter: drop-shadow(0 0 5px var(--accent)); }
+.anat-part:focus-visible, .anat-slot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- 课堂现场投票（页面由课程服务器托管时出现） ---------- */
+.p-live { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: .82rem; }
+.p-live .pl-head { font-weight: 650; color: var(--ink-2); display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.p-live .pl-refresh {
+  font: inherit; font-size: .72rem; cursor: pointer;
+  background: transparent; color: var(--accent); border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px;
+}
+.p-live .pl-row { display: grid; grid-template-columns: 1.4em 1fr 3ch; gap: 8px; align-items: center; margin: 3px 0; }
+.p-live .pl-opt { font-family: var(--mono); font-size: .74rem; color: var(--muted); font-weight: 600; }
+.p-live .pl-bar { height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
+.p-live .pl-bar i { display: block; height: 100%; border-radius: 5px; background: var(--accent); transition: width .3s; }
+.p-live .pl-row.is-right .pl-bar i { background: var(--good); }
+.p-live .pl-n { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; color: var(--ink-2); }
+.rig .p-live { border-top-color: var(--rig-line); }
+.rig .p-live .pl-head { color: var(--rig-ink); }
+.rig .p-live .pl-refresh { color: var(--rig-v); border-color: var(--rig-line); }
+.rig .p-live .pl-bar { background: #202737; }
+.rig .p-live .pl-bar i { background: var(--rig-v); }
+.rig .p-live .pl-row.is-right .pl-bar i { background: #57D08A; }
+.rig .p-live .pl-n { color: var(--rig-ink); }
+
+/* ---------- 返回课程主页 ---------- */
+#rail a.rail-home {
+  display: inline-block; font-size: .76rem; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 2px 12px; margin: 0 0 14px;
+}
+#rail a.rail-home:hover { color: var(--accent); border-color: var(--accent); background: transparent; }
+a.tb-home {
+  font-size: .95rem; font-weight: 600; text-decoration: none;
+  padding: 5px 12px; border-radius: 9px;
+  border: 1px solid var(--accent); color: var(--accent);
+}
+
+/* ---------- 权重热图 / 刺激显示 ---------- */
+.train-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 920px) { .train-grid { grid-template-columns: 1fr; } }
+.wmap-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.wmap-item { text-align: center; }
+.wmap {
+  display: grid; grid-template-columns: repeat(5, 17px); grid-auto-rows: 17px; gap: 1px;
+  padding: 6px; background: var(--rig-panel);
+  border: 1.5px solid var(--rig-line); border-radius: 8px;
+}
+.wmap.win { border-color: #57D08A; box-shadow: 0 0 9px #57D08A55; }
+.wmap i { display: block; border-radius: 2px; background: #1A2030; }
+.wmap-label { font-family: var(--mono); font-size: .7rem; color: var(--rig-muted); margin-top: 5px; }
+.stim-wrap { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+
+/* NMDA 与门面板 */
+.and-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+.and-state {
+  font-family: var(--mono); font-size: .9rem; font-weight: 700;
+  padding: 6px 18px; border-radius: 10px;
+  background: #331C1C; color: #E8A0A0;
+}
+.and-state.open { background: #16301F; color: #7BE3A5; }
+</style>
+
+<div id="progress" role="presentation"></div>
+
+<nav id="rail" aria-label="课程目录">
+  <a class="rail-home" href="/">← 课程主页</a>
+  <div class="rail-course">神经科学导论</div>
+  <div class="rail-lec">第二讲<br>大脑如何学习</div>
+  <div class="rail-group">第一课时 · 权重与它怎么变</div>
+  <a href="#s0" data-sec="s0">引言 · 缝隙两侧的记忆</a>
+  <a href="#s1" data-sec="s1">1 · w 住在哪里</a>
+  <a href="#s2" data-sec="s2">2 · 权重是可变的</a>
+  <a href="#s3" data-sec="s3">3 · 时序与因果</a>
+  <div class="rail-group">第二课时 · 从方程到训练</div>
+  <a href="#s4" data-sec="s4">4 · 把一句话写成方程</a>
+  <a href="#s5" data-sec="s5">5 · 亲手训练</a>
+  <a href="#s6" data-sec="s6">6 · 两种学习的对话</a>
+  <a href="#s7" data-sec="s7">7 · 一句话与预告</a>
+  <div class="rail-hint">
+    键盘 <kbd>←</kbd> <kbd>→</kbd> 切换小节<br>
+    所有仪器都可以动手操作
+  </div>
+</nav>
+
+<div id="topbar">
+  <a class="tb-home" href="/" aria-label="课程主页">⌂</a>
+  <button class="btn ghost" id="tb-prev" aria-label="上一节" style="padding:6px 12px">←</button>
+  <select id="tb-select" aria-label="跳转到小节"></select>
+  <button class="btn ghost" id="tb-next" aria-label="下一节" style="padding:6px 12px">→</button>
+</div>
+
+<main>
+
+<!-- ============ 引言 ============ -->
+<section class="scene cover" id="s0" data-title="引言 · 缝隙两侧的记忆">
+  <div class="wrap">
+    <div class="c-course">神经科学导论 · 南京大学人工智能学院 · 第二讲</div>
+    <h1>大脑如何学习</h1>
+    <p class="c-sub">突触、Hebb 规则，与不用反向传播的学习</p>
+    <div class="cover-spark" aria-hidden="true"><canvas id="cover-canvas" height="130"></canvas></div>
+
+    <p style="max-width:60ch">上一讲的神经元精密得像一台仪器，但它从头到尾<strong>没有学任何东西</strong>。而你会背的每一个单词、骑车时的每一个平衡动作，都得写在某个物理的地方。主流答案：写在神经元之间那道约 20 纳米缝隙的<strong>两侧</strong>。</p>
+
+    <div class="tiles">
+      <div class="tile">
+        <div class="t-label">你的突触总数</div>
+        <div class="t-num">~10¹⁴</div>
+        <div class="t-sub">每一个都是一台可调的机器——大脑真正的"参数量"</div>
+      </div>
+      <div class="tile">
+        <div class="t-label">突触间隙</div>
+        <div class="t-num">~20 nm</div>
+        <div class="t-sub">光学显微镜看不见；电子显微镜时代人类才确认它真的存在</div>
+      </div>
+      <div class="tile">
+        <div class="t-label">一次传递耗时</div>
+        <div class="t-num">&lt;1 ms</div>
+        <div class="t-sub">化学信号过河，比电信号慢，但换来了"可调"</div>
+      </div>
+      <div class="tile">
+        <div class="t-label">一个突触</div>
+        <div class="t-num">1000+ 种蛋白</div>
+        <div class="t-sub">不是一根导线，是一台由上千种蛋白质组成的机器</div>
+      </div>
+    </div>
+
+    <div class="thesis reveal">
+      <span class="t-mark">本讲唯一要讲透的一件事</span>
+      学习不发生在神经元里，发生在连接上：<strong>学习 = 突触权重的局部改写</strong>。Hebb（1949）：一起活跃的细胞，连在一起。<br>
+      <span class="small">今天把这句话变成机制、方程，和一小群你亲手训练的神经元——没有老师、没有损失函数、没有反向传播，它们会自己长出特征检测器。</span>
+    </div>
+
+    <p style="max-width:60ch">上一讲带走的零件今天全要用：脉冲、阈值、求和、f–I ≈ ReLU。还有高中生物的账也一起算了：你背过突触小体、递质、受体——<strong>那些是名词</strong>。今天的问题换一个问法：<strong>当你的网络里有个 w = 0.3，这个数字物理上存在哪里？你调用 optimizer.step() 的时候，大脑里是谁在动手？</strong></p>
+  </div>
+</section>
+
+<!-- ============ 1 · w 住在哪里 ============ -->
+<section class="scene" id="s1" data-title="1 · w 住在哪里">
+  <div class="wrap wide">
+    <div class="kicker">第 1 节 <span class="k-time">第一课时</span></div>
+    <h2>w 住在哪里：一次突触传递</h2>
+    <p class="lede">上一讲结束在轴突末梢——脉冲到了线的尽头。往前一步就是缝隙。先看信号怎么过河，再看「权重」这个数字藏在河两岸的什么地方。</p>
+
+    <div class="rig" id="rig-syn">
+      <div class="rig-head">
+        <span class="led" id="syn-led"></span>
+        <span class="rig-name">SYNAPSE REPLAY · 一次突触传递的慢镜头</span>
+        <span class="rig-spacer"></span>
+        <button class="btn" id="syn-play" style="padding:5px 14px;font-size:.8rem">▶ 播放</button>
+      </div>
+      <div class="rig-body">
+        <div class="ap-grid">
+          <div>
+            <svg id="syn-svg" class="chan-svg" viewBox="0 0 340 330" role="img" aria-label="突触传递示意：脉冲到达、钙内流、囊泡释放、递质扩散、受体开门"></svg>
+          </div>
+          <div>
+            <div class="scope-frame"><canvas id="syn-canvas" height="220"></canvas></div>
+            <div class="ctl" style="margin-top:12px">
+              <span class="ctl-label"><span>时间游标</span><span class="ctl-val" id="syn-t-val">0.0 ms</span></span>
+              <input type="range" id="syn-scrub" min="0" max="1000" step="1" value="0">
+            </div>
+            <div class="phase-strip" id="syn-phases">
+              <span class="phase" data-ph="0">① 脉冲到达</span>
+              <span class="phase" data-ph="1">② Ca²⁺ 内流</span>
+              <span class="phase" data-ph="2">③ 囊泡释放</span>
+              <span class="phase" data-ph="3">④ 扩散过河</span>
+              <span class="phase" data-ph="4">⑤ 受体开门</span>
+            </div>
+          </div>
+        </div>
+        <div class="story" id="syn-story" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <p>这条流水线高中讲过名词版。真正值钱的是下面这件事：整条链上有<strong>三个可以拧的旋钮</strong>，而它们的乘积，就是你写了几百遍的那个 w。</p>
+
+    <div class="rig" id="rig-npq">
+      <div class="rig-head"><span class="led on"></span><span class="rig-name">n·p·q · 权重的三个旋钮</span></div>
+      <div class="rig-body">
+        <div class="ap-grid">
+          <div>
+            <div class="ctl-row">
+              <div class="ctl" style="flex:1;min-width:170px">
+                <span class="ctl-label"><span>n · 可释放囊泡数</span><span class="ctl-val" id="npq-n-val">5</span></span>
+                <input type="range" id="npq-n" min="1" max="10" step="1" value="5">
+              </div>
+              <div class="ctl" style="flex:1;min-width:170px">
+                <span class="ctl-label"><span>p · 释放概率</span><span class="ctl-val" id="npq-p-val">0.40</span></span>
+                <input type="range" id="npq-p" min="0.05" max="0.95" step="0.05" value="0.4">
+              </div>
+              <div class="ctl" style="flex:1;min-width:170px">
+                <span class="ctl-label"><span>q · 受体数量（相对）</span><span class="ctl-val" id="npq-q-val">1.00</span></span>
+                <input type="range" id="npq-q" min="0.2" max="2" step="0.05" value="1">
+              </div>
+            </div>
+            <div class="ctl-row" style="align-items:baseline">
+              <span class="outcome idle" id="npq-w" style="font-size:1rem">w ∝ n·p·q = 2.00</span>
+              <span class="chip-note">基线（n=5, p=0.4, q=1）定为 EPSP ≈ 0.5 mV</span>
+            </div>
+          </div>
+          <div>
+            <div class="scope-frame"><canvas id="npq-canvas" height="200"></canvas></div>
+          </div>
+        </div>
+        <div class="chip-note" style="margin-top:12px">拧任何一个旋钮，EPSP 都变——<strong>改 n、改 p、改 q，都是在改 w</strong>。真实的突触也是这么被改的：LTP 主要往突触后加受体（q↑），有些突触改释放概率（p↑）。</div>
+      </div>
+    </div>
+
+    <div class="task"><span class="task-tag">动手</span><span>把三个旋钮都拧到最大，EPSP 也不过 4–5 mV；而从静息（约 −65 mV）到阈值（约 −51 mV，第一讲你亲手测的）差着约 14 mV——<strong>单枪匹马永远不够</strong>。约 28 路输入同时到达才凑得齐，这正是第一讲「时间求和」的另一半：一个神经元的每次发放，都是几十路突触投票的结果。</span></div>
+
+    <p>顺带补上负权重：谷氨酸<span class="term">glutamate</span>突触投赞成票（EPSP），GABA 突触投反对票（IPSP，把膜电位往下拽）——<strong>抑制也有自己的物理实体</strong>。<span class="mlb"><span class="b">突触强度</span><span class="arr">⇄</span><span class="m">权重 w（含正负）</span></span><span class="mlb"><span class="b">树突汇流</span><span class="arr">⇄</span><span class="m">Σ wᵢxᵢ</span></span></p>
+
+    <div class="gained">✓ 已测得 <span class="g-eq">w 的物理实体：n·p·q</span>——三个都是可拧的旋钮</div>
+  </div>
+</section>
+<!-- ============ 2 · 权重是可变的 ============ -->
+<section class="scene" id="s2" data-title="2 · 权重是可变的">
+  <div class="wrap wide">
+    <div class="kicker">第 2 节 <span class="k-time">第一课时</span></div>
+    <h2>权重是可变的：亲手重现两个经典实验</h2>
+    <p class="lede">w 不是常数——它有自己的历史。下面这台仪器里装着两个真实实验：一个 1973 年在麻醉兔的海马里做成，一个 1992 年在脑片上做成。</p>
+
+    <div class="rig" id="rig-ltp">
+      <div class="rig-head">
+        <span class="led on"></span>
+        <span class="rig-name">PLASTICITY BENCH · 经典可塑性实验台</span>
+      </div>
+      <div class="rig-body">
+        <div class="predict" data-predict="p2-ltp" data-answer="1">
+          <div class="pq"><span class="p-tag">先投票</span>给一条突触通路来一串高频刺激（100 Hz、持续 1 秒），停下来之后再用单发测试脉冲量它的响应。会看到什么？</div>
+          <div class="opts">
+            <button data-i="0">和原来一样——刺激过去就过去了</button>
+            <button data-i="1">持久增大——这条通路被写强了</button>
+            <button data-i="2">反而变小——用狠了会疲劳</button>
+          </div>
+          <div class="p-reveal">「疲劳」不是瞎想——高频轰炸<b>期间</b>囊泡确实会耗竭，但停下几秒就恢复。持久的方向是<b>增强</b>：EPSP 幅度跳上一个新台阶并停在那里，几小时、在活体动物里甚至几个月都量得到。这就是长时程增强<span style="font-style:italic;color:var(--rig-muted)"> LTP</span>——用下面的仪器亲手做一遍。</div>
+        </div>
+        <div class="scope-frame"><canvas id="ltp-canvas" height="260"></canvas></div>
+        <div class="ctl-row">
+          <button class="btn ghost" id="ltp-test">单发测试 ×10</button>
+          <button class="btn" id="ltp-hfs">⚡ 高频刺激 100 Hz × 1 s</button>
+          <button class="btn ghost" id="ltp-lfs">低频刺激 1 Hz × 15 min（快进）</button>
+          <button class="chip" id="ltp-ap5" aria-pressed="false">💊 AP5（NMDA 阻断剂）</button>
+          <button class="btn ghost" id="ltp-reset" style="margin-left:auto">重置</button>
+        </div>
+        <div class="ctl-row" style="align-items:baseline">
+          <span class="outcome idle" id="ltp-state">突触强度：100%（基线）</span>
+          <span class="chip-note" id="ltp-note">先打一组测试脉冲建立基线，再动手改写它。</span>
+        </div>
+        <div class="chip-note" style="margin-top:8px">协议出处：高频→LTP = Bliss &amp; Lømo 1973（麻醉兔在体齿状回，场电位，这里理想化为单条通路）；低频→LTD = Dudek &amp; Bear 1992（海马 CA1 脑片）。</div>
+      </div>
+    </div>
+
+    <div class="task"><span class="task-tag">动手</span><span>做一个完整的实验：测基线 → 高频刺激 → 再测（涨了，而且不回落）→ 打开 AP5 再来一次高频 → 再测。<strong>AP5 堵住的是什么，下面马上讲。</strong></span></div>
+
+    <h3>开关藏在一个分子里</h3>
+    <p>AP5 堵住的是 <strong>NMDA 受体</strong>——改写权重的扳机。记三个词就够：</p>
+    <div class="duel">
+      <div class="panel">
+        <ul style="margin:0;font-size:.95rem">
+          <li><strong>Mg²⁺ 塞子</strong>：通道平时被一颗镁离子堵死；只有膜已去极化，塞子才被推开（阻断随电压连续减弱，不是硬开关）。</li>
+          <li><strong>符合检测</strong>：所以开门要<strong>两件事同时成立</strong>——谷氨酸在（突触前刚放过电）+ 膜已去极化（突触后正活跃）。缺一不可。</li>
+          <li><strong>Ca²⁺ 扳机</strong>：门一开，Ca²⁺ 涌入；<strong>大而快的钙信号 → 往膜上加受体（LTP）；小而慢的 → 往下撤受体（LTD）</strong>。同一个扳机，两个方向。</li>
+        </ul>
+        <p class="small" style="margin:10px 0 0">这解释了你刚做的两个实验：高频轰炸 = 前后都猛烈活跃 → 大钙 → LTP；低频哼唧 = 弱符合 → 小而慢的钙 → LTD；AP5 把扳机整个卸了 → 怎么刺激都写不动。</p>
+      </div>
+      <div class="panel">
+        <div class="p-title">NMDA 受体：前 × 后 的符合检测</div>
+        <svg viewBox="0 0 320 180" role="img" aria-label="NMDA开门条件真值表：仅当突触前活跃且突触后去极化时钙才进入" style="width:100%;height:auto;color:var(--ink-2)">
+          <g font-size="12" fill="currentColor">
+            <text x="96" y="28" text-anchor="middle" font-weight="600">后端安静</text>
+            <text x="226" y="28" text-anchor="middle" font-weight="600">后端去极化</text>
+            <text x="52" y="72" text-anchor="end" font-weight="600">前端安静</text>
+            <text x="52" y="132" text-anchor="end" font-weight="600">前端放电</text>
+          </g>
+          <g>
+            <rect x="66" y="46" width="120" height="44" rx="8" fill="var(--surface-2)" stroke="var(--line)"/>
+            <rect x="196" y="46" width="112" height="44" rx="8" fill="var(--surface-2)" stroke="var(--line)"/>
+            <rect x="66" y="106" width="120" height="44" rx="8" fill="var(--surface-2)" stroke="var(--line)"/>
+            <rect x="196" y="106" width="112" height="44" rx="8" fill="none" stroke="var(--good)" stroke-width="2.5"/>
+          </g>
+          <g font-size="12.5" fill="var(--muted)" text-anchor="middle">
+            <text x="126" y="72">没递质，门关</text>
+            <text x="252" y="72">没递质，门关</text>
+            <text x="126" y="132">Mg²⁺ 堵着</text>
+          </g>
+          <text x="252" y="126" font-size="12.5" fill="var(--good)" text-anchor="middle" font-weight="700">Ca²⁺ 进入</text>
+          <text x="252" y="143" font-size="11" fill="var(--good)" text-anchor="middle">权重改写开始</text>
+        </svg>
+        <p class="small" style="margin:8px 0 0">一个分子实现了「前 × 后」的乘法。这是 Hebb 规则最著名的<strong>候选</strong>分子实现——候选，因为还存在不走 NMDA 的可塑性通路。</p>
+      </div>
+    </div>
+
+    <p>写入还有形态上的痕迹：LTP 之后，接收端的树突棘<span class="term">dendritic spine</span>会随之变大（Matsuzaki 2004，双光子显微镜下直接看到）。你的记忆最强的候选载体，就是全脑 10¹⁴ 个这样的可写位点。<span class="small">（最强候选，不是已判决——最后一节还有一桩悬案。）</span></p>
+
+    <div class="gained">✓ 已测得 <span class="g-eq">权重可写（LTP / LTD）</span>，且改写的条件是「前后同时活跃」</div>
+  </div>
+</section>
+
+<!-- ============ 3 · 时序与因果 ============ -->
+<section class="scene" id="s3" data-title="3 · 时序与因果">
+  <div class="wrap wide">
+    <div class="kicker">第 3 节 <span class="k-time">第一课时</span></div>
+    <h2>Hebb 原话里藏着的方向</h2>
+    <p class="lede">教科书把 Hebb 总结成「一起放电，一起相连」。他 1949 年的原话更小心——也更深刻。</p>
+
+    <div class="thesis" style="font-size:1.02rem;max-width:680px">
+      <span class="t-mark">HEBB 1949 · 原文大意</span>
+      「当细胞 A 的轴突<strong>反复或持续地参与激发</strong>细胞 B……A 对 B 的效能就会增强。」<br>
+      <span class="small">注意两点：原话是<strong>因果的、有方向的</strong>——A 帮着点燃了 B，不是"恰好同时"；而且只讲了增强，没讲削弱。「一起放电，一起相连」是几十年后的顺口溜（Carla Shatz），把因果抹平成了相关。</span>
+    </div>
+
+    <p>大脑记得这个方向吗？1998 年 Bi 与 Poo 在培养的海马神经元上直接问了：让突触前后各发一个脉冲，<strong>就差几毫秒</strong>，权重会怎么变？下面的仪器让你把他们的曲线自己做出来。</p>
+
+    <div class="rig" id="rig-stdp">
+      <div class="rig-head"><span class="led" id="stdp-led"></span><span class="rig-name">STDP BENCH · 把 Bi &amp; Poo 曲线做出来</span></div>
+      <div class="rig-body">
+        <div class="predict" data-predict="p2-stdp" data-answer="0">
+          <div class="pq"><span class="p-tag">先投票</span>让突触<strong>前</strong>神经元先放电、10 ms 之后<strong>后</strong>神经元放电，如此配对 60 次。这根突触会怎样？</div>
+          <div class="opts">
+            <button data-i="0">增强——"你抢在我前面，可能是我的因"</button>
+            <button data-i="1">削弱——后来者居上，先到的被惩罚</button>
+            <button data-i="2">不变——差 10 ms 太短，突触感觉不到</button>
+          </div>
+          <div class="p-reveal">用下面的仪器验证：选好 Δt，打 60 次配对，看落下来的点。再把 Δt 反过来（后先于前）试试——<b>方向不同，命运相反</b>。</div>
+        </div>
+        <div class="scope-frame"><canvas id="stdp-canvas" height="280"></canvas></div>
+        <div class="ctl-row">
+          <div class="ctl" style="flex:1;max-width:340px">
+            <span class="ctl-label"><span>Δt = 后放电时刻 − 前放电时刻 (ms)</span><span class="ctl-val" id="stdp-dt-val">+10</span></span>
+            <input type="range" id="stdp-dt" min="-50" max="50" step="2" value="10">
+          </div>
+          <button class="btn" id="stdp-pair">配对刺激 ×60</button>
+          <button class="btn ghost" id="stdp-fit">显示拟合曲线</button>
+          <button class="btn ghost" id="stdp-reset">清空</button>
+          <span class="outcome idle" id="stdp-out">—</span>
+        </div>
+        <div class="chip-note" style="margin-top:10px">目标：在 Δt 轴上多选几个点（正的、负的、远的、近的），各打一轮配对，让曲线从你自己的数据里浮现。<br>出处与边界：Bi &amp; Poo 1998，培养海马神经元，约 60 次配对；窗口约 ±20–40 ms（τ₊≈17 ms、τ₋≈34 ms）。<strong>曲线形状随突触类型、发放频率、神经调质而变——这是一类现象，不是大脑的通用常数。</strong></div>
+      </div>
+    </div>
+
+    <p>这叫脉冲时序依赖可塑性<span class="term">spike-timing-dependent plasticity, STDP</span>。它的不对称性正是 Hebb 原话的方向：<strong>你先于我放电（可能是我的因）→ 加强；你在我之后才来（不可能是因）→ 削弱。</strong>大脑没有忘记因果——是顺口溜忘了。<span class="mlb"><span class="b">时序不对称</span><span class="arr">⇄</span><span class="m">credit assignment</span></span></p>
+
+    <div class="gained">✓ 已测得 <span class="g-eq">改写规则在乎顺序（STDP）</span>：先因后果加强，颠倒因果削弱</div>
+  </div>
+</section>
+
+<!-- ============ 课间 ============ -->
+<section class="scene interlude" id="break" data-title="课间">
+  <div class="wrap">
+    <div class="i-mark">第一课时完 · 课间休息</div>
+    <div class="i-text">课间想一想：这条规则只看得见一根突触两端的活动，<br>连隔壁的突触都看不见。这么"目光短浅"，真能学出什么有用的东西吗？</div>
+    <p class="small" style="margin-top:14px">你已亲手测出：w 的三个旋钮、LTP/LTD、STDP 的方向。答案在第二课时——你会亲手训练它。</p>
+  </div>
+</section>
+<!-- ============ 4 · 把一句话写成方程 ============ -->
+<section class="scene" id="s4" data-title="4 · 把一句话写成方程">
+  <div class="wrap">
+    <div class="kicker">第 4 节 <span class="k-time">第二课时</span></div>
+    <h2>把一句话写成方程</h2>
+    <p class="lede">要训练，先建模。第一步是把上半场的毫秒世界换到你熟悉的尺度上。</p>
+
+    <div class="panel" style="margin:1.8em 0">
+      <div class="p-title">换尺度：从脉冲到发放率</div>
+      <p style="margin-top:0;font-size:.95rem">把时间窗拉长、对脉冲取平均：x 和 y 不再是一个个脉冲，而是<strong>发放率</strong>——上一讲你测过它和输入的关系（f–I ≈ ReLU）。在这个平均尺度上，「前后同时活跃」就是<strong>乘积 x·y 大</strong>。</p>
+      <svg viewBox="0 0 640 96" role="img" aria-label="脉冲序列取平均变为发放率" style="width:100%;max-width:560px;height:auto;color:var(--ink-2)">
+        <g stroke="var(--c-v)" stroke-width="2">
+          <path d="M20 40 h150 M34 40 v-20 M52 40 v-20 M60 40 v-20 M92 40 v-20 M99 40 v-20 M107 40 v-20 M143 40 v-20"/>
+        </g>
+        <text x="95" y="66" font-size="12" fill="currentColor" text-anchor="middle">脉冲序列（毫秒）</text>
+        <path d="M200 40 h44" stroke="currentColor" stroke-width="1.6"/>
+        <polygon points="244,35 254,40 244,45" fill="currentColor"/>
+        <text x="227" y="28" font-size="11.5" fill="var(--muted)" text-anchor="middle">取平均</text>
+        <text x="332" y="46" font-size="15" font-family="Georgia,serif" font-style="italic" fill="currentColor" text-anchor="middle">x = 发放率</text>
+        <text x="332" y="70" font-size="11.5" fill="var(--muted)" text-anchor="middle">（第一讲：f–I ≈ ReLU）</text>
+        <path d="M432 40 h44" stroke="currentColor" stroke-width="1.6"/>
+        <polygon points="476,35 486,40 476,45" fill="currentColor"/>
+        <text x="560" y="46" font-size="15" font-family="Georgia,serif" font-style="italic" fill="var(--c-na)" text-anchor="middle">x·y 大 = 同时活跃</text>
+      </svg>
+      <p class="small" style="margin-bottom:0">代价说在明处：STDP 的毫秒时序在平均里被抹掉了——方程继承的是顺口溜（对称版），不是原话（因果版）。时序的账，留到强化学习那一讲算。</p>
+    </div>
+
+    <p>于是 Hebb 的一句话变成一行更新式：</p>
+    <div class="eq">Δ<i>w</i><sub>i</sub> = <i>η</i> · <i>x</i><sub>i</sub> · <i>y</i></div>
+    <p>盯住等式右边：<strong>只有这根突触两端拿得到的量</strong>——前端活动 x<sub>i</sub>、后端活动 y、一个常数 η。没有别的。对比一下你天天在跑的东西：反向传播里每个 Δw 都要知道 ∂L/∂w——<strong>千里之外的损失函数对我的导数</strong>，还得靠一条与前向权重对称的通路逐层送回来。一个是本地记账，一个是全局调度。<span class="mlb"><span class="b">Hebb 更新</span><span class="arr">⇄</span><span class="m">局部规则</span></span><span class="mlb"><span class="b">反向传播</span><span class="arr">⇄</span><span class="m">全局梯度</span></span></p>
+
+    <p>这条规则有个毛病，而且是致命的——盯着 Δw = η·x·y 想十秒钟，你们大概已经看出来了。<strong>别急着说出来</strong>：下一节先亲手撞上它，再亲手修好它。</p>
+  </div>
+</section>
+
+<!-- ============ 5 · 亲手训练 ============ -->
+<section class="scene" id="s5" data-title="5 · 亲手训练">
+  <div class="wrap wide">
+    <div class="kicker">第 5 节 <span class="k-time">第二课时</span></div>
+    <h2>亲手训练：没有老师，它能学到什么</h2>
+    <p class="lede">一个神经元，一团二维数据（已中心化），规则就是上面那一行。它一次只看一个点，没有损失函数、没有标签、没有 backward。</p>
+
+    <div class="predict" data-predict="p2-pca" data-answer="0">
+      <div class="pq"><span class="p-tag">先投票</span>把它丢进数据云里训练足够久，权重向量 w（图上会画成一支箭头）的<strong>方向</strong>会怎样？</div>
+      <div class="opts">
+        <button data-i="0">转向某个由数据决定的特定方向，然后停住</button>
+        <button data-i="1">永远打转，不会安定下来</button>
+        <button data-i="2">缩回原点——没有监督信号，学了也白学</button>
+      </div>
+      <div class="p-reveal">下面亲手验证。建议先用「单步观察」看清<b>每一步更新的几何</b>，再按「训练」看结局——方向会稳住，但还有一个投票里没问的惊喜在等你。</div>
+    </div>
+
+    <div class="rig" id="rig-oja">
+      <div class="rig-head">
+        <span class="led" id="oja-led"></span>
+        <span class="rig-name">HEBB TRAINER · 一个神经元的无监督训练台</span>
+        <span class="rig-spacer"></span>
+        <div class="presets" role="group" aria-label="学习规则">
+          <button class="mini on" id="rule-hebb">纯 Hebb</button>
+          <button class="mini" id="rule-oja">Hebb − y²w（修好的）</button>
+        </div>
+      </div>
+      <div class="code-lab">
+        <div class="code-pane">
+          <pre class="code" id="oja-code"><span class="cm">// 一个 Hebb 神经元，如假包换</span>
+<span class="kw">const</span> eta = <input class="cnum" id="oja-eta" value="0.04">;  <span class="cm">// 学习率</span>
+<span class="kw">let</span> w = 随机小向量();
+<span class="kw">for</span> (<span class="kw">let</span> t = 0; t &lt; <input class="cnum" id="oja-steps" value="600" style="width:6ch">; t++) {
+  <span class="kw">const</span> x = 随机取一个数据点();  <span class="cm">// 在线：一次只看一个</span>
+  <span class="kw">const</span> y = w[0]*x[0] + w[1]*x[1]; <span class="cm">// 前向：发放率</span>
+  w[0] += eta * y * x[0];  <span class="cm">// Hebb：前 × 后</span>
+  w[1] += eta * y * x[1];<span id="oja-fix-line">
+  <span class="cm">// （这里将来要发生点什么……）</span></span>
+}
+<span class="cm">// 没有 loss，没有 backward，没有标签，</span>
+<span class="cm">// 没有存下数据集——看完就扔。</span></pre>
+          <div class="ctl-row">
+            <div class="ctl" style="flex:1;min-width:150px">
+              <span class="ctl-label"><span>数据方向 (°)</span><span class="ctl-val" id="oja-ang-val">25</span></span>
+              <input type="range" id="oja-ang" min="0" max="180" step="5" value="25">
+            </div>
+            <div class="ctl" style="flex:1;min-width:150px">
+              <span class="ctl-label"><span>数据伸长比</span><span class="ctl-val" id="oja-ecc-val">3.2</span></span>
+              <input type="range" id="oja-ecc" min="1.5" max="5" step="0.1" value="3.2">
+            </div>
+          </div>
+          <div class="run-row">
+            <button class="btn ghost" id="oja-step">单步观察</button>
+            <button class="btn" id="oja-train">▶ 训练</button>
+            <button class="btn ghost" id="oja-reset">重置</button>
+            <button class="btn ghost" id="oja-compare" disabled>对照：数据主轴</button>
+          </div>
+        </div>
+        <div class="result-pane">
+          <div class="scope-frame"><canvas id="oja-canvas" height="340"></canvas></div>
+          <div class="ctl-row" style="justify-content:space-between">
+            <span class="outcome idle" id="oja-norm">|w| = —</span>
+            <span class="outcome idle" id="oja-angle">与主轴夹角：—</span>
+          </div>
+          <div class="story" id="oja-story" style="min-height:3.6em">先押完票再动手。「单步观察」会点亮一个数据点，并把这一步的 Δw 画成接在 w 箭头上的绿色小段——注意哪些点推得狠、哪些点推不动。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="task" id="hebb-crash" hidden><span class="task-tag">撞上了</span><span><strong>方向稳了，长度爆了。</strong>y 越大 → w 越大 → y 更大……正反馈没有刹车，|w| 在指数爆炸（第一讲的积分器没有泄漏时也是这个下场）。修法：给更新减去一项 <strong>η·y²·w</strong>——活动越猛、收得越紧。<button class="btn" id="oja-fix" style="margin-left:8px">在方程里加上 −y²·w（Oja 1982）</button></span></div>
+
+    <p id="oja-payoff" hidden>现在可以说破了：w 停住的那个方向，就是数据方差最大的方向——<strong>第一主成分</strong>。你没有给它协方差矩阵，没有做特征分解，没有目标函数；它一次只看一个点，只用突触两端的信息，<strong>却算出了一个需要全局信息才能定义的量</strong>。点「对照：数据主轴」，看看它和数值解差几度。<span class="mlb"><span class="b">Oja 神经元</span><span class="arr">⇄</span><span class="m">在线 PCA</span></span></p>
+
+    <details class="deep">
+      <summary>为什么是必然：三行推导，把巧合变成定理</summary>
+      <div class="deep-body">
+        <p style="margin-top:12px">对数据分布取期望（C = E[xxᵀ] 是相关矩阵）：</p>
+        <div class="eq" style="font-size:1.05rem">E[Δ<i>w</i>] = <i>η</i> · E[<i>x</i>(<i>x</i>ᵀ<i>w</i>)] = <i>η</i> · <i>C</i><i>w</i></div>
+        <p><strong>纯 Hebb 的期望更新就是 w ← w + ηCw——没有归一化的幂迭代。</strong>数值课上你们用它求过最大特征向量：方向必然转向 C 的第一特征向量（可能差个正负号，都对），模长必然指数增长。你亲手撞上的爆炸不是 bug，是幂迭代的另一半。</p>
+        <p>Oja 那一项恰好补上缺的归一化：在 |w| = 1 处达到平衡。注意它和 weight decay 不是一回事——weight decay 把 w 拉向 0，Oja 项（y² 门控）把 |w| 拉向 1。生物学里对应的也不是这条方程本身，而是「突触缩放」一类稳态机制（Turrigiano）：细胞会整体调低过强的突触。</p>
+        <p class="small" style="margin-bottom:0">历史顺序值得记：Hebb 1949 年写下直觉，Oja 1982 年才证明这句话在算什么。大脑先有算法，数学家后补定理。</p>
+      </div>
+    </details>
+    <p class="note">脚注：数据在生成时已经中心化（减去均值）——这是「收敛到主成分」成立的前提；不去均值，w 会转向均值方向。PCA 课上的老规矩，在这里同样管用。</p>
+  </div>
+</section>
+    <h3>加一味竞争：一小群神经元</h3>
+    <p>一个神经元只能学一个方向。现在放<strong>四个</strong>神经元看同一路输入，加一条规则：<strong>谁响应最强，谁获得这次学习机会</strong>（赢者通吃——学过 k-means 的你会觉得眼熟，这就是在线聚类）。输入换成 5×5 像素的光条，四种朝向随机出现（位置固定、带噪声）。</p>
+
+    <div class="predict" data-predict="p2-bars" data-answer="1">
+      <div class="pq"><span class="p-tag">先投票</span>四个神经元的权重图开局是白纸。训练几百步之后，四张图会变成什么样？</div>
+      <div class="opts">
+        <button data-i="0">全都变成四种朝向的平均——一团十字糊</button>
+        <button data-i="1">各自长成一种朝向的检测器</button>
+        <button data-i="2">全都学成同一种最常出现的朝向</button>
+      </div>
+      <div class="p-reveal">开训吧。盯住四张热图怎么从白纸里<b>分家</b>——训练一半时可以暂停，猜猜每张最后归谁。</div>
+    </div>
+
+    <div class="rig" id="rig-bars">
+      <div class="rig-head">
+        <span class="led" id="bars-led"></span>
+        <span class="rig-name">FEATURE FARM · 四个神经元 · 竞争学习</span>
+        <span class="rig-spacer"></span>
+        <span class="chip-note">随机种子 <input class="cnum" id="bars-seed" value="42" style="width:6ch"></span>
+      </div>
+      <div class="rig-body">
+        <div class="ap-grid">
+          <div>
+            <div class="stim-wrap">
+              <div class="wmap-item">
+                <div class="wmap" id="bars-stim" aria-label="当前刺激"></div>
+                <div class="wmap-label">当前刺激</div>
+              </div>
+              <div class="story" style="flex:1;min-width:220px;margin-top:0" id="bars-story">四张白纸，等待开训。训练中每一步：出一根光条 → 四个神经元比响应 → 赢家把自己的权重图往这根光条挪一点。</div>
+            </div>
+            <div class="ctl-row">
+              <button class="btn" id="bars-train">▶ 训练 ×800</button>
+              <button class="btn ghost" id="bars-pause" disabled>暂停</button>
+              <button class="btn ghost" id="bars-reset">重置</button>
+            </div>
+            <div class="ctl-row">
+              <span class="chip-note">探针（训练后试试）：</span>
+              <div class="presets">
+                <button class="mini" data-probe="0">─</button>
+                <button class="mini" data-probe="1">│</button>
+                <button class="mini" data-probe="2">╱</button>
+                <button class="mini" data-probe="3">╲</button>
+              </div>
+              <span class="outcome idle" id="bars-probe-out">—</span>
+            </div>
+            <div class="ctl-row">
+              <button class="chip" id="bars-bad" aria-pressed="false">坏初始化（3 号流放远方）</button>
+              <button class="chip chip-k" id="bars-leaky" aria-pressed="false">输家也小步学习</button>
+              <button class="chip" id="bars-jitter" aria-pressed="false">位置抖动</button>
+            </div>
+          </div>
+          <div>
+            <div class="wmap-row" id="bars-maps"></div>
+            <div class="chip-note" style="margin-top:10px">每张热图 = 一个神经元的 25 个权重；下方数字是它的胜场。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p id="bars-payoff">四张白纸各自长成了一种朝向的检测器——<strong>整套代码里没有任何地方写过「朝向」两个字</strong>。规则只有两条：局部的 Hebb 挪动，和赢者通吃。第一讲 Hubel &amp; Wiesel 在猫皮层里找到的朝向细胞，长的就是这种脸。</p>
+
+    <div class="task"><span class="task-tag">两个失败实验</span><span><strong>①</strong> 点「坏初始化」再训练：3 号神经元被扔得太远，一次都赢不了——<strong>死单元</strong>（k-means 的空簇、dead ReLU 的亲戚）。打开「输家也小步学习」再试：输家每步也向刺激挪一小步，慢慢挪回赛场。顺带一说：真实皮层也有这出戏——单眼被剥夺输入，它的地盘很快被另一只眼抢走（Hubel &amp; Wiesel 的剥夺实验）。<strong>②</strong> 打开「位置抖动」再训练：光条位置一变，学习就散了——同一朝向换个位置，在像素距离上比不同朝向还远。<strong>竞争学习不懂"平移不变"。这就是下一讲要解决的问题。</strong></span></div>
+
+    <div class="panel" style="margin:1.8em 0">
+      <div class="p-title">把三张脸放在一起看</div>
+      <div class="wmap-row" id="compare-maps" style="justify-content:space-around"></div>
+      <p class="small" style="margin:12px 0 0">左：这台仪器训练出的权重（示例）。中：真实 V1 简单细胞的感受野（示意，亮=兴奋区、暗=抑制区）。右：某个 CNN 第一层卷积核（示意）。<strong>你们天天训练出来的第一层滤波器，一条局部规则加一味竞争也能长出来。</strong></p>
+    </div>
+
+    <p>最后把话说到边界上。这个演示证明的是<strong>充分性</strong>：局部规则 + 竞争，<em>足以</em>长出朝向检测器——可能性证明，不是实然结论；而且喂给它的本来就是光条，答案有一半预装在数据里。真实的皮层更妙：雪貂、猴子<strong>睁眼之前</strong>就已有朝向选择性——如果经验来不及当老师，训练数据是什么？一个候选答案：视网膜在黑暗中自发放的<strong>活动波</strong>。把这个问题记下来：<strong>睁眼之前，皮层拿什么当训练数据？</strong>（下一讲。）</p>
+
+    <p>再补一句给做 AI 的你们：无标签、在线、单遍数据、从相关结构里长出特征——<strong>这也是自监督预训练的哲学</strong>。1949 年的那句话没有死，它换了框架又活了一遍。<span class="mlb"><span class="b">Hebb + 竞争</span><span class="arr">⇄</span><span class="m">无监督特征学习</span></span></p>
+
+    <div class="gained">✓ 已测得 <span class="g-eq">相关 → 主成分（Oja）；竞争 → 检测器</span>，全部只用局部信息</div>
+  </div>
+</section>
+
+<!-- ============ 6 · 两种学习的对话 ============ -->
+<section class="scene" id="s6" data-title="6 · 两种学习的对话">
+  <div class="wrap">
+    <div class="kicker">第 6 节 <span class="k-time">第二课时</span></div>
+    <h2>两种学习的对话</h2>
+    <p class="lede">现在把今天的规则和你天天用的那套并排放在桌上。</p>
+
+    <div class="cmp-scroll">
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Hebb / 局部规则</th><th>反向传播</th></tr></thead>
+        <tbody>
+          <tr><td>每根突触要知道</td><td>自己两端的活动（x, y）</td><td>全局损失对自己的梯度 ∂L/∂w</td></tr>
+          <tr><td>需要可导吗</td><td><strong>不需要——脉冲照用</strong></td><td>需要——连 ReLU 都得选个次梯度</td></tr>
+          <tr><td>老师</td><td>没有：数据的相关结构就是老师</td><td>有：标签与损失函数</td></tr>
+          <tr><td>学到什么</td><td>输入的相关结构与特征</td><td>任务的最优解</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>第二行值得停一秒——第一讲结尾那个悬念「脉冲不可导，反向传播用不上，大脑怎么学」，今天有了正面回答：<strong>大脑的规则根本不求导。</strong></p>
+
+    <p>但代价也在桌上：Hebb 学得出特征，学不出「有目标的行为」。大脑的候选补丁是在局部两因子外再乘一个<strong>第三因子</strong>——多巴胺一类的全局调制信号（"刚才干得好/糟"）：Δw = η·x·y·<strong>D</strong>。这是强化学习那一讲的门票。</p>
+
+    <div class="predict" data-predict="p2-bp" data-answer="2">
+      <div class="pq"><span class="p-tag">下课前最后一票</span>那么——大脑在做反向传播吗？</div>
+      <div class="opts">
+        <button data-i="0">在做，只是我们还没找到它的实现</button>
+        <button data-i="1">不做，局部规则 + 调制就是全部答案</button>
+        <button data-i="2">在近似某种梯度，但用的是别的机器</button>
+      </div>
+      <div class="p-reveal">这道题没有标准答案——绿色只代表目前文献里声音最大的猜想：对称反向通路至今没找到（反传的硬要求），但「用反馈连接近似梯度」的理论一直活跃（feedback alignment、预测编码等），而三因子规则已有坚实证据。<b>记住你投的选项：强化学习那一讲我们重投一次，看看全班的分布挪了多少。</b></div>
+    </div>
+
+    <details class="think">
+      <summary><span class="q-tag">思考</span>STDP 只加强「可能是因」的连接——这和你学过的哪些思想暗合？</summary>
+      <div class="a"><p>提示：credit assignment 的时序版本；Granger 因果的"先行者才可能是因"；强化学习里的资格迹<span class="term">eligibility trace</span>。把「相关 ≠ 因果」这句统计课口号，对照突触用毫秒时序做的粗糙因果过滤。</p></div>
+    </details>
+    <details class="think">
+      <summary><span class="q-tag">思考</span>记忆真的只写在突触权重里吗？</summary>
+      <div class="a"><p>一桩悬案：2015 年 Ryan 等人在小鼠上抑制蛋白合成、抹掉 LTP 之后，用光遗传直接激活当初的「印记细胞」，记忆仍能被唤起。突触权重是目前最强的候选载体，但载体之争没有完全落幕——连接的存在本身、细胞的内在状态，都还在候选名单上。</p></div>
+    </details>
+  </div>
+</section>
+
+<!-- ============ 7 · 一句话与预告 ============ -->
+<section class="scene" id="s7" data-title="7 · 一句话与预告">
+  <div class="wrap">
+    <div class="kicker">第 7 节 <span class="k-time">第二课时</span></div>
+    <h2>一句话，然后下课</h2>
+
+    <div class="thesis">
+      <span class="t-mark">一句话带走</span>
+      学习是突触权重的局部改写：相关让连接生长（Hebb / Oja），竞争让功能分化（检测器），归一化让一切不爆炸——没有老师，没有梯度，在 20 瓦上在线运行。
+    </div>
+
+    <div class="recap-row">
+      <span class="gained">✓ w 的实体 · n·p·q 三旋钮</span>
+      <span class="gained">✓ LTP / LTD · 亲手复现 1973 与 1992</span>
+      <span class="gained">✓ NMDA · 前×后的符合检测</span>
+      <span class="gained">✓ STDP · 大脑记得因果方向</span>
+      <span class="gained">✓ 纯 Hebb = 幂迭代 · 爆炸是定理</span>
+      <span class="gained">✓ Oja → 主成分 · 竞争 → 朝向检测器</span>
+    </div>
+
+    <p class="note">边界一并带走：突触权重是记忆<strong>最强候选</strong>载体，不是已判决的唯一载体；STDP 是一类现象，不是通用常数；朝向检测器实验是充分性证明，真实皮层的发育另有故事——这三句话都在今天的仪器边上原样写着。</p>
+
+    <div class="next-teaser">
+      <div class="nt-tag">下一讲预告</div>
+      <div class="nt-title">视觉皮层：大脑的卷积网络</div>
+      <p style="margin:.4em 0 0;font-size:.95rem">今天留下了两桩悬案：光条挪个位置，竞争学习就认不出（<strong>不变性从哪来？</strong>）；睁眼之前，皮层拿什么当训练数据（<strong>视网膜波？</strong>）。下一讲进真实的视觉系统：Hubel &amp; Wiesel 的简单细胞与复杂细胞、感受野的层级组装——看大脑怎么把今天长出的检测器拼成一台会看的机器，再看 CNN 从它身上抄走了哪几样。</p>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer class="colophon">
+  《神经科学导论》第二讲 · 南京大学人工智能学院 · 键盘 ← → 切换小节
+</footer>
+<script>
+'use strict';
+/* ================= 基础设施（与第一讲一致） ================= */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+
+function fitCanvas(cv) {
+  if (!cv.dataset.h) cv.dataset.h = cv.getAttribute('height') || 240;
+  const hCss = +cv.dataset.h;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.style.height = hCss + 'px';
+  const wCss = cv.clientWidth || (cv.parentElement ? cv.parentElement.clientWidth : 600) || 600;
+  const W = Math.max(50, Math.round(wCss * dpr)), H = Math.round(hCss * dpr);
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w: wCss, h: hCss };
+}
+
+const redraws = new Set();
+function requestRedrawAll() { redraws.forEach(f => { try { f(); } catch (e) {} }); }
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => setTimeout(requestRedrawAll, 30));
+new MutationObserver(() => setTimeout(requestRedrawAll, 30))
+  .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+let resizeTimer = null;
+addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(requestRedrawAll, 120); });
+
+function visibilityFlag(el) {
+  const state = { visible: false };
+  new IntersectionObserver(es => es.forEach(e => { state.visible = e.isIntersecting; }), { rootMargin: '80px' }).observe(el);
+  return state;
+}
+
+const RIG = {
+  bg: '#10141C', grid: '#1E2531', axis: '#3A4254', text: '#7C8598',
+  v: '#BFA3EF', na: '#E07A50', k: '#5F9FD8', i: '#C9A43F',
+  good: '#7BE3A5', bad: '#E8A0A0', dim: 'rgba(191,163,239,0.35)'
+};
+function chartColors() {
+  return {
+    ink: cssVar('--ink'), muted: cssVar('--muted'), line: cssVar('--line'),
+    v: cssVar('--c-v'), na: cssVar('--c-na'), k: cssVar('--c-k'), i: cssVar('--c-i'), ref: cssVar('--c-ref'),
+    accent: cssVar('--accent'), surface: cssVar('--surface')
+  };
+}
+function rigAxes(ctx, w, h, pad, xr, yr, xlabel, ylabel, xticks, yticks) {
+  ctx.fillStyle = RIG.bg; ctx.fillRect(0, 0, w, h);
+  const X = x => pad.l + (x - xr[0]) / (xr[1] - xr[0]) * (w - pad.l - pad.r);
+  const Y = y => h - pad.b - (y - yr[0]) / (yr[1] - yr[0]) * (h - pad.t - pad.b);
+  ctx.strokeStyle = RIG.grid; ctx.lineWidth = 1; ctx.beginPath();
+  (xticks || []).forEach(t => { ctx.moveTo(X(t), pad.t); ctx.lineTo(X(t), h - pad.b); });
+  (yticks || []).forEach(t => { ctx.moveTo(pad.l, Y(t)); ctx.lineTo(w - pad.r, Y(t)); });
+  ctx.stroke();
+  ctx.strokeStyle = RIG.axis; ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, h - pad.b); ctx.lineTo(w - pad.r, h - pad.b); ctx.stroke();
+  ctx.fillStyle = RIG.text; ctx.font = '11px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  (xticks || []).forEach(t => ctx.fillText(t, X(t), h - pad.b + 5));
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  (yticks || []).forEach(t => ctx.fillText(t, pad.l - 6, Y(t)));
+  if (xlabel) { ctx.textAlign = 'right'; ctx.textBaseline = 'bottom'; ctx.fillText(xlabel, w - pad.r, h - 4); }
+  if (ylabel) { ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillText(ylabel, 6, 4); }
+  return { X, Y };
+}
+function drawTrace(ctx, X, Y, ts, vs, color, lw) {
+  ctx.strokeStyle = color; ctx.lineWidth = lw || 2; ctx.lineJoin = 'round'; ctx.beginPath();
+  for (let i = 0; i < ts.length; i++) {
+    const x = X(ts[i]), y = Y(vs[i]);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+/* 可复现随机数 */
+function makeRng(seed) {
+  let s = (seed >>> 0) || 1;
+  return () => { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; };
+}
+
+/* ================= 导航 ================= */
+(function nav() {
+  const scenes = $$('.scene');
+  const links = $$('#rail a[data-sec]');
+  const sel = $('#tb-select');
+  scenes.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.id; o.textContent = s.dataset.title || s.id;
+    sel.appendChild(o);
+  });
+  const byId = id => scenes.findIndex(s => s.id === id);
+  let current = 0;
+  const io = new IntersectionObserver(es => {
+    es.forEach(e => {
+      if (e.isIntersecting) {
+        current = byId(e.target.id);
+        links.forEach(a => a.classList.toggle('active', a.dataset.sec === e.target.id));
+        sel.value = e.target.id;
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  scenes.forEach(s => io.observe(s));
+  const go = i => { const s = scenes[clamp(i, 0, scenes.length - 1)]; if (s) s.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' }); };
+  sel.addEventListener('change', () => go(byId(sel.value)));
+  $('#tb-prev').addEventListener('click', () => go(current - 1));
+  $('#tb-next').addEventListener('click', () => go(current + 1));
+  addEventListener('keydown', e => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(current + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(current - 1); }
+  });
+  addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const p = doc.scrollTop / (doc.scrollHeight - doc.clientHeight || 1);
+    $('#progress').style.width = (p * 100).toFixed(2) + '%';
+  }, { passive: true });
+  const rio = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); rio.unobserve(e.target); } }), { threshold: 0.2 });
+  $$('.reveal').forEach(el => rio.observe(el));
+})();
+
+/* ================= 预测-投票组件（含课堂现场投票，与第一讲一致） ================= */
+const LIVE = { on: false };
+const livePromise = (async () => {
+  if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+  try {
+    const r = await fetch('/health', { cache: 'no-store' });
+    if (r.ok) { const j = await r.json(); if (j && j.votes) LIVE.on = true; }
+  } catch (e) {}
+})();
+function liveTally(p, qid, myChoice) {
+  const nOpts = p.querySelectorAll('.opts button').length;
+  const right = +p.dataset.answer;
+  try {
+    fetch('/api/vote', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ qid, choice: myChoice })
+    }).catch(() => {});
+  } catch (e) {}
+  const box = document.createElement('div');
+  box.className = 'p-live';
+  box.innerHTML = '<div class="pl-head">现场投票 · 汇总中… <button class="pl-refresh" type="button">刷新</button></div>';
+  p.appendChild(box);
+  const refresh = async () => {
+    try {
+      const r = await fetch('/api/votes?qid=' + encodeURIComponent(qid), { cache: 'no-store' });
+      if (!r.ok) return;
+      const counts = ((await r.json()).counts || []).slice(0, nOpts).map(c => c || 0);
+      const total = counts.reduce((a, b) => a + b, 0);
+      const max = Math.max(1, ...counts);
+      box.innerHTML = '<div class="pl-head">现场投票 · ' + total + ' 人 <button class="pl-refresh" type="button">刷新</button></div>' +
+        counts.map((c, i) =>
+          '<div class="pl-row' + (i === right ? ' is-right' : '') + '">' +
+          '<span class="pl-opt">' + 'ABCD'[i] + '</span>' +
+          '<span class="pl-bar"><i style="width:' + Math.round(c / max * 100) + '%"></i></span>' +
+          '<span class="pl-n">' + c + '</span></div>').join('');
+      box.querySelector('.pl-refresh').addEventListener('click', refresh);
+    } catch (e) {}
+  };
+  box.querySelector('.pl-refresh').addEventListener('click', refresh);
+  setTimeout(refresh, 500);
+  let n = 0;
+  const iv = setInterval(() => { refresh(); if (++n >= 12) clearInterval(iv); }, 2500);
+}
+$$('.predict').forEach(p => {
+  p.querySelectorAll('.opts button').forEach(b => b.addEventListener('click', async () => {
+    if (p.classList.contains('revealed')) return;
+    b.classList.add('chosen');
+    p.classList.add('revealed');
+    const right = p.dataset.answer;
+    p.querySelectorAll('.opts button').forEach(x => { if (x.dataset.i === right) x.classList.add('right'); });
+    await livePromise;
+    if (LIVE.on && p.dataset.predict) liveTally(p, p.dataset.predict, +b.dataset.i);
+  }));
+});
+
+/* ================= 封面：突触网络微光 ================= */
+(function cover() {
+  const cv = $('#cover-canvas'); if (!cv) return;
+  const rng = makeRng(20260901);
+  const nodes = [];
+  for (let i = 0; i < 13; i++) nodes.push({ x: 0.04 + 0.92 * (i / 12) + 0.03 * (rng() - 0.5), y: 0.25 + 0.55 * rng() });
+  const edges = [];
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const d = Math.hypot(nodes[i].x - nodes[j].x, nodes[i].y - nodes[j].y);
+      if (d < 0.22 && rng() < 0.8) edges.push({ a: i, b: j, ph: rng() * 6.28, sp: 0.4 + rng() * 0.7 });
+    }
+  }
+  const vis = visibilityFlag(cv);
+  function draw(t) {
+    const { ctx, w, h } = fitCanvas(cv);
+    const C = chartColors();
+    ctx.clearRect(0, 0, w, h);
+    edges.forEach(e => {
+      const s = REDUCED ? 0.6 : 0.5 + 0.5 * Math.sin(t * 0.001 * e.sp + e.ph);
+      ctx.strokeStyle = C.v; ctx.globalAlpha = 0.12 + 0.45 * s;
+      ctx.lineWidth = 0.6 + 2.4 * s;
+      ctx.beginPath();
+      ctx.moveTo(nodes[e.a].x * w, nodes[e.a].y * h);
+      ctx.lineTo(nodes[e.b].x * w, nodes[e.b].y * h);
+      ctx.stroke();
+    });
+    ctx.globalAlpha = 1;
+    nodes.forEach(n => {
+      ctx.fillStyle = C.accent; ctx.beginPath();
+      ctx.arc(n.x * w, n.y * h, 3.2, 0, 7); ctx.fill();
+    });
+    ctx.fillStyle = C.muted; ctx.font = '11px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('10^14 个可写的连接 · 强度此起彼伏', 4, 2);
+  }
+  if (REDUCED) { draw(0); redraws.add(() => draw(0)); return; }
+  (function loop(now) { requestAnimationFrame(loop); if (vis.visible) draw(now); })(0);
+})();
+
+/* ================= 第1节 · 突触传递慢镜头 ================= */
+(function synReplay() {
+  const cv = $('#syn-canvas'); if (!cv) return;
+  const T = 10, N = 500;
+  const rec = { t: [], preV: [], ca: [], glu: [], epsp: [] };
+  for (let i = 0; i < N; i++) {
+    const t = i / (N - 1) * T;
+    rec.t.push(t);
+    rec.preV.push(-65 + 108 * Math.exp(-((t - 1.3) ** 2) / 0.14));
+    const caOn = 1 / (1 + Math.exp(-(t - 1.6) * 6));
+    rec.ca.push(caOn * Math.exp(-Math.max(0, t - 1.9) / 1.4));
+    const gOn = 1 / (1 + Math.exp(-(t - 2.6) * 7));
+    rec.glu.push(gOn * Math.exp(-Math.max(0, t - 3.0) / 1.3));
+    const te = t - 3.4;
+    rec.epsp.push(te > 0 ? 0.5 * (te / 1.8) * Math.exp(1 - te / 1.8) : 0);
+  }
+  const phaseOf = t => t < 1.0 ? 0 : t < 2.1 ? 1 : t < 3.0 ? 2 : t < 3.8 ? 3 : 4;
+  const STORY = [
+    '<b>① 脉冲到达。</b>上一讲造出来的动作电位一路跑到轴突末梢——线的尽头。它自己过不了河：间隙约 20 nm，电信号跳不过去。',
+    '<b>② Ca²⁺ 内流。</b>去极化打开末梢上的电压门控钙通道，Ca²⁺ 涌入——它是「放货」的命令信号。',
+    '<b>③ 囊泡释放。</b>装满谷氨酸的囊泡与前膜融合，把几千个递质分子倒进间隙。<b>每个囊泡是一「份」货——这就是旋钮 n 和 p 管的事。</b>',
+    '<b>④ 扩散过河。</b>递质分子用不到一毫秒扩散过 20 nm——化学接力换来的代价是延迟，换到的是下面这一步的「可调」。',
+    '<b>⑤ 受体开门 → EPSP。</b>谷氨酸撞上 AMPA 受体，通道开，Na⁺ 进入，突触后膜轻轻抬高约 0.5 mV——<b>受体有多少，就是旋钮 q。</b>信号过河完成，w 的三个旋钮全部亮相。'
+  ];
+  const svg = $('#syn-svg');
+  svg.innerHTML = [
+    '<text x="12" y="22" font-size="12" fill="#7C8598">突触前末梢（轴突的尽头）</text>',
+    // 前末梢轮廓
+    '<path d="M100 34 Q170 16 240 34 L252 96 Q170 128 88 96 Z" fill="#171C27" stroke="#3A4254" stroke-width="2"/>',
+    // 脉冲到达指示
+    '<circle id="syn-spike" cx="100" cy="30" r="6" fill="#BFA3EF" opacity="0"/>',
+    // 囊泡
+    '<circle id="ves1" cx="150" cy="62" r="11" fill="none" stroke="#C9A43F" stroke-width="2"/>',
+    '<circle cx="196" cy="56" r="11" fill="none" stroke="#C9A43F" stroke-width="2"/>',
+    '<circle cx="122" cy="52" r="11" fill="none" stroke="#C9A43F" stroke-width="2"/>',
+    // 钙通道（左下角）
+    '<rect x="96" y="88" width="9" height="18" rx="3" fill="#3A4254"/>',
+    '<rect x="114" y="88" width="9" height="18" rx="3" fill="#3A4254"/>',
+    '<g id="syn-caflow" opacity="0"><line x1="109" y1="118" x2="109" y2="94" stroke="#E07A50" stroke-width="3"/><polygon points="104,98 114,98 109,88" fill="#E07A50"/><text x="128" y="118" font-size="11" fill="#E07A50">Ca²⁺</text></g>',
+    // 间隙
+    '<text x="262" y="112" font-size="11" fill="#7C8598">间隙</text>',
+    '<text x="262" y="126" font-size="11" fill="#7C8598">~20 nm</text>',
+    // 递质点
+    '<g id="syn-glu" opacity="0">' + [0,1,2,3,4,5].map(i =>
+      '<circle class="glu-dot" data-i="' + i + '" cx="' + (150 + (i % 3) * 16 - 16) + '" cy="108" r="3.2" fill="#C9A43F"/>').join('') + '</g>',
+    // 突触后
+    '<path d="M92 176 Q170 148 248 176 L240 236 Q170 262 100 236 Z" fill="#171C27" stroke="#3A4254" stroke-width="2"/>',
+    // AMPA 受体两个
+    '<g id="syn-r1"><rect x="140" y="158" width="8" height="20" rx="3" fill="#5F9FD8"/><rect id="syn-g1" x="150" y="158" width="8" height="20" rx="3" fill="#5F9FD8"/></g>',
+    '<g id="syn-r2"><rect x="186" y="158" width="8" height="20" rx="3" fill="#5F9FD8"/><rect id="syn-g2" x="196" y="158" width="8" height="20" rx="3" fill="#5F9FD8"/></g>',
+    '<g id="syn-naflow" opacity="0"><line x1="172" y1="182" x2="172" y2="212" stroke="#5F9FD8" stroke-width="3"/><polygon points="167,208 177,208 172,218" fill="#5F9FD8"/><text x="182" y="212" font-size="11" fill="#5F9FD8">Na⁺</text></g>',
+    '<text x="12" y="300" font-size="12" fill="#7C8598">突触后（树突棘）· 受体在这一侧</text>',
+    '<text id="syn-epsp-tag" x="240" y="252" font-size="12" fill="#BFA3EF" opacity="0">EPSP ↑</text>'
+  ].join('');
+  const el = id => svg.querySelector('#' + id);
+  const scrub = $('#syn-scrub'), tval = $('#syn-t-val'), story = $('#syn-story');
+  function setIdx(idx) {
+    idx = clamp(Math.round(idx), 0, N - 1);
+    const t = rec.t[idx];
+    tval.textContent = t.toFixed(1) + ' ms';
+    el('syn-spike').setAttribute('opacity', rec.preV[idx] > -30 ? 0.95 : 0);
+    el('syn-caflow').setAttribute('opacity', clamp(rec.ca[idx] * 1.4, 0, 1));
+    // 融合中的囊泡：ph2 期间向膜移动并淡出
+    const fuse = clamp((t - 2.1) / 0.9, 0, 1);
+    el('ves1').setAttribute('cy', 62 + 34 * fuse);
+    el('ves1').setAttribute('opacity', 1 - fuse * 0.9);
+    // 递质扩散
+    const glu = el('syn-glu');
+    glu.setAttribute('opacity', clamp(rec.glu[idx] * 1.5, 0, 1));
+    const spread = clamp((t - 2.7) / 1.1, 0, 1);
+    glu.querySelectorAll('.glu-dot').forEach((d, i) => {
+      d.setAttribute('cy', 108 + spread * (44 + (i % 2) * 8));
+      d.setAttribute('cx', 150 + ((i % 3) - 1) * (16 + spread * 10) + (i > 2 ? 6 : -4));
+    });
+    // 受体开门
+    const open = clamp(rec.epsp[idx] / 0.45, 0, 1);
+    el('syn-g1').setAttribute('transform', 'rotate(' + (58 * open) + ' 150 178)');
+    el('syn-g2').setAttribute('transform', 'rotate(' + (58 * open) + ' 196 178)');
+    el('syn-naflow').setAttribute('opacity', open);
+    el('syn-epsp-tag').setAttribute('opacity', open);
+    const ph = phaseOf(t);
+    $$('#syn-phases .phase').forEach(x => x.classList.toggle('on', +x.dataset.ph === ph));
+    if (story.dataset.ph !== String(ph)) { story.dataset.ph = ph; story.innerHTML = STORY[ph]; }
+    draw(idx);
+  }
+  function draw(idx) {
+    const { ctx, w, h } = fitCanvas(cv);
+    ctx.fillStyle = RIG.bg; ctx.fillRect(0, 0, w, h);
+    const pad = { l: 46, r: 10 };
+    const X = t => pad.l + t / T * (w - pad.l - pad.r);
+    const hTop = h * 0.5;
+    const Yv = v => 8 + (1 - (v + 80) / 135) * (hTop - 16);
+    const Ye = v => hTop + 10 + (1 - v / 0.7) * (h - hTop - 34);
+    ctx.fillStyle = RIG.text; ctx.font = '10.5px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('突触前 V (mV)', 4, 6);
+    ctx.fillText('突触后 EPSP (mV，放大)', 4, hTop + 2);
+    ctx.textAlign = 'center';
+    [0, 2, 4, 6, 8, 10].forEach(t => ctx.fillText(t, X(t), h - 14));
+    ctx.strokeStyle = RIG.grid; ctx.beginPath();
+    ctx.moveTo(pad.l, Yv(-65)); ctx.lineTo(w - pad.r, Yv(-65));
+    ctx.moveTo(pad.l, Ye(0)); ctx.lineTo(w - pad.r, Ye(0)); ctx.stroke();
+    drawTrace(ctx, X, Yv, rec.t, rec.preV, RIG.v, 2);
+    drawTrace(ctx, X, Ye, rec.t, rec.epsp, RIG.k, 2);
+    const xc = X(rec.t[idx]);
+    ctx.strokeStyle = '#57D08A'; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(xc, 6); ctx.lineTo(xc, h - 18); ctx.stroke();
+  }
+  scrub.max = N - 1;
+  scrub.addEventListener('input', () => { stopPlay(); setIdx(+scrub.value); });
+  let playing = false, raf = null;
+  const btn = $('#syn-play'), led = $('#syn-led');
+  function stopPlay() { playing = false; btn.textContent = '▶ 播放'; led.classList.remove('on'); if (raf) cancelAnimationFrame(raf); }
+  btn.addEventListener('click', () => {
+    if (playing) { stopPlay(); return; }
+    playing = true; btn.textContent = '⏸ 暂停'; led.classList.add('on');
+    if (+scrub.value >= N - 2) scrub.value = 0;
+    let last = 0;
+    (function step(now) {
+      if (!playing) return;
+      raf = requestAnimationFrame(step);
+      if (now - last < 16) return;
+      last = now;
+      const idx = +scrub.value + N / 420;              // 全程约 7 秒
+      if (idx >= N - 1) { scrub.value = N - 1; setIdx(N - 1); stopPlay(); return; }
+      scrub.value = idx; setIdx(idx);
+    })(0);
+  });
+  setIdx(0);
+  redraws.add(() => setIdx(+scrub.value));
+})();
+
+/* ================= 第1节 · n·p·q 三旋钮 ================= */
+(function npq() {
+  const cv = $('#npq-canvas'); if (!cv) return;
+  const els = { n: $('#npq-n'), p: $('#npq-p'), q: $('#npq-q') };
+  function draw() {
+    const n = +els.n.value, p = +els.p.value, q = +els.q.value;
+    $('#npq-n-val').textContent = n;
+    $('#npq-p-val').textContent = p.toFixed(2);
+    $('#npq-q-val').textContent = q.toFixed(2);
+    const w = n * p * q;
+    const amp = 0.5 * w / 2.0;                          // 基线 n·p·q=2 → 0.5 mV
+    $('#npq-w').textContent = 'w ∝ n·p·q = ' + w.toFixed(2) + '　（EPSP 峰值 ' + amp.toFixed(2) + ' mV）';
+    $('#npq-w').className = 'outcome ' + (amp >= 0.5 ? 'spike' : 'idle');
+    const { ctx, w: W, h } = fitCanvas(cv);
+    const { X, Y } = rigAxes(ctx, W, h, { l: 46, r: 10, t: 12, b: 30 }, [0, 30], [0, 5],
+      'ms', 'EPSP (mV)', [0, 10, 20, 30], [0, 1, 2, 3, 4, 5]);
+    const ts = [], vs = [];
+    for (let t = 0; t <= 30; t += 0.2) {
+      const te = t - 2;
+      ts.push(t); vs.push(te > 0 ? amp * (te / 4) * Math.exp(1 - te / 4) : 0);
+    }
+    ctx.strokeStyle = RIG.grid; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(X(0), Y(0.5)); ctx.lineTo(X(30), Y(0.5)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = RIG.text; ctx.font = '10.5px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText('基线 0.5 mV', X(20), Y(0.5) - 3);
+    drawTrace(ctx, X, Y, ts, vs, RIG.k, 2.2);
+  }
+  Object.values(els).forEach(s => s.addEventListener('input', draw));
+  redraws.add(draw);
+  draw();
+})();
+</script>
+<script>
+'use strict';
+/* ================= 第2节 · 经典可塑性实验台 ================= */
+(function ltpBench() {
+  const cv = $('#ltp-canvas'); if (!cv) return;
+  const rng = makeRng(7331);
+  let stable, transient, curT, pts, events;
+  function init() {
+    stable = 1.0; transient = { amp: 0, t0: 0, tau: 2.5 };
+    curT = 0; pts = []; events = [];
+    $('#ltp-note').textContent = '先打一组测试脉冲建立基线，再动手改写它。';
+  }
+  const factor = t => stable + (transient.amp > 0 ? transient.amp * Math.exp(-Math.max(0, t - transient.t0) / transient.tau) : 0);
+  const ap5on = () => $('#ltp-ap5').getAttribute('aria-pressed') === 'true';
+  function stateOut() {
+    const f = factor(curT) * 100;
+    const el = $('#ltp-state');
+    el.textContent = '突触强度：' + f.toFixed(0) + '%（基线 100）';
+    el.className = 'outcome ' + (f > 115 ? 'spike' : f < 85 ? 'fail' : 'idle');
+  }
+  function draw() {
+    const { ctx, w, h } = fitCanvas(cv);
+    const xmax = Math.max(30, curT + 4);
+    const { X, Y } = rigAxes(ctx, w, h, { l: 48, r: 12, t: 26, b: 32 }, [0, xmax], [0, 250],
+      '时间 (min)', 'EPSP 幅度 (% 基线)', [0, 10, 20, 30, 40, 50, 60].filter(v => v <= xmax), [0, 50, 100, 150, 200, 250]);
+    ctx.strokeStyle = RIG.axis; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(X(0), Y(100)); ctx.lineTo(X(xmax), Y(100)); ctx.stroke();
+    ctx.setLineDash([]);
+    events.forEach(ev => {
+      if (ev.type.startsWith('lfs')) {
+        ctx.fillStyle = 'rgba(95,159,216,0.12)';
+        ctx.fillRect(X(ev.t - 15), Y(250), X(ev.t) - X(ev.t - 15), Y(0) - Y(250));
+      }
+      ctx.strokeStyle = ev.type.startsWith('hfs') ? RIG.i : RIG.k;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(X(ev.t), Y(250)); ctx.lineTo(X(ev.t), Y(0)); ctx.stroke();
+      ctx.fillStyle = ev.type.endsWith('ap5') ? RIG.text : (ev.type.startsWith('hfs') ? RIG.i : RIG.k);
+      ctx.font = '11px "IBM Plex Mono", monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(ev.type.startsWith('hfs') ? (ev.type.endsWith('ap5') ? '100Hz+AP5' : '⚡100Hz') : (ev.type.endsWith('ap5') ? '1Hz+AP5' : '1Hz×15min'), X(ev.t), 6);
+    });
+    ctx.fillStyle = RIG.v;
+    pts.forEach(p => { ctx.beginPath(); ctx.arc(X(p.t), Y(clamp(p.a, 0, 248)), 3.4, 0, 7); ctx.fill(); });
+    stateOut();
+  }
+  $('#ltp-test').addEventListener('click', () => {
+    for (let i = 0; i < 10; i++) {
+      curT += 0.5;
+      pts.push({ t: curT, a: factor(curT) * 100 * (1 + 0.045 * (rng() * 2 - 1)) });
+    }
+    draw();
+  });
+  $('#ltp-hfs').addEventListener('click', () => {
+    curT += 1;
+    if (ap5on()) {
+      events.push({ t: curT, type: 'hfs-ap5' });
+      $('#ltp-note').textContent = 'AP5 在场：高频轰炸打完，什么都没写上——扳机被卸了。打几发测试脉冲确认。';
+    } else {
+      stable = Math.min(2.3, stable * 1.6);
+      transient = { amp: stable * 0.22, t0: curT, tau: 2.5 };
+      events.push({ t: curT, type: 'hfs' });
+      $('#ltp-note').textContent = '写入完成——打几发测试脉冲，看看新台阶稳不稳（开头略高的一小段是刺激后短暂增强，几分钟内消退）。';
+    }
+    draw();
+  });
+  $('#ltp-lfs').addEventListener('click', () => {
+    curT += 15;
+    if (ap5on()) {
+      events.push({ t: curT, type: 'lfs-ap5' });
+      $('#ltp-note').textContent = 'AP5 在场：低频磨了 15 分钟，也没写下去。';
+    } else {
+      stable = Math.max(0.45, stable * 0.7);
+      transient = { amp: 0, t0: curT, tau: 2.5 };
+      events.push({ t: curT, type: 'lfs' });
+      $('#ltp-note').textContent = '低频 15 分钟磨完：往下写了——这就是 LTD。打测试脉冲看新水平。';
+    }
+    draw();
+  });
+  $('#ltp-ap5').addEventListener('click', () => {
+    const b = $('#ltp-ap5');
+    b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+  });
+  $('#ltp-reset').addEventListener('click', () => { init(); draw(); });
+  init();
+  redraws.add(draw);
+  draw();
+})();
+
+/* ================= 第3节 · STDP 做曲线台 ================= */
+(function stdpBench() {
+  const cv = $('#stdp-canvas'); if (!cv) return;
+  const rng = makeRng(9182);
+  const curve = dt => { const d = dt === 0 ? 0.5 : dt; return d > 0 ? 100 * Math.exp(-d / 17) : -50 * Math.exp(d / 34); };
+  let pts = [], fitOn = false;
+  function draw() {
+    const { ctx, w, h } = fitCanvas(cv);
+    const { X, Y } = rigAxes(ctx, w, h, { l: 52, r: 14, t: 16, b: 34 }, [-55, 55], [-70, 120],
+      'Δt (ms)', 'Δw (%)', [-40, -20, 0, 20, 40], [-50, 0, 50, 100]);
+    ctx.strokeStyle = RIG.axis; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(X(0), Y(-70)); ctx.lineTo(X(0), Y(120)); ctx.stroke();
+    ctx.fillStyle = RIG.text; ctx.font = '11px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('pre 先于 post →', X(6), Y(115));
+    ctx.textAlign = 'right';
+    ctx.fillText('← post 先于 pre', X(-6), Y(115));
+    if (fitOn) {
+      ctx.strokeStyle = RIG.dim; ctx.lineWidth = 2;
+      ctx.beginPath();
+      let first = true;
+      for (let d = -55; d <= -0.5; d += 0.5) { const x = X(d), y = Y(curve(d)); first ? ctx.moveTo(x, y) : ctx.lineTo(x, y); first = false; }
+      ctx.stroke();
+      ctx.beginPath(); first = true;
+      for (let d = 0.5; d <= 55; d += 0.5) { const x = X(d), y = Y(curve(d)); first ? ctx.moveTo(x, y) : ctx.lineTo(x, y); first = false; }
+      ctx.stroke();
+    }
+    pts.forEach(p => {
+      ctx.fillStyle = p.dw >= 0 ? RIG.good : RIG.bad;
+      ctx.beginPath(); ctx.arc(X(p.dt), Y(clamp(p.dw, -68, 118)), 4, 0, 7); ctx.fill();
+    });
+    if (!pts.length && !fitOn) {
+      ctx.fillStyle = RIG.text; ctx.font = '12px "IBM Plex Sans", sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('坐标是空的——曲线要靠你自己的配对实验一点点做出来', w / 2, h / 2 - 30);
+    }
+  }
+  $('#stdp-dt').addEventListener('input', () => {
+    const v = +$('#stdp-dt').value;
+    $('#stdp-dt-val').textContent = (v > 0 ? '+' : '') + v;
+  });
+  $('#stdp-pair').addEventListener('click', () => {
+    const dt = +$('#stdp-dt').value;
+    const dw = curve(dt) + 13 * (rng() * 2 - 1);
+    pts.push({ dt, dw });
+    const out = $('#stdp-out');
+    out.textContent = 'Δt=' + (dt > 0 ? '+' : '') + dt + ' ms → Δw = ' + (dw >= 0 ? '+' : '') + dw.toFixed(0) + '%';
+    out.className = 'outcome ' + (dw >= 0 ? 'spike' : 'fail');
+    draw();
+  });
+  $('#stdp-fit').addEventListener('click', () => { fitOn = !fitOn; draw(); });
+  $('#stdp-reset').addEventListener('click', () => { pts = []; fitOn = false; $('#stdp-out').textContent = '—'; $('#stdp-out').className = 'outcome idle'; draw(); });
+  redraws.add(draw);
+  draw();
+})();
+</script>
+<script>
+'use strict';
+/* ================= 第5节 · Hebb/Oja 训练台 ================= */
+(function ojaTrainer() {
+  const cv = $('#oja-canvas'); if (!cv) return;
+  let rng = makeRng(555);
+  const gauss = () => Math.sqrt(-2 * Math.log(1 - rng())) * Math.cos(2 * Math.PI * rng());
+  let pts = [], w = [0, 0], rule = 'hebb', trained = false, showAxis = false, last = null;
+  let running = false, raf = null;
+
+  function makeData() {
+    const ang = +$('#oja-ang').value * Math.PI / 180, ecc = +$('#oja-ecc').value;
+    const s1 = 1.6, s2 = 1.6 / ecc, ca = Math.cos(ang), sa = Math.sin(ang);
+    pts = [];
+    for (let i = 0; i < 200; i++) {
+      const u = gauss() * s1, v = gauss() * s2;
+      pts.push([u * ca - v * sa, u * sa + v * ca]);
+    }
+    let mx = 0, my = 0;
+    pts.forEach(p => { mx += p[0]; my += p[1]; });
+    mx /= pts.length; my /= pts.length;
+    pts = pts.map(p => [p[0] - mx, p[1] - my]);
+  }
+  function pc1() {
+    let cxx = 0, cxy = 0, cyy = 0;
+    pts.forEach(p => { cxx += p[0] * p[0]; cxy += p[0] * p[1]; cyy += p[1] * p[1]; });
+    const n = pts.length; cxx /= n; cxy /= n; cyy /= n;
+    const tr = cxx + cyy, det = cxx * cyy - cxy * cxy;
+    const l1 = tr / 2 + Math.sqrt(Math.max(0, tr * tr / 4 - det));
+    let e = Math.abs(cxy) > 1e-9 ? [cxy, l1 - cxx] : (cxx >= cyy ? [1, 0] : [0, 1]);
+    const en = Math.hypot(e[0], e[1]);
+    return [e[0] / en, e[1] / en];
+  }
+  function readouts() {
+    const norm = Math.hypot(w[0], w[1]);
+    const el = $('#oja-norm');
+    el.textContent = '|w| = ' + (norm < 1000 ? norm.toFixed(3) : norm.toExponential(1));
+    el.className = 'outcome ' + (norm > 10 ? 'fail' : norm > 0.9 && norm < 1.1 ? 'spike' : 'idle');
+  }
+  function stepOnce(record) {
+    const eta = clamp(parseFloat($('#oja-eta').value) || 0.04, 0.001, 0.3);
+    const x = pts[Math.floor(rng() * pts.length)];
+    const y = w[0] * x[0] + w[1] * x[1];
+    let d0, d1;
+    if (rule === 'hebb') { d0 = eta * y * x[0]; d1 = eta * y * x[1]; }
+    else { d0 = eta * y * (x[0] - y * w[0]); d1 = eta * y * (x[1] - y * w[1]); }
+    w[0] += d0; w[1] += d1;
+    if (record) last = { x, y, d: [d0, d1] };
+  }
+  function draw() {
+    const { ctx, w: W, h } = fitCanvas(cv);
+    ctx.fillStyle = RIG.bg; ctx.fillRect(0, 0, W, h);
+    const R = 4.4, cx = W / 2, cy = h / 2, sc = Math.min(W, h) / 2 / R;
+    const PX = p => cx + p[0] * sc, PY = p => cy - p[1] * sc;
+    ctx.strokeStyle = RIG.grid; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx - R * sc, cy); ctx.lineTo(cx + R * sc, cy);
+    ctx.moveTo(cx, cy - R * sc); ctx.lineTo(cx, cy + R * sc);
+    ctx.stroke();
+    ctx.fillStyle = RIG.dim;
+    pts.forEach(p => { ctx.beginPath(); ctx.arc(PX(p), PY(p), 2.2, 0, 7); ctx.fill(); });
+    if (showAxis) {
+      const e = pc1();
+      ctx.strokeStyle = RIG.text; ctx.setLineDash([6, 5]); ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(cx - e[0] * R * sc, cy + e[1] * R * sc);
+      ctx.lineTo(cx + e[0] * R * sc, cy - e[1] * R * sc);
+      ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = RIG.text; ctx.font = '11px "IBM Plex Mono", monospace';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+      ctx.fillText('数据主轴（数值解）', cx + e[0] * R * sc * 0.55 + 6, cy - e[1] * R * sc * 0.55);
+    }
+    const norm = Math.hypot(w[0], w[1]);
+    if (norm > 1e-9) {
+      const dir = [w[0] / norm, w[1] / norm];
+      const len = Math.min(norm, 1.35) * 2.0 * sc;
+      const tip = [cx + dir[0] * len, cy - dir[1] * len];
+      ctx.strokeStyle = RIG.v; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(tip[0], tip[1]); ctx.stroke();
+      const a = Math.atan2(-(dir[1]), dir[0]);
+      ctx.fillStyle = RIG.v;
+      ctx.beginPath();
+      ctx.moveTo(tip[0], tip[1]);
+      ctx.lineTo(tip[0] - 11 * Math.cos(a - 0.4), tip[1] - 11 * Math.sin(a - 0.4));
+      ctx.lineTo(tip[0] - 11 * Math.cos(a + 0.4), tip[1] - 11 * Math.sin(a + 0.4));
+      ctx.fill();
+      ctx.font = '12px "IBM Plex Mono", monospace';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillText('w', tip[0] + 6, tip[1] + 2);
+      if (norm > 5) {
+        ctx.fillStyle = RIG.bad;
+        ctx.fillText('|w| 已出画布 ' + norm.toExponential(0), 10, 8);
+      }
+      if (last) {
+        ctx.strokeStyle = RIG.good; ctx.lineWidth = 2.4;
+        ctx.beginPath(); ctx.arc(PX(last.x), PY(last.x), 6.5, 0, 7); ctx.stroke();
+        const K = 3.0 * sc;
+        ctx.beginPath();
+        ctx.moveTo(tip[0], tip[1]);
+        ctx.lineTo(tip[0] + last.d[0] * K, tip[1] - last.d[1] * K);
+        ctx.stroke();
+        ctx.fillStyle = RIG.good;
+        ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.fillText('Δw', tip[0] + last.d[0] * K + 4, tip[1] - last.d[1] * K);
+      }
+    }
+    readouts();
+  }
+  function resetW(keepPanels) {
+    stopTrain();
+    w = [0.45 * (rng() * 2 - 1) + 0.2, 0.45 * (rng() * 2 - 1) - 0.15];
+    trained = false; showAxis = false; last = null;
+    $('#oja-compare').disabled = true;
+    $('#oja-angle').textContent = '与主轴夹角：—';
+    $('#oja-angle').className = 'outcome idle';
+    if (!keepPanels) { $('#hebb-crash').hidden = true; $('#oja-payoff').hidden = true; }
+    draw();
+  }
+  function stopTrain() { running = false; if (raf) cancelAnimationFrame(raf); $('#oja-train').textContent = '▶ 训练'; $('#oja-led').classList.remove('on'); }
+  function finishTrain() {
+    stopTrain();
+    trained = true;
+    if (rule === 'hebb') {
+      $('#hebb-crash').hidden = false;
+      $('#oja-story').innerHTML = '<b>方向稳住了——但看右下角的 |w|。</b>投票只问了方向，长度那边出了大事。往下看。';
+    } else {
+      $('#oja-payoff').hidden = false;
+      $('#oja-compare').disabled = false;
+      $('#oja-story').innerHTML = '<b>收敛了：方向停住，|w| ≈ 1。</b>它停在哪个方向？点「对照：数据主轴」揭晓。（w 停在主轴的哪一头都算对——特征向量本来就差一个正负号。）';
+    }
+    draw();
+  }
+  function train() {
+    if (running) { stopTrain(); return; }
+    const total = clamp(parseInt($('#oja-steps').value) || 600, 50, 5000);
+    let done = 0;
+    running = true;
+    $('#oja-train').textContent = '⏸ 暂停';
+    $('#oja-led').classList.add('on');
+    last = null;
+    if (REDUCED) {
+      for (let i = 0; i < total; i++) stepOnce(false);
+      finishTrain(); return;
+    }
+    (function loop() {
+      if (!running) return;
+      raf = requestAnimationFrame(loop);
+      for (let i = 0; i < 6 && done < total; i++, done++) stepOnce(false);
+      draw();
+      if (done >= total) finishTrain();
+    })();
+  }
+  function setRule(r) {
+    rule = r;
+    $('#rule-hebb').classList.toggle('on', r === 'hebb');
+    $('#rule-oja').classList.toggle('on', r === 'oja');
+    $('#oja-fix-line').innerHTML = r === 'oja'
+      ? '\n  w[0] -= eta * y*y * w[0]; <span class="cm">// Oja：活动门控的归一化</span>\n  w[1] -= eta * y*y * w[1];'
+      : '\n  <span class="cm">// （这里将来要发生点什么……）</span>';
+    resetW(r === 'oja');
+  }
+  $('#rule-hebb').addEventListener('click', () => setRule('hebb'));
+  $('#rule-oja').addEventListener('click', () => setRule('oja'));
+  $('#oja-fix').addEventListener('click', () => { setRule('oja'); train(); document.getElementById('rig-oja').scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'center' }); });
+  $('#oja-step').addEventListener('click', () => {
+    stopTrain();
+    stepOnce(true);
+    const mag = Math.hypot(last.d[0], last.d[1]);
+    $('#oja-story').innerHTML = '这个点的响应 y = ' + last.y.toFixed(2) + '，这一步 |Δw| = ' + mag.toFixed(3) +
+      '。<b>与 w 同向的点响应大、推得狠；横着的点响应小、几乎推不动</b>——多按几次，看正反馈怎么滚起来。';
+    draw();
+  });
+  $('#oja-train').addEventListener('click', train);
+  $('#oja-reset').addEventListener('click', () => resetW(false));
+  $('#oja-compare').addEventListener('click', () => {
+    showAxis = true;
+    const e = pc1(), norm = Math.hypot(w[0], w[1]);
+    const cos = Math.abs((w[0] * e[0] + w[1] * e[1]) / (norm || 1));
+    const angle = Math.acos(Math.min(1, cos)) * 180 / Math.PI;
+    const el = $('#oja-angle');
+    el.textContent = '与主轴夹角：' + angle.toFixed(1) + '°';
+    el.className = 'outcome ' + (angle < 6 ? 'spike' : 'idle');
+    draw();
+  });
+  ['oja-ang', 'oja-ecc'].forEach(id => $('#' + id).addEventListener('input', () => {
+    $('#oja-ang-val').textContent = $('#oja-ang').value;
+    $('#oja-ecc-val').textContent = (+$('#oja-ecc').value).toFixed(1);
+    makeData(); resetW(true);
+  }));
+  $$('#rig-oja .cnum').forEach(inp => inp.addEventListener('focus', () => inp.select()));
+  makeData();
+  resetW(false);
+  redraws.add(draw);
+})();
+
+/* ================= 第5节 · 竞争学习农场 ================= */
+(function barsFarm() {
+  const stimEl = $('#bars-stim'), mapsEl = $('#bars-maps'); if (!stimEl) return;
+  const GLYPH = ['─', '│', '╱', '╲'];
+  const lerp = (a, b, t) => Math.round(a + (b - a) * t);
+  const cellColor = v => {
+    v = clamp(v, -1, 1);
+    if (v >= 0) return 'rgb(' + lerp(26, 191, v) + ',' + lerp(32, 163, v) + ',' + lerp(48, 239, v) + ')';
+    const u = -v;
+    return 'rgb(' + lerp(26, 95, u) + ',' + lerp(32, 159, u) + ',' + lerp(48, 216, u) + ')';
+  };
+  function buildMap(container, cells) {
+    const m = document.createElement('div');
+    m.className = 'wmap';
+    if (cells) m.setAttribute('style', 'grid-template-columns:repeat(5,12px);grid-auto-rows:12px');
+    for (let i = 0; i < 25; i++) m.appendChild(document.createElement('i'));
+    container.appendChild(m);
+    return m;
+  }
+  function paint(mapEl, vals) {
+    [...mapEl.children].forEach((c, i) => { c.style.background = cellColor(vals[i]); });
+  }
+  // 刺激格
+  for (let i = 0; i < 25; i++) stimEl.appendChild(document.createElement('i'));
+  // 四张权重图
+  const maps = [], labels = [];
+  for (let k = 0; k < 4; k++) {
+    const item = document.createElement('div');
+    item.className = 'wmap-item';
+    const m = buildMap(item);
+    const lb = document.createElement('div');
+    lb.className = 'wmap-label';
+    lb.textContent = k + ' 号 · 胜 0';
+    item.appendChild(lb);
+    mapsEl.appendChild(item);
+    maps.push(m); labels.push(lb);
+  }
+  let rng, W, wins, remaining = 0, running = false, raf = null;
+  const flag = id => $(id).getAttribute('aria-pressed') === 'true';
+  function bar(o, jitter) {
+    const img = new Array(25).fill(0);
+    const off = jitter ? Math.floor(rng() * 3) - 1 : 0;
+    for (let i = 0; i < 5; i++) {
+      let r, c;
+      if (o === 0) { r = 2 + off; c = i; }
+      else if (o === 1) { r = i; c = 2 + off; }
+      else if (o === 2) { r = 4 - i + off; c = i; }
+      else { r = i + off; c = i; }
+      if (r < 0 || r > 4) continue;
+      img[r * 5 + c] = 1;
+    }
+    for (let i = 0; i < 25; i++) img[i] = clamp(img[i] + 0.25 * (rng() * 2 - 1), 0, 1);
+    return img;
+  }
+  function renderAll(stim) {
+    if (stim) paint(stimEl, stim);
+    maps.forEach((m, k) => paint(m, W[k]));
+    labels.forEach((lb, k) => { lb.textContent = k + ' 号 · 胜 ' + wins[k]; });
+  }
+  function reset() {
+    stopTrain();
+    const seed = Math.abs(parseInt($('#bars-seed').value) || 42);
+    rng = makeRng(seed * 7919 + 13);
+    const bad = flag('#bars-bad');
+    W = [];
+    for (let k = 0; k < 4; k++) {
+      const w = [];
+      for (let i = 0; i < 25; i++) w.push(bad && k === 3 ? 3.0 + 0.1 * rng() : 0.2 + 0.15 * rng());
+      W.push(w);
+    }
+    wins = [0, 0, 0, 0];
+    remaining = 800;
+    $('#bars-story').innerHTML = flag('#bars-bad')
+      ? '坏初始化就位：<b>3 号被扔到离所有刺激都很远的地方</b>。开训，看它的胜场。'
+      : '四张白纸，等待开训。训练中每一步：出一根光条 → 四个神经元比响应 → 赢家把自己的权重图往这根光条挪一点。';
+    $('#bars-probe-out').textContent = '—';
+    $('#bars-probe-out').className = 'outcome idle';
+    renderAll(new Array(25).fill(0));
+  }
+  function step() {
+    const o = Math.floor(rng() * 4);
+    const x = bar(o, flag('#bars-jitter'));
+    let best = 0, bestD = 1e9;
+    for (let k = 0; k < 4; k++) {
+      let d = 0;
+      for (let i = 0; i < 25; i++) { const e = x[i] - W[k][i]; d += e * e; }
+      if (d < bestD) { bestD = d; best = k; }
+    }
+    wins[best]++;
+    const leaky = flag('#bars-leaky');
+    for (let k = 0; k < 4; k++) {
+      const eta = k === best ? 0.15 : (leaky ? 0.02 : 0);
+      if (!eta) continue;
+      for (let i = 0; i < 25; i++) W[k][i] += eta * (x[i] - W[k][i]);
+    }
+    return x;
+  }
+  function stopTrain() { running = false; if (raf) cancelAnimationFrame(raf); $('#bars-train').textContent = remaining > 0 && remaining < 800 ? '▶ 继续（剩 ' + remaining + ' 步）' : '▶ 训练 ×800'; $('#bars-pause').disabled = true; $('#bars-led').classList.remove('on'); }
+  function finish() {
+    stopTrain();
+    remaining = 800;
+    $('#bars-train').textContent = '▶ 再训练 ×800';
+    const dead = wins.filter(w2 => w2 < 10).length;
+    $('#bars-story').innerHTML = dead
+      ? '<b>训练完了，但 ' + dead + ' 个神经元一场都没赢——死单元。</b>它的图还是白纸。打开「输家也小步学习」再重置重训，看它怎么被救回赛场。'
+      : (flag('#bars-jitter')
+        ? '<b>散了。</b>位置一抖，同一朝向的光条在像素距离上反而更远，热图学不出干净的朝向。这不是 bug——是"不懂平移不变"的病，下一讲开药。'
+        : '<b>分家完成。</b>四张热图各占一种朝向——用下面的探针试试：出一根光条，猜谁最像它，再看谁真的赢。');
+  }
+  function train() {
+    if (running) { stopTrain(); return; }
+    running = true;
+    $('#bars-train').textContent = '训练中…';
+    $('#bars-pause').disabled = false;
+    $('#bars-led').classList.add('on');
+    if (REDUCED) {
+      let x = null;
+      while (remaining > 0) { x = step(); remaining--; }
+      renderAll(x); finish(); return;
+    }
+    (function loop() {
+      if (!running) return;
+      raf = requestAnimationFrame(loop);
+      let x = null;
+      for (let i = 0; i < 5 && remaining > 0; i++, remaining--) x = step();
+      renderAll(x);
+      if (remaining <= 0) finish();
+    })();
+  }
+  $('#bars-train').addEventListener('click', () => { if (remaining <= 0) remaining = 800; train(); });
+  $('#bars-pause').addEventListener('click', stopTrain);
+  $('#bars-reset').addEventListener('click', reset);
+  $('#bars-seed').addEventListener('change', reset);
+  $('#bars-seed').addEventListener('focus', e => e.target.select());
+  ['#bars-bad', '#bars-leaky', '#bars-jitter'].forEach(id => {
+    $(id).addEventListener('click', () => {
+      const b = $(id);
+      b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+      if (id === '#bars-bad') reset();
+    });
+  });
+  $$('[data-probe]').forEach(b => b.addEventListener('click', () => {
+    const o = +b.dataset.probe;
+    const x = bar(o, false);
+    let best = 0, bestD = 1e9;
+    for (let k = 0; k < 4; k++) {
+      let d = 0;
+      for (let i = 0; i < 25; i++) { const e = x[i] - W[k][i]; d += e * e; }
+      if (d < bestD) { bestD = d; best = k; }
+    }
+    paint(stimEl, x);
+    maps.forEach((m, k) => m.classList.toggle('win', k === best));
+    setTimeout(() => maps.forEach(m => m.classList.remove('win')), 1500);
+    $('#bars-probe-out').textContent = GLYPH[o] + ' → ' + best + ' 号最像';
+    $('#bars-probe-out').className = 'outcome spike';
+  }));
+  reset();
+
+  /* ---- 三张脸对比图（静态示意） ---- */
+  const cmp = $('#compare-maps');
+  if (cmp) {
+    const mk = f => { const m = new Array(25).fill(0); f(m); return m; };
+    const idx = (r, c) => r * 5 + c;
+    const learned = [
+      mk(m => { for (let c = 0; c < 5; c++) m[idx(2, c)] = 0.85; for (let i = 0; i < 25; i++) m[i] = m[i] || 0.1; }),
+      mk(m => { for (let r = 0; r < 5; r++) m[idx(r, 2)] = 0.85; for (let i = 0; i < 25; i++) m[i] = m[i] || 0.1; }),
+      mk(m => { for (let i = 0; i < 5; i++) m[idx(4 - i, i)] = 0.85; for (let i = 0; i < 25; i++) m[i] = m[i] || 0.1; }),
+      mk(m => { for (let i = 0; i < 5; i++) m[idx(i, i)] = 0.85; for (let i = 0; i < 25; i++) m[i] = m[i] || 0.1; }),
+    ];
+    const v1 = [
+      mk(m => { for (let c = 0; c < 5; c++) { m[idx(2, c)] = 0.9; m[idx(1, c)] = -0.5; m[idx(3, c)] = -0.5; } }),
+      mk(m => { for (let r = 0; r < 5; r++) { m[idx(r, 2)] = 0.9; m[idx(r, 1)] = -0.5; m[idx(r, 3)] = -0.5; } }),
+      mk(m => { for (let i = 0; i < 5; i++) { m[idx(4 - i, i)] = 0.9; if (i < 4) { m[idx(3 - i, i)] = -0.5; m[idx(4 - i, i + 1)] = -0.5; } } }),
+      mk(m => { for (let i = 0; i < 5; i++) { m[idx(i, i)] = 0.9; if (i < 4) { m[idx(i + 1, i)] = -0.5; m[idx(i, i + 1)] = -0.5; } } }),
+    ];
+    const conv1 = [
+      mk(m => { for (let c = 0; c < 5; c++) for (let r = 0; r < 5; r++) m[idx(r, c)] = r < 2 ? -0.7 : r > 2 ? 0.7 : 0; }),
+      mk(m => { for (let c = 0; c < 5; c++) for (let r = 0; r < 5; r++) m[idx(r, c)] = c < 2 ? -0.7 : c > 2 ? 0.7 : 0; }),
+      mk(m => { for (let c = 0; c < 5; c++) for (let r = 0; r < 5; r++) m[idx(r, c)] = (c - (4 - r)) > 0 ? 0.7 : (c - (4 - r)) < 0 ? -0.7 : 0; }),
+      mk(m => { for (let c = 0; c < 5; c++) for (let r = 0; r < 5; r++) m[idx(r, c)] = (c - r) > 0 ? 0.7 : (c - r) < 0 ? -0.7 : 0; }),
+    ];
+    [['这台仪器学到的（示例）', learned], ['真实 V1 感受野（示意）', v1], ['CNN conv1（示意）', conv1]].forEach(([label, group]) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'wmap-item';
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:8px';
+      group.forEach(g => { const m = buildMap(row, true); paint(m, g); });
+      wrap.appendChild(row);
+      const lb = document.createElement('div');
+      lb.className = 'wmap-label';
+      lb.textContent = label;
+      wrap.appendChild(lb);
+      cmp.appendChild(wrap);
+    });
+  }
+})();
+</script>
+

@@ -37,7 +37,7 @@ button.danger:hover { border-color: #E8A0A0; }
   <input id="key" type="password" autocomplete="off" placeholder="ADMIN_KEY">
   <div class="row" id="btns"></div>
   <div class="row" style="margin-top:14px">
-    <button class="danger" id="reset-all">全部清零（第一讲六道题）</button>
+    <button class="danger" id="reset-all">全部清零（两讲全部题目）</button>
     <button id="show">查看当前票数</button>
   </div>
   <div id="log" aria-live="polite"></div>
@@ -45,11 +45,15 @@ button.danger:hover { border-color: #E8A0A0; }
 
 <script>
 'use strict';
-const QIDS = ['p-na', 'p-allornone', 'p-refract', 'p-sum', 'p-fi', 'p-ttx'];
+const QIDS = ['p-na', 'p-allornone', 'p-refract', 'p-sum', 'p-fi', 'p-ttx',
+  'p2-ltp', 'p2-stdp', 'p2-pca', 'p2-bars', 'p2-bp'];
 const NAMES = {
-  'p-na': '第3节 · Na⁺ 门全开', 'p-allornone': '第4节 · 全或无',
-  'p-refract': '实验A · 不应期', 'p-sum': '实验B · 时间求和',
-  'p-fi': '实验C · 频率编码', 'p-ttx': '实验D · TTX',
+  'p-na': '一讲 · Na⁺ 门全开', 'p-allornone': '一讲 · 全或无',
+  'p-refract': '一讲 · 不应期', 'p-sum': '一讲 · 时间求和',
+  'p-fi': '一讲 · 频率编码', 'p-ttx': '一讲 · TTX',
+  'p2-ltp': '二讲 · 高频刺激之后', 'p2-stdp': '二讲 · STDP 时序',
+  'p2-pca': '二讲 · w 转向哪里', 'p2-bars': '二讲 · 四张热图',
+  'p2-bp': '二讲 · 大脑在做反向传播吗',
 };
 const $ = s => document.querySelector(s);
 const keyEl = $('#key'), log = $('#log');

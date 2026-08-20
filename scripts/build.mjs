@@ -30,8 +30,10 @@ ${frag}
 }
 
 mkdirSync('worker/dist/lec01', { recursive: true });
+mkdirSync('worker/dist/lec02', { recursive: true });
 mkdirSync('worker/dist/admin', { recursive: true });
 writeFileSync('worker/dist/lec01/index.html', wrap('lectures/lec01-neuron/index.html'));
+writeFileSync('worker/dist/lec02/index.html', wrap('lectures/lec02-synapse/index.html'));
 writeFileSync('worker/dist/index.html', wrap('site/home.html'));
 writeFileSync('worker/dist/admin/index.html', wrap('site/admin.html'));
 writeFileSync('worker/src/version.js', `export const VERSION = '${sha}';\n`);
