@@ -1,0 +1,166 @@
+name: release
+
+on:
+  push:
+    paths: ['.deploy/request.json']
+
+concurrency: release
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve request
+        run: |
+          echo "部署请求："
+          cat .deploy/request.json
+
+      - name: Check credential
+        run: |
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+            echo "::error::缺少仓库 secret CLOUDFLARE_API_TOKEN。配置方法：1) 打开 dash.cloudflare.com → 右上角头像 → My Profile → API Tokens → Create Token；2) 使用官方模板「Edit Cloudflare Workers」创建（Account Resources 选本账户）；3) 复制生成的 token（只显示一次）；4) 回到本仓库 Settings → Secrets and variables → Actions → New repository secret，Name 填 CLOUDFLARE_API_TOKEN，粘贴 token 保存；5) 在本页面点 Re-run jobs 重跑本次部署。"
+            exit 1
+          fi
+          echo "凭据就绪。"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup wrangler
+        run: npm install -g wrangler
+
+      - name: Discover account / subdomain / KV
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          API="https://api.cloudflare.com/client/v4"
+          api() { curl -sS -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" "$@"; }
+
+          ACCOUNT_ID=$(api "$API/accounts?per_page=5" | jq -r '.result[0].id // empty')
+          if [ -z "$ACCOUNT_ID" ]; then
+            echo "::error::用此 token 列不出任何 Cloudflare 账户——请确认 token 用「Edit Cloudflare Workers」模板创建且未过期。"
+            exit 1
+          fi
+          echo "account: $ACCOUNT_ID"
+
+          SUB=$(api "$API/accounts/$ACCOUNT_ID/workers/subdomain" | jq -r '.result.subdomain // empty')
+          if [ -z "$SUB" ]; then
+            CAND="neusci-${ACCOUNT_ID:0:8}"
+            echo "账户尚无 workers.dev 子域，创建候选：$CAND"
+            api -X PUT -d "{\"subdomain\":\"$CAND\"}" "$API/accounts/$ACCOUNT_ID/workers/subdomain" | jq -e '.success' >/dev/null
+            SUB="$CAND"
+          fi
+          echo "workers.dev 子域：$SUB"
+
+          NS_ID=$(api "$API/accounts/$ACCOUNT_ID/storage/kv/namespaces?per_page=100" \
+            | jq -r '.result[] | select(.title=="INTRO_NEUSCI_CFG") | .id' | head -n1)
+          if [ -z "$NS_ID" ]; then
+            NS_ID=$(api -X POST -d '{"title":"INTRO_NEUSCI_CFG"}' "$API/accounts/$ACCOUNT_ID/storage/kv/namespaces" | jq -r '.result.id')
+            echo "已创建 KV namespace INTRO_NEUSCI_CFG"
+          fi
+          echo "KV namespace：$NS_ID"
+
+          {
+            echo "ACCOUNT_ID=$ACCOUNT_ID"
+            echo "KV_ID=$NS_ID"
+            echo "WORKER_URL=https://intro-neusci.$SUB.workers.dev"
+          } >> "$GITHUB_ENV"
+
+      - name: Bootstrap runtime secrets
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          API="https://api.cloudflare.com/client/v4"
+          VAL_URL="$API/accounts/$ACCOUNT_ID/storage/kv/namespaces/$KV_ID/values/cfg%3Aadmin_key"
+          CODE=$(curl -sS -o /tmp/admin_key.txt -w '%{http_code}' -H "Authorization: Bearer $CF_TOKEN" "$VAL_URL")
+          if [ "$CODE" = "200" ] && [ -s /tmp/admin_key.txt ]; then
+            KEY=$(cat /tmp/admin_key.txt)
+            echo "沿用 KV 中已有的管理密钥（重部署不换密钥）。"
+          else
+            KEY=$(openssl rand -hex 24)
+            echo "首次生成管理密钥（仅此一次明文显示，请立刻保存到自己的密码管理器）："
+            echo "    ADMIN_KEY = $KEY"
+            curl -sS -X PUT -H "Authorization: Bearer $CF_TOKEN" --data "$KEY" "$VAL_URL" | jq -e '.success' >/dev/null
+          fi
+          echo "::add-mask::$KEY"
+          echo "ADMIN_KEY=$KEY" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: node scripts/build.mjs
+
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ env.ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          cd worker
+          sed -i "s/__KV_ID__/$KV_ID/" wrangler.toml
+          wrangler deploy
+          echo "$ADMIN_KEY" | wrangler secret put ADMIN_KEY
+
+      - name: Wait for reachable
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 24); do
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' "$WORKER_URL/" || true)
+            [ "$CODE" = "200" ] && { echo "可达（$i 次尝试后）"; exit 0; }
+            echo "等待中… ($i/24, HTTP $CODE)"
+            sleep 5
+          done
+          echo "::error::$WORKER_URL 在 120 秒内未返回 200"
+          exit 1
+
+      - name: Smoke test
+        run: |
+          set -euo pipefail
+          VER=$(grep -o 'build:[a-zA-Z0-9._-]*' worker/dist/index.html | head -1)
+          echo "断言线上版本：$VER"
+
+          poll() { # poll "描述" 命令……（≤90s：KV/路由有正缓存，写后读必须轮询）
+            DESC=$1; shift
+            for i in $(seq 1 18); do
+              if "$@"; then echo "✓ $DESC"; return 0; fi
+              sleep 5
+            done
+            echo "::error::冒烟测试失败：$DESC"
+            return 1
+          }
+          has_ver() { curl -s "$1" | grep -q "$VER"; }
+
+          poll "首页已是本次构建" has_ver "$WORKER_URL/"
+          poll "第一讲已是本次构建" has_ver "$WORKER_URL/lec01/"
+          curl -s "$WORKER_URL/lec01/" | grep -q "神经元如何计算" && echo "✓ 第一讲标题在位"
+          curl -s "$WORKER_URL/health" | jq -e '.ok and .votes' >/dev/null && echo "✓ /health 正常"
+
+          curl -s -X POST -H 'content-type: application/json' \
+            -d '{"qid":"smoke-test","choice":1}' "$WORKER_URL/api/vote" | jq -e '.ok' >/dev/null && echo "✓ 投票写入"
+          count_ok() { curl -s "$WORKER_URL/api/votes?qid=smoke-test" | jq -e '.counts[1] >= 1' >/dev/null; }
+          poll "投票可读回" count_ok
+
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+            -H 'authorization: Bearer wrong-key' -H 'content-type: application/json' \
+            -d '{"qid":"smoke-test"}' "$WORKER_URL/api/reset")
+          [ "$CODE" = "403" ] && echo "✓ 错误密钥被拒 (403)" || { echo "::error::错误密钥未被拒（HTTP $CODE）"; exit 1; }
+
+          curl -s -X POST -H "authorization: Bearer $ADMIN_KEY" -H 'content-type: application/json' \
+            -d '{"qid":"smoke-test"}' "$WORKER_URL/api/reset" | jq -e '.ok' >/dev/null && echo "✓ 正确密钥可清零"
+          zero_ok() { curl -s "$WORKER_URL/api/votes?qid=smoke-test" | jq -e '(.counts | add) == 0' >/dev/null; }
+          poll "清零已生效" zero_ok
+
+      - name: Summary
+        run: |
+          {
+            echo "## 已上线 ✅"
+            echo ""
+            echo "- 课程首页：$WORKER_URL/"
+            echo "- 第一讲：$WORKER_URL/lec01/"
+            echo "- 课堂控制台：$WORKER_URL/admin/"
+            echo "- 版本：\`${GITHUB_SHA:0:7}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

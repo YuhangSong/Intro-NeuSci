@@ -643,6 +643,27 @@ button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--r
 .recap-row .gained { margin: 0; font-size: .8rem; padding: 5px 13px; }
 .anat-part.sel { filter: drop-shadow(0 0 5px var(--accent)); }
 .anat-part:focus-visible, .anat-slot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- 课堂现场投票（页面由课程服务器托管时出现） ---------- */
+.p-live { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: .82rem; }
+.p-live .pl-head { font-weight: 650; color: var(--ink-2); display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.p-live .pl-refresh {
+  font: inherit; font-size: .72rem; cursor: pointer;
+  background: transparent; color: var(--accent); border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px;
+}
+.p-live .pl-row { display: grid; grid-template-columns: 1.4em 1fr 3ch; gap: 8px; align-items: center; margin: 3px 0; }
+.p-live .pl-opt { font-family: var(--mono); font-size: .74rem; color: var(--muted); font-weight: 600; }
+.p-live .pl-bar { height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
+.p-live .pl-bar i { display: block; height: 100%; border-radius: 5px; background: var(--accent); transition: width .3s; }
+.p-live .pl-row.is-right .pl-bar i { background: var(--good); }
+.p-live .pl-n { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; color: var(--ink-2); }
+.rig .p-live { border-top-color: var(--rig-line); }
+.rig .p-live .pl-head { color: var(--rig-ink); }
+.rig .p-live .pl-refresh { color: var(--rig-v); border-color: var(--rig-line); }
+.rig .p-live .pl-bar { background: #202737; }
+.rig .p-live .pl-bar i { background: var(--rig-v); }
+.rig .p-live .pl-row.is-right .pl-bar i { background: #57D08A; }
+.rig .p-live .pl-n { color: var(--rig-ink); }
 </style>
 <div id="progress" role="presentation"></div>
 
@@ -1654,14 +1675,62 @@ function drawTrace(ctx, X, Y, ts, vs, color, lw) {
   $$('.reveal').forEach(el => rio.observe(el));
 })();
 
-/* ================= 预测-投票组件 ================= */
+/* ================= 预测-投票组件（含课堂现场投票） ================= */
+/* 页面由课程服务器（Cloudflare Worker）托管时，/health 会应答并开启现场汇总；
+   在本地文件、离线或其他托管环境下静默保持纯本地行为。 */
+const LIVE = { on: false };
+const livePromise = (async () => {
+  if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+  try {
+    const r = await fetch('/health', { cache: 'no-store' });
+    if (r.ok) { const j = await r.json(); if (j && j.votes) LIVE.on = true; }
+  } catch (e) {}
+})();
+
+function liveTally(p, qid, myChoice) {
+  const nOpts = p.querySelectorAll('.opts button').length;
+  const right = +p.dataset.answer;
+  try {
+    fetch('/api/vote', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ qid, choice: myChoice })
+    }).catch(() => {});
+  } catch (e) {}
+  const box = document.createElement('div');
+  box.className = 'p-live';
+  box.innerHTML = '<div class="pl-head">现场投票 · 汇总中… <button class="pl-refresh" type="button">刷新</button></div>';
+  p.appendChild(box);
+  const refresh = async () => {
+    try {
+      const r = await fetch('/api/votes?qid=' + encodeURIComponent(qid), { cache: 'no-store' });
+      if (!r.ok) return;
+      const counts = ((await r.json()).counts || []).slice(0, nOpts).map(c => c || 0);
+      const total = counts.reduce((a, b) => a + b, 0);
+      const max = Math.max(1, ...counts);
+      box.innerHTML = '<div class="pl-head">现场投票 · ' + total + ' 人 <button class="pl-refresh" type="button">刷新</button></div>' +
+        counts.map((c, i) =>
+          '<div class="pl-row' + (i === right ? ' is-right' : '') + '">' +
+          '<span class="pl-opt">' + 'ABCD'[i] + '</span>' +
+          '<span class="pl-bar"><i style="width:' + Math.round(c / max * 100) + '%"></i></span>' +
+          '<span class="pl-n">' + c + '</span></div>').join('');
+      box.querySelector('.pl-refresh').addEventListener('click', refresh);
+    } catch (e) {}
+  };
+  box.querySelector('.pl-refresh').addEventListener('click', refresh);
+  setTimeout(refresh, 500);
+  let n = 0;
+  const iv = setInterval(() => { refresh(); if (++n >= 12) clearInterval(iv); }, 2500);
+}
+
 $$('.predict').forEach(p => {
-  p.querySelectorAll('.opts button').forEach(b => b.addEventListener('click', () => {
+  p.querySelectorAll('.opts button').forEach(b => b.addEventListener('click', async () => {
     if (p.classList.contains('revealed')) return;
     b.classList.add('chosen');
     p.classList.add('revealed');
     const right = p.dataset.answer;
     p.querySelectorAll('.opts button').forEach(x => { if (x.dataset.i === right) x.classList.add('right'); });
+    await livePromise;
+    if (LIVE.on && p.dataset.predict) liveTally(p, p.dataset.predict, +b.dataset.i);
   }));
 });
 

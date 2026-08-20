@@ -23,3 +23,13 @@
 - 页面按「节」组织，左侧栏可跳转；键盘 `←` / `→` 在节与节之间切换，适合投影讲授。
 - 每个交互模块附有「动手试试」引导任务，学生课后可自行探索。
 - 支持浅色 / 深色两种显示模式（跟随系统）。
+- **课堂现场投票**：讲义由课程服务器托管时，六道「先投票」题自动开启现场汇总——学生在自己设备上点选，投影上实时看到全班分布。开课前在 `/admin/` 用管理密钥把上一班的票清零。
+
+## 发布（Cloudflare Worker + GitHub Actions）
+
+站点发布为一个 Cloudflare Worker（课程首页 `/`、讲义 `/lec01/`、课堂控制台 `/admin/`、投票 API `/api/*`）。所有部署经由 GitHub Actions 完成，本地不需要任何 Cloudflare 工具。
+
+- **唯一的人工配置**：仓库 secret `CLOUDFLARE_API_TOKEN`（用 Cloudflare 官方模板「Edit Cloudflare Workers」创建）。account id、workers.dev 子域、KV namespace 全部由流水线自动发现或创建。
+- **触发发布**：修改 `.deploy/request.json` 的 `nonce` 并 push，等 Actions 全绿（含线上冒烟测试）才算上线成功。
+- **管理密钥**：首次部署时自动生成并持久化在 KV，只在那一次的 Actions 日志里明文显示——请保存；重部署不换密钥。
+- 目录：`worker/`（Worker 与静态资源配置）、`site/`（首页/控制台源码）、`scripts/build.mjs`（构建，产物在 `worker/dist/`，已 gitignore）、`.github/workflows/release.yml`（流水线）。

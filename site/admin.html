@@ -1,0 +1,95 @@
+<title>课堂控制台</title>
+<style>
+:root { color-scheme: dark; }
+body {
+  margin: 0; background: #10141C; color: #C9D1E0;
+  font-family: "IBM Plex Sans", -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 16px; line-height: 1.8;
+}
+.wrap { max-width: 640px; margin: 0 auto; padding: 10vh 24px; }
+h1 { font-size: 1.3rem; letter-spacing: .08em; }
+h1 span { font-family: "IBM Plex Mono", monospace; font-size: .75rem; color: #7C8598; letter-spacing: .14em; display: block; }
+p { color: #8791A3; font-size: .9rem; max-width: 56ch; }
+input {
+  width: 100%; font: inherit; font-family: "IBM Plex Mono", monospace; font-size: .9rem;
+  background: #171C27; color: #C9D1E0; border: 1px solid #2A3140; border-radius: 9px;
+  padding: 10px 14px; margin: 8px 0 18px;
+}
+input:focus { outline: 2px solid #BFA3EF; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
+button {
+  font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer;
+  background: transparent; color: #C9D1E0; border: 1px solid #2A3140; border-radius: 9px;
+  padding: 8px 16px;
+}
+button:hover { border-color: #BFA3EF; color: #BFA3EF; }
+button.danger { border-color: #7A3A3A; color: #E8A0A0; }
+button.danger:hover { border-color: #E8A0A0; }
+#log { font-family: "IBM Plex Mono", monospace; font-size: .8rem; margin-top: 20px; white-space: pre-wrap; color: #7C8598; }
+#log .ok { color: #7BE3A5; }
+#log .err { color: #E8A0A0; }
+</style>
+
+<div class="wrap">
+  <h1><span>INTRO-NEUSCI · CLASSROOM CONSOLE</span>课堂控制台</h1>
+  <p>开课前把上一班的现场投票清零。管理密钥在首次部署的 Actions 日志里打印过一次。</p>
+  <label for="key" style="font-size:.8rem;color:#7C8598">管理密钥</label>
+  <input id="key" type="password" autocomplete="off" placeholder="ADMIN_KEY">
+  <div class="row" id="btns"></div>
+  <div class="row" style="margin-top:14px">
+    <button class="danger" id="reset-all">全部清零（第一讲六道题）</button>
+    <button id="show">查看当前票数</button>
+  </div>
+  <div id="log" aria-live="polite"></div>
+</div>
+
+<script>
+'use strict';
+const QIDS = ['p-na', 'p-allornone', 'p-refract', 'p-sum', 'p-fi', 'p-ttx'];
+const NAMES = {
+  'p-na': '第3节 · Na⁺ 门全开', 'p-allornone': '第4节 · 全或无',
+  'p-refract': '实验A · 不应期', 'p-sum': '实验B · 时间求和',
+  'p-fi': '实验C · 频率编码', 'p-ttx': '实验D · TTX',
+};
+const $ = s => document.querySelector(s);
+const keyEl = $('#key'), log = $('#log');
+keyEl.value = localStorage.getItem('neusci-admin-key') || '';
+keyEl.addEventListener('change', () => localStorage.setItem('neusci-admin-key', keyEl.value));
+function say(msg, cls) {
+  const d = document.createElement('div');
+  if (cls) d.className = cls;
+  d.textContent = msg;
+  log.prepend(d);
+}
+async function reset(qid) {
+  try {
+    const r = await fetch('/api/reset', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: 'Bearer ' + keyEl.value.trim() },
+      body: JSON.stringify({ qid }),
+    });
+    if (r.status === 403) { say('✗ 密钥不对（' + qid + '）', 'err'); return false; }
+    if (!r.ok) { say('✗ ' + qid + ' 失败 HTTP ' + r.status, 'err'); return false; }
+    say('✓ 已清零 ' + (NAMES[qid] || qid), 'ok');
+    return true;
+  } catch (e) { say('✗ 网络错误：' + e.message, 'err'); return false; }
+}
+const btns = $('#btns');
+QIDS.forEach(q => {
+  const b = document.createElement('button');
+  b.textContent = '清零 · ' + NAMES[q];
+  b.addEventListener('click', () => reset(q));
+  btns.appendChild(b);
+});
+$('#reset-all').addEventListener('click', async () => {
+  for (const q of QIDS) { if (!(await reset(q))) break; }
+});
+$('#show').addEventListener('click', async () => {
+  for (const q of QIDS) {
+    try {
+      const j = await (await fetch('/api/votes?qid=' + q, { cache: 'no-store' })).json();
+      say(NAMES[q] + ' → ' + (j.counts || []).join(' / '));
+    } catch (e) { say('✗ ' + q + ' 读取失败', 'err'); }
+  }
+});
+</script>

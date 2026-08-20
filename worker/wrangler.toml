@@ -1,0 +1,20 @@
+name = "intro-neusci"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+workers_dev = true
+
+[assets]
+directory = "dist"
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "CFG"
+id = "__KV_ID__"
+
+[[durable_objects.bindings]]
+name = "VOTES"
+class_name = "VoteRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["VoteRoom"]
