@@ -52,6 +52,15 @@ a.lec .l-no { font-family: var(--mono); font-size: .74rem; letter-spacing: .12em
 a.lec .l-title { font-size: 1.25rem; font-weight: 700; margin: 2px 0; }
 a.lec .l-desc { font-size: .9rem; color: var(--ink-2); line-height: 1.7; }
 a.lec.soon { opacity: .55; pointer-events: none; }
+.grades {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 4px 24px; max-width: 60ch; box-shadow: var(--shadow);
+}
+.g-row { display: flex; align-items: flex-start; gap: 18px; padding: 15px 0; border-bottom: 1px solid var(--line); }
+.g-row:last-child { border-bottom: none; }
+.g-name { font-weight: 600; }
+.g-note { display: block; font-size: .85rem; font-weight: 400; color: var(--ink-2); line-height: 1.65; margin-top: 1px; }
+.g-pct { margin-left: auto; font-family: var(--mono); font-weight: 600; font-size: 1.05rem; color: var(--accent); white-space: nowrap; }
 .foot { margin-top: 4em; font-size: .8rem; color: var(--muted); line-height: 1.8; }
 a { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) { a.lec { transition: none; } }
@@ -83,6 +92,13 @@ a { color: var(--accent); }
     <span class="l-title" style="display:block">视觉皮层：大脑的卷积网络</span>
     <span class="l-desc">不变性从哪来？睁眼之前，皮层拿什么当训练数据？</span>
   </a>
+
+  <h2>成绩构成</h2>
+  <div class="grades">
+    <div class="g-row"><span class="g-name">考勤</span><span class="g-pct">10%</span></div>
+    <div class="g-row"><span class="g-name">平时成绩<span class="g-note">主要看平时参与讨论的情况</span></span><span class="g-pct">45%</span></div>
+    <div class="g-row"><span class="g-name">论文成绩</span><span class="g-pct">45%</span></div>
+  </div>
 
   <p class="foot">讲义内置课堂现场投票（学生在自己设备上点选，投影实时汇总）。键盘 ← → 可在讲义小节间切换。<br>课程材料仓库：GitHub · YuhangSong/Intro-NeuSci</p>
 </div>
