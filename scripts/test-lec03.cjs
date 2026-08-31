@@ -277,7 +277,7 @@ const ok = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); if 
   const Sw = await page.textContent('#wave-S');
   ok(parseFloat(Sw.match(/([\d.]+)/)[1]) >= 0.8, 'wave training S ≥ 0.8: ' + Sw.trim());
   await page.click('#wave-shuffle');
-  await page.waitForFunction(() => /学不出来/.test(document.getElementById('wave-story').textContent), null, { timeout: 60000 });
+  await page.waitForFunction(() => /学不出来|三步验证完毕/.test(document.getElementById('wave-story').textContent), null, { timeout: 60000 });
   const Ls = await page.textContent('#wave-L');
   ok(parseFloat(Ls.match(/([\d.]+)/)[1]) < 0.25, 'shuffle control L < 0.25: ' + Ls.trim());
   ok(await page.locator('#wave-payoff').isVisible(), 'wave payoff + badge visible');
