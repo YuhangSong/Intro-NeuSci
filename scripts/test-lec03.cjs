@@ -225,7 +225,7 @@ const ok = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); if 
   await page.locator('#mp-farm2 .mp-opts button').nth(1).click();
   const trainAndProbe = async () => {
     await page.click('#farm2-train');
-    await page.waitForFunction(() => /用探针验收/.test(document.getElementById('farm2-story').textContent), null, { timeout: 40000 });
+    await page.waitForFunction(() => /训练完成/.test(document.getElementById('farm2-story').textContent), null, { timeout: 40000 });
     for (let o = 0; o < 4; o++) { await page.click(`#rig-farm2 [data-probe="${o}"]`); await page.waitForTimeout(150); }
     return page.textContent('#farm2-verdict');
   };

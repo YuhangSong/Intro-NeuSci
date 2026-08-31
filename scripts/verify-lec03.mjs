@@ -13,6 +13,7 @@ const C3 = {
   lgnTheta: 0.05,      // LGN 输出阈（对归一化驱动）
   // 简单细胞
   nSub: 3,
+  thetaFrac: 0.25,     // 简单细胞阈值系数（页面 C3.thetaFrac 同源）
   subSpacing: 1.1,    // 子单元间距 (°)
   barLen: 4, barWid: 1.2,
   simpleBase: 2,
@@ -106,7 +107,7 @@ const subs = subCentersAt(PHI);
 // 标定阈值：取正交响应与峰值之间
 const drivePeak = barDrive(subs, 0, 0, PHI);
 const driveOrth = barDrive(subs, 0, 0, PHI + Math.PI / 2);
-const simpleTheta = driveOrth + 0.25 * (drivePeak - driveOrth);
+const simpleTheta = driveOrth + C3.thetaFrac * (drivePeak - driveOrth);
 const simpleGain = (C3.simplePeak - C3.simpleBase) / (drivePeak - simpleTheta);
 const simpleRate = drive => Math.max(0, C3.simpleBase + simpleGain * (drive - simpleTheta)) - 0 + (drive > simpleTheta ? 0 : 0);
 const rateAt = th => { const d = barDrive(subs, 0, 0, th); return d > simpleTheta ? C3.simpleBase + simpleGain * (d - simpleTheta) : C3.simpleBase; };
@@ -129,11 +130,11 @@ const spotRate = spotWorst > simpleTheta ? C3.simpleBase + simpleGain * (spotWor
 check('小光点(1.2°)沿轴各处响应 ≤1.3× 基线', spotRate <= 1.3 * C3.simpleBase, spotRate.toFixed(2) + ' Hz, drive=' + spotWorst.toFixed(3) + ' vs θ=' + simpleTheta.toFixed(3));
 // 15° 采样 ≥6 点估峰误差 ≤10°（对 4 个候选 φ0 各试）
 console.log('  15° 采样估峰误差：');
-for (const cand of [30, 60, 120, 150]) {
+for (const cand of [30, 60, 120, 150, 25, 35, 55, 65, 115, 125, 145, 155]) {
   const sc = subCentersAt(cand * Math.PI / 180);
   const dP = barDrive(sc, 0, 0, cand * Math.PI / 180);
   const dO = barDrive(sc, 0, 0, (cand + 90) * Math.PI / 180);
-  const th0 = dO + 0.25 * (dP - dO);
+  const th0 = dO + C3.thetaFrac * (dP - dO);
   let bestA = 0, bestR = -1;
   for (let a = 0; a < 180; a += 15) {
     const d = barDrive(sc, 0, 0, a * Math.PI / 180);

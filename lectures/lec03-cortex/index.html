@@ -202,6 +202,7 @@ a { color: var(--accent); }
 :is(button, a, input, select, textarea, summary):focus-visible {
   outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
 }
+.rig :is(button, input, summary):focus-visible { outline-color: var(--rig-v); }
 [hidden] { display: none !important; }
 
 /* 高亮论点 */
@@ -544,7 +545,7 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
   border: none; padding: 0;
 }
 .asm-cell:hover { background: #232B3B; }
-.asm-cell.probe-path { background: #1E2839; }
+.asm-cell.probe-path { background: #2A3B5E; }
 .asm-cell.unit { background: radial-gradient(circle at 50% 50%, #F0E6FF 0%, #BFA3EF 34%, #2A2440 62%, #1A2030 78%); }
 .asm-bars { min-width: 220px; flex: 1; }
 .asm-bar-row { display: grid; grid-template-columns: 3.2em 1fr 4.5ch; gap: 10px; align-items: center; margin: 8px 0; font-family: var(--mono); font-size: .8rem; }
@@ -684,7 +685,7 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
         <div class="t-sub">大脑给视觉下的本钱比任何感官都重</div>
       </div>
       <div class="tile">
-        <div class="t-label">V1 里来自 LGN 的突触</div>
+        <div class="t-label">V1 丘脑接收层里来自 LGN 的突触</div>
         <div class="t-num">~5%</div>
         <div class="t-sub">前馈只是零头——这笔账下课前再算</div>
       </div>
@@ -750,7 +751,17 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
               <button class="btn ghost" id="lgn-full">满屏照明</button>
               <button class="btn ghost" id="lgn-reset">清空记录</button>
             </div>
-            <div class="chip-note" style="margin-top:8px">拖动光斑找细胞。光斑停住 0.6 s 自动把「直径 → 放电率」记成右图一个点（只在放电明显高于基线时有位置意义——先把位置找对）。</div>
+            <div class="ctl-row">
+              <div class="ctl" style="flex:1;min-width:150px">
+                <span class="ctl-label"><span>光斑水平位置</span><span class="ctl-val" id="lgn-x-val">−2.5°</span></span>
+                <input type="range" id="lgn-x" min="-4.6" max="4.6" step="0.1" value="-2.5" aria-label="光斑水平位置（度）">
+              </div>
+              <div class="ctl" style="flex:1;min-width:150px">
+                <span class="ctl-label"><span>光斑垂直位置</span><span class="ctl-val" id="lgn-y-val">−2.0°</span></span>
+                <input type="range" id="lgn-y" min="-4.6" max="4.6" step="0.1" value="-2" aria-label="光斑垂直位置（度）">
+              </div>
+            </div>
+            <div class="chip-note" style="margin-top:8px">拖动光斑（或用两个位置滑杆）找细胞。光斑停住 0.6 s 自动把「直径 → 放电率」记成右图一个点——先把位置找对。</div>
           </div>
           <div>
             <div class="scope-frame"><canvas id="lgn-scope" height="90" role="img" aria-label="示波器：当前放电的脉冲刻线"></canvas></div>
@@ -761,14 +772,14 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
             <div class="scope-frame" style="margin-top:12px"><canvas id="lgn-chart" height="210" role="img" aria-label="直径-响应曲线：光斑直径对放电率"></canvas></div>
           </div>
         </div>
-        <div class="task"><span class="task-tag">动手</span><span>①拖动光斑，找到让这只细胞放电最猛的<strong>位置和直径</strong>；②把直径继续放大，测出「更大反而更弱」；③按「满屏照明」再测一次。</span></div>
+        <div class="task"><span class="task-tag">动手</span><span>①移动光斑，找到让这只细胞放电最猛的<strong>位置和直径</strong>；②把直径继续放大，测出「更大反而更弱」；③按「满屏照明」再测一次。</span></div>
         <div class="story" id="lgn-story" aria-live="polite">屏幕上任何地方都可能藏着这只细胞的地盘。移动光斑，听放电。</div>
       </div>
     </div>
 
     <div id="lgn-payoff" hidden>
       <p>你测出的这个结构叫<strong>中心-周边拮抗</strong><span class="term">center–surround antagonism</span>：中心一小片光推它，套在外面的一圈光拉它。光斑盖住中心时最猛；再放大就压到周边，响应反而掉；满屏时推拉相抵，几乎回到基线。</p>
-      <p>所以视网膜与 LGN 传给皮层的<strong>不是亮度图，是局部对比图</strong>。还有一件此刻值得亲手确认的事：这只细胞对朝向<strong>毫无偏好</strong>——转动的条、斜的条、竖的条，只要盖住中心的量一样，它一视同仁。朝向选择性此刻在这条通路上还<strong>不存在</strong>。<span class="mlb"><span class="b">中心-周边</span><span class="arr">⇄</span><span class="m">DoG / 边缘增强预处理</span></span></p>
+      <p>所以视网膜与 LGN 传给皮层的<strong>不是亮度图，是局部对比图</strong>。还有一件此刻值得亲手确认的事：这只细胞对朝向<strong>毫无偏好</strong>——转动的条、斜的条、竖的条，只要盖住中心的量一样，它一视同仁。朝向选择性<span class="term">orientation selectivity</span>此刻在这条通路上还<strong>不存在</strong>。<span class="mlb"><span class="b">中心-周边</span><span class="arr">⇄</span><span class="m">DoG / 边缘增强预处理</span></span></p>
       <div class="gained">✓ 已测得 <span class="g-eq">中心-周边拮抗</span>——报告对比，不报告亮度</div>
     </div>
   </div>
@@ -779,7 +790,7 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
   <div class="wrap wide">
     <div class="kicker">第 2 节 <span class="k-time">第一课时</span></div>
     <h2>1958 · 一根光条</h2>
-    <p class="lede">电极前进到初级视皮层 V1。1958 年，Hubel 和 Wiesel 对着一只麻醉猫的 V1 细胞投光点，投了几个小时——细胞几乎不响。他们靠扬声器听放电，屏幕上是一片令人绝望的安静。</p>
+    <p class="lede">电极前进到初级视皮层<span class="term">primary visual cortex, V1</span>。1958 年，Hubel 和 Wiesel 对着一只麻醉猫的 V1 细胞投光点，投了几个小时——细胞几乎不响。他们靠扬声器听放电，屏幕上是一片令人绝望的安静。</p>
 
     <div class="predict" data-predict="p3-slide" data-answer="1">
       <div class="pq"><span class="p-tag">先投票</span>后来它突然疯狂放电。触发它的是什么？</div>
@@ -806,7 +817,7 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
             <div class="ctl-row">
               <div class="ctl" style="flex:1;min-width:200px">
                 <span class="ctl-label"><span>光条朝向</span><span class="ctl-val" id="bar-ang-val">0°</span></span>
-                <input type="range" id="bar-ang" min="0" max="180" step="5" value="0" aria-label="光条朝向（度）">
+                <input type="range" id="bar-ang" min="0" max="175" step="5" value="0" aria-label="光条朝向（度）">
               </div>
               <button class="btn ghost" id="bar-m15">−15°</button>
               <button class="btn ghost" id="bar-p15">+15°</button>
@@ -835,7 +846,7 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
     </div>
 
     <div id="bar-payoff" hidden>
-      <p>这条曲线叫<strong>朝向调谐曲线</strong><span class="term">orientation tuning curve</span>：只在一个窄窗口里开火，转开 30° 就掉一半，转到垂直就装死。这样的细胞铺满整个 V1，各自钟情一个角度。而它楼下的 LGN 对朝向毫无感觉——<strong>朝向选择性是 V1 亲手造出来的</strong>。怎么造的？第 4 节你亲手接一遍。这条曲线本身，也是第 4 节的验收标准。</p>
+      <p>这条曲线叫<strong>朝向调谐曲线</strong><span class="term">orientation tuning curve</span>：只在一个窄窗口里开火，转开 30° 就掉一半，转到垂直就装死。这样的细胞铺满整个 V1，各自钟情一个角度。而它楼下的 LGN 对朝向毫无感觉——<strong>朝向选择性是 V1 亲手造出来的</strong>。怎么造的？第 4 节你亲手接一遍。第 4 节接完线，就拿这条曲线来对答案。</p>
       <div class="gained">✓ 已测得 <span class="g-eq">朝向调谐曲线</span>——挑食的第一种口味：朝向</div>
     </div>
   </div>
@@ -855,7 +866,7 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
         <button data-i="1">照样响——它认的是朝向</button>
         <button data-i="2">反转成抑制</button>
       </div>
-      <div class="p-reveal">很多人押 B——「它是朝向检测器，位置无所谓」。一分钟后你自己测出答案：它有一片自己的<b>感受野</b><span style="font-style:italic;color:var(--muted)"> receptive field</span>，光条出了这片地，朝向再对也白搭。</div>
+      <div class="p-reveal">很多人押 B——「它是朝向检测器，位置无所谓」。下面你自己测出答案：它有一片自己的<b>感受野</b><span class="term">receptive field</span>，光条出了这片地，朝向再对也白搭。</div>
     </div>
 
     <div class="rig" id="rig-bar2">
@@ -937,7 +948,7 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
             <div class="ctl-row">
               <button class="btn" id="asm-probe">探针 ×4（扫四个朝向）</button>
               <button class="btn ghost" id="asm-clear">清空</button>
-              <span class="outcome idle" id="asm-verdict">—</span>
+              <span class="outcome idle" id="asm-verdict" aria-live="polite">—</span>
             </div>
           </div>
         </div>
@@ -950,26 +961,26 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
       <div class="panel" style="margin:1.6em 0">
         <div class="p-title">把三张图放在一起看</div>
         <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start">
-          <div class="wmap-item"><canvas id="asm-cmp-you" width="120" height="120" style="width:120px;border-radius:8px"></canvas><div class="wmap-label" style="color:var(--muted)">你的排布</div></div>
-          <div class="wmap-item"><svg id="asm-cmp-hw" width="120" height="120" viewBox="0 0 120 120" aria-label="Hubel 与 Wiesel 1962 接线示意重绘：一排圆形感受野汇聚到一个椭圆形感受野"><g fill="none" stroke="var(--ink-2)"><circle cx="30" cy="90" r="13"/><circle cx="52" cy="68" r="13"/><circle cx="74" cy="46" r="13"/><circle cx="30" cy="90" r="5" fill="var(--accent)" stroke="none"/><circle cx="52" cy="68" r="5" fill="var(--accent)" stroke="none"/><circle cx="74" cy="46" r="5" fill="var(--accent)" stroke="none"/><ellipse cx="52" cy="68" rx="44" ry="20" transform="rotate(-45 52 68)" stroke="var(--accent)" stroke-dasharray="5 4"/></g><text x="6" y="16" font-size="10" fill="var(--muted)">H&amp;W 1962（示意重绘）</text></svg><div class="wmap-label" style="color:var(--muted)">1962 年的接线猜想</div></div>
+          <div class="wmap-item"><canvas id="asm-cmp-you" width="240" height="240" style="width:120px;height:120px;border-radius:8px" role="img" aria-label="你的排布：12×12 网格上放置的 LGN 单元"></canvas><div class="wmap-label" style="color:var(--muted)">你的排布</div></div>
+          <div class="wmap-item"><svg id="asm-cmp-hw" width="120" height="120" viewBox="0 0 120 120" role="img" aria-label="Hubel 与 Wiesel 1962 接线示意重绘：一排圆形感受野汇聚到一个椭圆形感受野"><g fill="none" stroke="var(--ink-2)"><circle cx="30" cy="90" r="13"/><circle cx="52" cy="68" r="13"/><circle cx="74" cy="46" r="13"/><circle cx="30" cy="90" r="5" fill="var(--accent)" stroke="none"/><circle cx="52" cy="68" r="5" fill="var(--accent)" stroke="none"/><circle cx="74" cy="46" r="5" fill="var(--accent)" stroke="none"/><ellipse cx="52" cy="68" rx="44" ry="20" transform="rotate(-45 52 68)" stroke="var(--accent)" stroke-dasharray="5 4"/></g><text x="6" y="16" font-size="10" fill="var(--muted)">H&amp;W 1962（示意重绘）</text></svg><div class="wmap-label" style="color:var(--muted)">1962 年的接线猜想</div></div>
           <div class="wmap-item"><div class="wmap small" id="asm-cmp-farm" style="background:var(--surface-2);border-color:var(--line)"></div><div class="wmap-label" style="color:var(--muted)">第二讲农场学出的权重</div></div>
         </div>
         <p class="small" style="margin:12px 0 0">同一个形状出现了三次：你手动接的、1962 年猜想的、上一讲局部规则自己长出来的。1962 年画在论文示意图上，1980 年被 Neocognitron 抄走，一直抄到你们的 conv1。<span class="mlb"><span class="b">对齐的 LGN 中心 + ReLU</span><span class="arr">⇄</span><span class="m">卷积核的一次乘加 + 激活</span></span></p>
       </div>
 
-      <p>注意此刻你手里只有<strong>一个位置的一份模板</strong>。隔壁位置还有一只同款 45° 细胞——于是一个直击要害的问题：</p>
-
-      <div class="predict" data-predict="p3-share-weights" data-answer="1">
-        <div class="pq"><span class="p-tag">先投票</span>隔壁位置那只同款 45° 细胞，和你刚接好的这只，用的是<strong>同一份权重</strong>吗？</div>
-        <div class="opts">
-          <button data-i="0">同一份——像卷积核在两处复用</button>
-          <button data-i="1">不是——两套独立的突触，各自长出来</button>
-          <button data-i="2">大部分共享，边角各自微调</button>
-        </div>
-        <div class="p-reveal">不是。<b>没有哪根轴突负责把权重复制过去</b>——皮层里不存在任何让相隔几毫米的两组突触保持同一份数值的机制。每个位置都是一套独立的接线，独立地长。卷积核的 Ctrl+C，皮层做不了。<b>那各处的检测器怎么长得差不多？这个问题先记下，第 9 节回答。</b></div>
-      </div>
-
       <div class="gained">✓ 已接通 <span class="g-eq">卷积核</span>——排列造出朝向，阈值把它剪利索</div>
+    </div>
+
+    <p>一枚模板只守<strong>一个位置</strong>。隔壁位置还有一只同款 45° 细胞——于是一个直击要害的问题：</p>
+
+    <div class="predict" data-predict="p3-share-weights" data-answer="1">
+      <div class="pq"><span class="p-tag">先投票</span>隔壁位置那只同款 45° 细胞，和这台装配台上接出来的这只，用的是<strong>同一份权重</strong>吗？</div>
+      <div class="opts">
+        <button data-i="0">同一份——像卷积核在两处复用</button>
+        <button data-i="1">不是——两套独立的突触，各自长出来</button>
+        <button data-i="2">大部分共享，边角各自微调</button>
+      </div>
+      <div class="p-reveal">不是。<b>没有哪根轴突负责把权重复制过去</b>——皮层里不存在任何让相隔几毫米的两组突触保持同一份数值的机制。每个位置都是一套独立的接线，独立地长。卷积核的 Ctrl+C，皮层做不了。<b>那各处的检测器怎么长得差不多？这个问题先记下，第 9 节回答。</b></div>
     </div>
   </div>
 </section>
@@ -1061,7 +1072,7 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
       <details class="deep">
         <summary>汇总用的是什么运算：能量模型，与 max 的关系</summary>
         <div class="deep-body">
-          <p style="margin-top:12px">定量模型里最常用的是<strong>能量模型</strong><span class="term">energy model</span>：取一对相位正交的简单细胞样感受野，响应平方后相加再开方——对相位与位置的敏感在平方和里被抹平。它更接近 <strong>L2 池化</strong>：把一组数收成它们的平方和开方。你们代码里的 max pooling（取最强者）是它的<strong>工程近似</strong>——保不变性的效果相同，运算更糙也更快。本页仪器里的复杂细胞就是按 L2 池化建模的，参数与简单细胞完全同一份。</p>
+          <p style="margin-top:12px">定量模型里最常用的是<strong>能量模型</strong><span class="term">energy model</span>：取一对相位正交的简单细胞样感受野，响应平方后相加——对相位的敏感在平方和里被抹平，这个和就叫「能量」。再开个方就是 <strong>L2 池化</strong>：把一组数收成平方和的开方，本页仪器用的正是它。你们代码里的 max pooling（取最强者）是它的<strong>工程近似</strong>——保不变性的效果相同，运算更糙也更快。本页仪器里的复杂细胞就是按 L2 池化建模的，参数与简单细胞完全同一份。</p>
           <p class="small" style="margin-bottom:0">边界：真实复杂细胞不全是「简单细胞的下一层」——有些一步到位直接从 LGN 组装，池化更像一族计算策略，不是一条固定导线。层级图是有用的简化，不是解剖判决。</p>
         </div>
       </details>
@@ -1084,7 +1095,7 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
         <button data-i="1">整张跟着右移 3 个像素</button>
         <button data-i="2">无规律地变化</button>
       </div>
-      <div class="p-reveal">「卷积 = 平移不变」大概是流传最广的一句错话。权值共享买到的是<b>等变</b><span style="font-style:italic;color:var(--muted)"> equivariant</span>：输入移多少，特征图整张跟着移多少——信息一点没丢，只是搬了家。要把「搬家」吸收掉、换成<b>不变</b><span style="font-style:italic;color:var(--muted)"> invariant</span>，还差一步：把一段窗口收成一个数。用下面的条带亲手核对。</div>
+      <div class="p-reveal">「卷积 = 平移不变」大概是流传最广的一句错话。权值共享买到的是<b>等变</b><span class="term">equivariant</span>：输入移多少，特征图整张跟着移多少——信息一点没丢，只是搬了家。要把「搬家」吸收掉、换成<b>不变</b><span class="term">invariant</span>，还差一步：把一段窗口收成一个数。用下面的条带亲手核对。</div>
     </div>
 
     <div class="eqv-card">
@@ -1173,7 +1184,7 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
                 <button class="mini" data-probe="2">╱</button>
                 <button class="mini" data-probe="3">╲</button>
               </div>
-              <span class="outcome idle" id="farm2-verdict">—</span>
+              <span class="outcome idle" id="farm2-verdict" aria-live="polite">—</span>
             </div>
           </div>
           <div>
@@ -1181,12 +1192,12 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
             <div class="chip-note" style="margin-top:10px" id="farm2-maps-note">四个神经元的权重（25 像素热图）；下方数字是胜场。</div>
           </div>
         </div>
-        <div class="task"><span class="task-tag">动手</span><span>①「直通」档训练 800 步，探针验收——亲眼确认病还在；②前端选「<strong>滤波 + 池化</strong>」，抖动照旧，再训 800 步，探针验收：四种朝向各归一家；③前端退回「<strong>只滤波</strong>」，同样参数再训一遍，看它照样散。<strong>学习规则、学习率、步数与上一讲一字未改。</strong></span></div>
+        <div class="task"><span class="task-tag">动手</span><span>①「直通」档训练 800 步，训完用探针挨个试——亲眼确认病还在；②前端选「<strong>滤波 + 池化</strong>」，抖动照旧，再训 800 步，探针应给出四种朝向各归一家；③前端退回「<strong>只滤波</strong>」，同样参数再训一遍，看它照样散。<strong>学习规则、学习率、步数与上一讲一字未改。</strong></span></div>
       </div>
     </div>
 
     <div id="farm2-payoff" hidden>
-      <p>「只滤波」这一档是第 6 节的活教材：处处都有朝向检测器还不够——12 个模板的报告<strong>仍然跟着位置跑</strong>（等变），同一朝向换个位置，激活的是另一批维度，在距离上照样比异朝向还远。把三个位置收成一个数（池化）之后，抖动 ±1 恰好落进不变区，下游看到的 4 维表示对同朝向刺激几乎不动——这才治好。</p>
+      <p>「只滤波」这一档是第 6 节的活教材：处处都有朝向检测器还不够——12 个模板的报告<strong>仍然跟着位置跑</strong>（等变），同一朝向换个位置，激活的是另一批维度，在距离上不再比异朝向更近。把三个位置收成一个数（池化）之后，抖动 ±1 恰好落进不变区，下游看到的 4 维表示对同朝向刺激几乎不动——这才治好。</p>
       <p>点题：<strong>不变性从表示的层级里来，不从学习规则里来。</strong>我们没有改学习规则一个字，改的是学习规则看到的世界。<span class="mlb"><span class="b">药方</span><span class="arr">⇄</span><span class="m">改表示，不改规则</span></span></p>
       <div class="gained">✓ 已治好 <span class="g-eq">抖动病</span>——两级接线，一副药</div>
     </div>
@@ -1244,7 +1255,7 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
       </svg>
     </div>
 
-    <p>沿腹侧通路<span class="term">ventral stream</span>往上走，每一站都在重复同一个动作：拼更大的模板，再抹掉更多的「在哪」。感受野越来越大，偏好越来越复杂，不变性越来越强——到颞下皮层 IT，一只细胞可以认一个物体，任凭它换位置、换大小。</p>
+    <p>沿腹侧通路<span class="term">ventral stream</span>往上走，每一站都在重复同一个动作：拼更大的模板，再抹掉更多的「在哪」。感受野越来越大，偏好越来越复杂，不变性越来越强——到颞下皮层<span class="term">inferotemporal cortex, IT</span>，一只细胞可以认一个物体，任凭它换位置、换大小。</p>
     <p>师承是明线：1962 年 Hubel 与 Wiesel 画出层级猜想；1980 年福岛邦彦的 Neocognitron 把「简单/复杂」直接抄成 S 层与 C 层；1989–1998 年 LeCun 的 LeNet 加上反向传播训练；再往后你们都认识。这一摞往上堆的逻辑，你们每天都在 import。<span class="mlb"><span class="b">简单/复杂交替堆叠</span><span class="arr">⇄</span><span class="m">conv / pool 层层相间</span></span></p>
     <details class="deep">
       <summary>抄作业的学生，后来反过来当了先生</summary>
@@ -1272,7 +1283,7 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
         <button data-i="1">各细胞独立地随机放电</button>
         <button data-i="2">成片的活动波，一场一场缓慢扫过</button>
       </div>
-      <div class="p-reveal">1991 年 Meister、Wong、Baylor 与 Shatz 把新生动物的视网膜铺在多电极阵列上：黑暗中它一点也不安静——<b>成片的活动波</b>一场一场缓慢扫过，相邻细胞一起烧，远处细胞各烧各的。这就是视网膜波<span style="font-style:italic;color:var(--muted)"> retinal waves</span>。它长什么样、能不能当训练数据，下面亲手测。</div>
+      <div class="p-reveal">1991 年 Meister、Wong、Baylor 与 Shatz 把新生动物的视网膜铺在多电极阵列上：黑暗中它一点也不安静——<b>成片的活动波</b>一场一场缓慢扫过，相邻细胞一起烧，远处细胞各烧各的。这就是视网膜波<span class="term">retinal waves</span>。它长什么样、能不能当训练数据，下面亲手测。</div>
     </div>
 
     <div class="rig" id="rig-wave">
@@ -1294,8 +1305,12 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
             </div>
             <div class="ctl-row">
               <button class="btn ghost" id="wave-pair">记录这一对电极</button>
-              <span class="outcome idle" id="wave-r">e1–e2：— </span>
-              <span class="chip-note" id="wave-pair-note">拖动 e1、e2 两个电极；相关按爆发时间窗（±2 帧平滑）计。</span>
+              <span class="outcome idle" id="wave-r" aria-live="polite">e1–e2：— </span>
+              <span class="chip-note" id="wave-pair-note">拖动电极；相关按爆发窗（±2 帧平滑）计。</span>
+            </div>
+            <div class="ctl-row" style="align-items:baseline">
+              <span class="chip-note">e1 列·行 <input class="cnum" id="wave-e1c" value="10" aria-label="e1 列（0–27）"> <input class="cnum" id="wave-e1r" value="14" aria-label="e1 行（0–27）"></span>
+              <span class="chip-note">e2 列·行 <input class="cnum" id="wave-e2c" value="13" aria-label="e2 列（0–27）"> <input class="cnum" id="wave-e2r" value="14" aria-label="e2 行（0–27）"></span>
             </div>
             <div class="scope-frame" style="margin-top:12px"><canvas id="wave-chart" height="180" role="img" aria-label="相关-距离图：电极对的相关系数对间距"></canvas></div>
           </div>
@@ -1308,8 +1323,8 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
               <button class="btn ghost" id="wave-reset">重置</button>
             </div>
             <div class="wave-readout">
-              <span class="outcome idle" id="wave-L">结构 L = —</span>
-              <span class="outcome idle" id="wave-S">相似 S = —</span>
+              <span class="outcome idle" id="wave-L" aria-live="polite">结构 L = —</span>
+              <span class="outcome idle" id="wave-S" aria-live="polite">相似 S = —</span>
               <div class="progressbar"><i id="wave-prog"></i></div>
             </div>
             <div class="chip-note" style="margin-top:8px">「打乱」的定义：每一帧的总放电量原封不动，只把「谁在哪」洗掉。结构 L：权重图的空间平滑度（邻格相关）；相似 S：六份权重两两的重合度（|cos|，展示时按符号归一）。</div>
@@ -1323,7 +1338,7 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
     <div id="wave-payoff" hidden>
       <p>结论摆在机架上：Hebb 需要的全部养分——<strong>「谁和谁总一起亮」</strong>——波里都有；打乱对照证明起作用的是波的<strong>时空结构</strong>，不是放电总量。六份彼此没有商量过的突触，长成了同一款平滑的局部接线——<strong>这就是第 4 节那个问题的答案</strong>：不共享权重，共享数据统计；睁眼之前，统计由视网膜自产自销。</p>
       <p>波里没有猫、没有光条，只有一件事——相邻的点总是一起亮。对 Hebb 规则来说，这就够开课了。<span class="mlb"><span class="b">视网膜波</span><span class="arr">⇄</span><span class="m">先造数据的预训练</span></span></p>
-      <div class="note" style="border:1px solid var(--line);border-radius:10px;padding:12px 16px;max-width:66ch">脚注 · 证据的边界：波被扎实证明负责的是<strong>拓扑映射的精化与双眼通路的分离</strong>——在眼内阻断波，视网膜→LGN 的精细接线成不了形（Penn 等 1998；McLaughlin 等 2003；综述见 Katz &amp; Shatz 1996）。朝向选择性确实在睁眼前出现（Chapman &amp; Stryker 1993，雪貂），但波是不是<strong>它</strong>的老师，尚未定论——这台仪器演示的是前者一类的接线塑形。「各处因同一份统计而趋同」是模型层面的解释，不是已测得的生物学事实。出生后关键期内的视觉经验仍要接手精调——第二讲提过的剥夺实验就是这扇窗的证据。</div>
+      <div class="note" style="border:1px solid var(--line);border-radius:10px;padding:12px 16px;max-width:66ch">脚注 · 证据的边界：波被扎实证明负责的是<strong>拓扑映射的精化与双眼通路的分离</strong>——眼内阻断波，LGN 里的双眼通路就分不开（Penn 等 1998，雪貂）；基因剔除波的小鼠，上丘的拓扑映射在一个短暂关键期内精化失败（McLaughlin 等 2003）；综述见 Katz &amp; Shatz 1996。朝向选择性确实在睁眼前出现（Chapman &amp; Stryker 1993，雪貂），但波是不是<strong>它</strong>的老师，尚未定论——这台仪器演示的是前者一类的接线塑形。「各处因同一份统计而趋同」是模型层面的解释，不是已测得的生物学事实。出生后关键期内的视觉经验仍要接手精调——第二讲提过的剥夺实验就是这扇窗的证据。</div>
       <div class="gained">✓ 已验证 <span class="g-eq">波就是训练数据</span>——结构在，规则就能学</div>
     </div>
   </div>
@@ -1350,7 +1365,7 @@ details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); bo
       <span class="gained">✓ 波就是训练数据 · 打乱就失效</span>
     </div>
 
-    <p class="note">边界一并带走：①生物没有权值共享——各位置独立接线，「靠共享数据统计趋同」是模型层面的解释；②这台机器不是严格前馈——V1 神经元的突触里来自 LGN 的只占约 5%（Peters &amp; Payne 1993），横向与反馈接线占大头，今天的图纸只画了它的一小半；③池化只是复杂细胞的简化模型，能量模型也是漫画；④波之于朝向选择性未定论，出生后关键期的经验仍要精调。</p>
+    <p class="note">边界一并带走：①生物没有权值共享——各位置独立接线，「靠共享数据统计趋同」是模型层面的解释；②这台机器不是严格前馈——即便在 V1 的丘脑接收层（第 4 层），来自 LGN 的突触也只占约 5%（Peters &amp; Payne 1993），横向与反馈接线占大头，今天的图纸只画了它的一小半；③池化只是复杂细胞的简化模型，能量模型也是漫画；④波之于朝向选择性未定论，出生后关键期的经验仍要精调。</p>
 
     <details class="think">
       <summary><span class="q-tag">思考</span>如果给你一台不许用权值共享的框架，你会怎么让各处的卷积核自己长成一样？</summary>
@@ -1880,12 +1895,20 @@ function makeDwell(ms, fn) {
   cv.addEventListener('pointerdown', e => { dragging = true; cv.setPointerCapture(e.pointerId); onMove(e); });
   cv.addEventListener('pointermove', e => { if (dragging) onMove(e); });
   cv.addEventListener('pointerup', () => { dragging = false; });
-  function onMove(e) {
-    const [x, y] = toDeg(e);
+  function applyPos(x, y) {
     st.sx = clamp(x, -4.6, 4.6); st.sy = clamp(y, -4.6, 4.6);
+    $('#lgn-x').value = st.sx; $('#lgn-y').value = st.sy;
+    $('#lgn-x-val').textContent = (st.sx < 0 ? '−' : '') + Math.abs(st.sx).toFixed(1) + '°';
+    $('#lgn-y-val').textContent = (st.sy < 0 ? '−' : '') + Math.abs(st.sy).toFixed(1) + '°';
     if (st.full) endFull();
     refresh(); proximityStory(); dwell();
   }
+  function onMove(e) {
+    const [x, y] = toDeg(e);
+    applyPos(x, y);
+  }
+  $('#lgn-x').addEventListener('input', () => applyPos(+$('#lgn-x').value, st.sy));
+  $('#lgn-y').addEventListener('input', () => applyPos(st.sx, +$('#lgn-y').value));
   $('#lgn-d').addEventListener('input', () => {
     st.d = +$('#lgn-d').value;
     $('#lgn-d-val').textContent = st.d.toFixed(1) + '°';
@@ -2011,8 +2034,9 @@ function makeDwell(ms, fn) {
     $('#bar-led').classList.add('on');
     $('#bar-payoff').hidden = false;
     LEC3.dialOri = dial;
+    document.dispatchEvent(new CustomEvent('lec3-dial'));
     $('#bar-note').textContent = '最佳朝向 ' + trueOri + '°，你报 ' + dial + '°——误差 ' + err + '°。';
-    $('#bar-story').innerHTML = '<b>验收通过。</b>完整调谐曲线已叠在你的点上。这只细胞的口味，你现在有实测数据了。';
+    $('#bar-story').innerHTML = '<b>测到了。</b>完整调谐曲线已叠在你的点上。这只细胞的口味，你现在有实测数据了。';
     drawChart();
   });
   const scope = makeScope($('#bar-scope'), () => rateCache, () => $('#bar-snd').checked);
@@ -2025,7 +2049,9 @@ function makeDwell(ms, fn) {
   const cv = $('#bar2-screen'); if (!cv) return;
   const chart = $('#bar2-chart');
   const cell = () => LEC3.cell;
-  const lockAng = () => (LEC3.dialOri !== null ? LEC3.dialOri : LEC3.trueOri);
+  let frozenAng = null;   // 解锁那一刻冻结，之后不再变
+  const lockAng = () => { if (frozenAng === null) frozenAng = (LEC3.dialOri !== null ? LEC3.dialOri : LEC3.trueOri); return frozenAng; };
+  const unlocked = () => LEC3.dialOri !== null;
   const st = { pos: 0, done: false };
   const pts = new Map();          // pos -> pct
   let normAt0 = null;
@@ -2037,6 +2063,12 @@ function makeDwell(ms, fn) {
     const { ctx, w, h } = fitCanvas(cv);
     const sc = Math.min(w, h) / C3.fov;
     ctx.fillStyle = '#3A4150'; ctx.fillRect(0, 0, w, h);
+    if (!unlocked()) {
+      ctx.fillStyle = 'rgba(201,209,224,0.75)'; ctx.font = '13px "IBM Plex Sans", sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('先在第 2 节报出最佳朝向，这台仪器才解锁', w / 2, h / 2);
+      return;
+    }
     const phi = lockAng() * Math.PI / 180;
     // 导轨（垂直于光条）
     ctx.strokeStyle = 'rgba(201,209,224,0.25)'; ctx.setLineDash([4, 5]); ctx.lineWidth = 1.2;
@@ -2076,6 +2108,7 @@ function makeDwell(ms, fn) {
     [...pts.entries()].forEach(([p, v]) => { ctx.beginPath(); ctx.arc(X(p), Y(clamp(v, 0, 104)), 3.6, 0, 7); ctx.fill(); });
   }
   function refresh() {
+    if (!unlocked()) { drawScreen(); return; }
     const v = pct(st.pos);
     const el = $('#bar2-rate');
     el.textContent = v.toFixed(0) + ' %';
@@ -2097,18 +2130,22 @@ function makeDwell(ms, fn) {
     }
   }
   const dwell = makeDwell(600, () => {
-    if (st.done) return;
+    if (st.done || !unlocked()) return;
     pts.set(st.pos, pct(st.pos));
     drawChart(); judge();
     if (!st.done) $('#bar2-story').innerHTML = '已记 ' + pts.size + ' 个位置点。两侧都要测到 2° 开外，并拿到一个 20% 以下的点。';
   });
   $('#bar2-pos').addEventListener('input', () => {
+    if (!unlocked()) { $('#bar2-story').textContent = '这台仪器等你第 2 节的答案——先回去把最佳朝向报出来。'; drawScreen(); return; }
     st.pos = +$('#bar2-pos').value;
     $('#bar2-pos-val').textContent = st.pos.toFixed(2) + '°';
     normAt0 = null;
     refresh(); dwell();
   });
-  $('#bar2-story').textContent = '朝向已锁定。把滑杆当电极推进器，一格一格挪。';
+  document.addEventListener('lec3-dial', () => {
+    if (unlocked()) { $('#bar2-story').textContent = '朝向已锁定。把滑杆当电极推进器，一格一格挪。'; refresh(); }
+  });
+  $('#bar2-story').textContent = unlocked() ? '朝向已锁定。把滑杆当电极推进器，一格一格挪。' : '这台仪器等你第 2 节的答案。';
   redraws.add(() => { drawScreen(); drawChart(); });
   refresh(); drawChart();
 })();
@@ -2137,6 +2174,7 @@ function makeDwell(ms, fn) {
     const b = document.createElement('button');
     b.className = 'asm-cell';
     b.setAttribute('aria-label', '格 ' + (r + 1) + '-' + (c + 1));
+    b.setAttribute('aria-pressed', 'false');
     const [x, y] = gridPos(r, c);
     const onPath = PROBES.some(a => {
       const rad = a * Math.PI / 180;
@@ -2144,10 +2182,12 @@ function makeDwell(ms, fn) {
     });
     if (onPath) b.classList.add('probe-path');
     b.addEventListener('click', () => {
+      probeRun++;   // 编辑网格作废在途探针动画
       const k = r * A + c;
       if (units.has(k)) units.delete(k);
       else { if (units.size >= 5) { $('#asm-story').textContent = '最多 5 个单元——先移掉一个再放。'; return; } units.add(k); }
       b.classList.toggle('unit', units.has(k));
+      b.setAttribute('aria-pressed', String(units.has(k)));
       $('#asm-count').textContent = units.size;
       probed = false;
       $('#asm-verdict').textContent = '—'; $('#asm-verdict').className = 'outcome idle';
@@ -2155,6 +2195,16 @@ function makeDwell(ms, fn) {
     grid.appendChild(b);
     cells.push(b);
   }
+  grid.addEventListener('keydown', e => {
+    const i = cells.indexOf(document.activeElement);
+    if (i < 0) return;
+    let j = -1;
+    if (e.key === 'ArrowRight') j = i % A < A - 1 ? i + 1 : i;
+    else if (e.key === 'ArrowLeft') j = i % A > 0 ? i - 1 : i;
+    else if (e.key === 'ArrowDown') j = i + A < A * A ? i + A : i;
+    else if (e.key === 'ArrowUp') j = i - A >= 0 ? i - A : i;
+    if (j >= 0) { e.preventDefault(); e.stopPropagation(); cells[j].focus(); }
+  });
   // 响应表
   const rows = {};
   PROBES.forEach(a => {
@@ -2166,7 +2216,7 @@ function makeDwell(ms, fn) {
     $('#asm-bar-rows').appendChild(row);
     rows[a] = row;
   });
-  let probed = false, done = false;
+  let probed = false, done = false, probeRun = 0;
   function setRow(a, v) {
     const row = rows[a];
     row.querySelector('.ab-fill').style.width = clamp(v / barMax * 100, 0, 100).toFixed(1) + '%';
@@ -2176,8 +2226,10 @@ function makeDwell(ms, fn) {
   function drawYou() {
     const cvy = $('#asm-cmp-you'); if (!cvy) return;
     const ctx = cvy.getContext('2d');
+    ctx.setTransform(2, 0, 0, 2, 0, 0);   // 240 物理像素 → 120 CSS 像素（高分屏不发虚）
     const S = 120, u = S / A;
     ctx.clearRect(0, 0, S, S);
+    cvy.setAttribute('aria-label', '你的排布：已放置 ' + units.size + ' 个 LGN 单元');
     ctx.fillStyle = cssVar('--surface-2'); ctx.fillRect(0, 0, S, S);
     ctx.strokeStyle = cssVar('--line');
     for (let i = 0; i <= A; i++) {
@@ -2207,7 +2259,9 @@ function makeDwell(ms, fn) {
     const list = [...units];
     const resp = {};
     PROBES.forEach(a => { resp[a] = asmDrive(list, a); });
+    const my = ++probeRun;
     const show = i => {
+      if (my !== probeRun) return;
       if (i >= PROBES.length) { verdict(resp); return; }
       setRow(PROBES[i], resp[PROBES[i]]);
       if (REDUCED) show(i + 1); else setTimeout(() => show(i + 1), 260);
@@ -2238,8 +2292,9 @@ function makeDwell(ms, fn) {
     }
   }
   $('#asm-clear').addEventListener('click', () => {
+    probeRun++;
     units.clear();
-    cells.forEach(b => b.classList.remove('unit'));
+    cells.forEach(b => { b.classList.remove('unit'); b.setAttribute('aria-pressed', 'false'); });
     $('#asm-count').textContent = '0';
     PROBES.forEach(a => { setRow(a, 0); rows[a].querySelector('.ab-val').textContent = '—'; });
     $('#asm-verdict').textContent = '—'; $('#asm-verdict').className = 'outcome idle';
@@ -2252,7 +2307,8 @@ function makeDwell(ms, fn) {
   const cv = $('#cx-screen'); if (!cv) return;
   const chart = $('#cx-chart');
   const cell = () => LEC3.cell;
-  const lockAng = () => (LEC3.dialOri !== null ? LEC3.dialOri : LEC3.trueOri);
+  let frozenAng = null;   // 首次使用即冻结，避免中途换角度混曲线
+  const lockAng = () => { if (frozenAng === null) frozenAng = (LEC3.dialOri !== null ? LEC3.dialOri : LEC3.trueOri); return frozenAng; };
   const st = { pos: 0, ch: 's', done: false };
   const data = { s: new Map(), c: new Map() };
   const orth = { s: null, c: null };
@@ -2559,7 +2615,7 @@ function makeDwell(ms, fn) {
   function finish() {
     stopTrain(); trained = true; remaining = F.steps;
     $('#farm2-train').textContent = '▶ 再训练 ×800';
-    $('#farm2-story').innerHTML = '训练完成（800 步，抖动开）。<b>用探针验收</b>：四个朝向各按一次，看各归谁家。';
+    $('#farm2-story').innerHTML = '训练完成（800 步，抖动开）。<b>四个朝向各按一次探针</b>，看各归谁家。';
   }
   function train() {
     if (running) { stopTrain(); $('#farm2-train').textContent = '▶ 继续'; return; }
@@ -2582,7 +2638,7 @@ function makeDwell(ms, fn) {
     })();
   }
   function probe(o) {
-    if (!trained) { $('#farm2-story').textContent = '先训练，再验收。'; return; }
+    if (!trained) { $('#farm2-story').textContent = '先训练，再用探针。'; return; }
     const { enc, D } = TIERS[tier];
     const prng = makeRng(seedOf() + 1000 + o * 7);   // 探针独立随机流：与按键顺序无关
     const raw = noisyBar(prng, o, false);
@@ -2611,10 +2667,12 @@ function makeDwell(ms, fn) {
       $('#farm2-story').innerHTML = '<b>只滤波不够。</b>处处有检测器，报告仍跟着位置跑——等变治不了病。' + (sawPoolPass ? '' : '现在切「滤波 + 池化」，同样参数再训。');
     } else if (!distinct && tier === 'direct') {
       $('#farm2-story').innerHTML = '<b>病还在</b>——和上一讲一样散。现在给它配前端：先试「只滤波」，再试「滤波 + 池化」。';
+    } else if (distinct && tier === 'direct') {
+      $('#farm2-story').innerHTML = '这一把居然分家了——竞争学习偶尔也能蒙对（换个种子多半就散）。病的证据在上一讲和第 1 节的结案照里，继续往下配前端。';
     } else if (distinct) {
       $('#farm2-story').innerHTML = '这一档分家了。按任务清单把该看的失败也看了，结论才完整。';
     }
-    MP.reveal('mp-farm2');
+    if (tier === 'pool') MP.reveal('mp-farm2');
     if (sawPoolPass && sawFilterFail && !done) {
       done = true;
       $('#farm2-payoff').hidden = false;
@@ -2832,7 +2890,7 @@ function makeDwell(ms, fn) {
     })(0);
   }
   // 电极拖拽
-  let dragEl = null;
+  let dragEl = null, trainGen = 0;
   const toCell = e => {
     const rct = cv.getBoundingClientRect();
     const u = Math.min(rct.width, rct.height) / N;
@@ -2848,13 +2906,25 @@ function makeDwell(ms, fn) {
     dragEl = d1 <= d2 ? el1 : el2;
     dragEl.c = p.c; dragEl.r = p.r;
     cv.setPointerCapture(e.pointerId);
-    updatePairNote(); drawRetina();
+    syncElInputs(); updatePairNote(); drawRetina();
   });
-  cv.addEventListener('pointermove', e => { if (dragEl) { const p = toCell(e); dragEl.c = p.c; dragEl.r = p.r; updatePairNote(); drawRetina(); } });
+  cv.addEventListener('pointermove', e => { if (dragEl) { const p = toCell(e); dragEl.c = p.c; dragEl.r = p.r; syncElInputs(); updatePairNote(); drawRetina(); } });
   cv.addEventListener('pointerup', () => { dragEl = null; });
   const dist = () => Math.hypot(el1.c - el2.c, el1.r - el2.r);
+  function syncElInputs() {
+    $('#wave-e1c').value = el1.c; $('#wave-e1r').value = el1.r;
+    $('#wave-e2c').value = el2.c; $('#wave-e2r').value = el2.r;
+  }
+  [['#wave-e1c', el1, 'c'], ['#wave-e1r', el1, 'r'], ['#wave-e2c', el2, 'c'], ['#wave-e2r', el2, 'r']].forEach(([sel, e, k]) => {
+    $(sel).addEventListener('change', () => {
+      const v = parseInt($(sel).value, 10);
+      e[k] = clamp(Number.isFinite(v) ? v : e[k], 0, N - 1);
+      syncElInputs(); updatePairNote(); drawRetina();
+    });
+    $(sel).addEventListener('focus', ev => ev.target.select());
+  });
   function updatePairNote() {
-    $('#wave-pair-note').textContent = '当前间距 ' + dist().toFixed(1) + ' 格。按「记录这一对」测相关。';
+    $('#wave-pair-note').textContent = '当前间距 ' + dist().toFixed(1) + ' 格；相关按爆发窗（±2 帧平滑）计。';
   }
   function measurePair() {
     // 独立生成器同步跑 3600 帧；活动按爆发时间窗（±2 帧滑窗）平滑后算零延迟相关
@@ -2876,8 +2946,9 @@ function makeDwell(ms, fn) {
     return cov / Math.sqrt(Math.max(1e-12, va * vb));
   }
   $('#wave-pair').addEventListener('click', () => {
-    const r = measurePair();
     const d = dist();
+    if (d < 1) { $('#wave-story').textContent = '两个电极叠在同一格上了——先分开它们，才算「一对」。'; return; }
+    const r = measurePair();
     pairs.push({ d, r });
     const el = $('#wave-r');
     el.textContent = 'e1–e2：r = ' + r.toFixed(2) + '（隔 ' + d.toFixed(1) + ' 格）';
@@ -2899,6 +2970,7 @@ function makeDwell(ms, fn) {
   function runTrain(shuffle) {
     if (busy) return;
     busy = true;
+    const myGen = ++trainGen;
     $('#wave-led').classList.add('on');
     const rng = makeRng(seedOf());
     const gen = waveGen(rng);
@@ -2908,6 +2980,7 @@ function makeDwell(ms, fn) {
     let t = 0;
     const CHUNK = 150;
     function chunk() {
+      if (myGen !== trainGen || !W6) return;   // 重置/换种子会作废在途训练
       const end = Math.min(WV.trainFrames, t + CHUNK);
       for (; t < end; t++) {
         let f = gen().frame;
@@ -2974,6 +3047,7 @@ function makeDwell(ms, fn) {
   $('#wave-train').addEventListener('click', () => runTrain(false));
   $('#wave-shuffle').addEventListener('click', () => runTrain(true));
   $('#wave-reset').addEventListener('click', () => {
+    trainGen++; busy = false; $('#wave-led').classList.remove('on');
     pairs.length = 0; flags.corr = flags.wave = flags.shuf = false;
     W6 = null; trainedKind = null;
     unitMaps.forEach(m => [...m.children].forEach(c => { c.style.background = '#1A2030'; }));

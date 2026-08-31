@@ -167,6 +167,8 @@ jobs:
             echo ""
             echo "- 课程首页：$WORKER_URL/"
             echo "- 第一讲：$WORKER_URL/lec01/"
+            echo "- 第二讲：$WORKER_URL/lec02/"
+            echo "- 第三讲：$WORKER_URL/lec03/"
             echo "- 课堂控制台：$WORKER_URL/admin/"
             echo "- 版本：\`${GITHUB_SHA:0:7}\`"
           } >> "$GITHUB_STEP_SUMMARY"
