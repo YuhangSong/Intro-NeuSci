@@ -1,0 +1,99 @@
+# 工作交接（换工作空间后从这里接着做）
+
+> 新会话请先读这份文件，再读 `CLAUDE.md`（行文铁律与技术要点，具有约束力）。
+> 分支：`claude/neuroscience-intro-course-kys46t`（所有开发与推送都在这条分支上）
+> 线上：https://intro-neusci.hypergrid.workers.dev/
+
+## 1. 当前状态
+
+| 部分 | 状态 |
+|------|------|
+| 第一讲 `lectures/lec01-neuron/` 神经元如何计算 | 完成、已上线 |
+| 第二讲 `lectures/lec02-synapse/` 大脑如何学习 | 完成、已审校修订、已上线 |
+| 第三讲 视觉皮层：大脑的卷积网络 | **未开工**（首页已有「筹备中」占位卡片） |
+| 课程首页 `site/home.html` | 完成（含讲义列表、成绩构成） |
+| 课堂控制台 `site/admin.html` | 完成（清零现场投票） |
+| 发布流水线 `.github/workflows/release.yml` | 完成，最近一次 run #8 全绿 |
+| `.deploy/request.json` | `nonce = 8`（下次发布填 9） |
+
+工作树干净、已与远端同步。恢复现场只需 `git clone` + `git checkout claude/neuroscience-intro-course-kys46t`，
+无需任何本地凭据（Cloudflare 部署全部在 GitHub Actions 里完成）。
+
+## 2. 发布仪式（每次改了讲义/首页都要走）
+
+1. `node scripts/build.mjs` 本地验证构建通过（产物 `worker/dist/`，已 gitignore）
+2. 改 `.deploy/request.json` 的 `nonce` +1
+3. commit + `git push -u origin claude/neuroscience-intro-course-kys46t`
+4. 等 GitHub Actions `release` 跑完并**全绿**（含线上冒烟测试），才可以对用户说「已上线」
+5. 失败时把 Actions 的真实报错原样报给用户，不要猜
+
+唯一的人工配置是仓库 secret `CLOUDFLARE_API_TOKEN`（已配好）。管理密钥自动生成并存在
+Cloudflare KV `INTRO_NEUSCI_CFG` 的 `cfg:admin_key`，**日志中永不打印**（本仓库公开）。
+
+## 3. 新增一讲的完整清单
+
+1. 新建 `lectures/lecNN-slug/index.html`——**无 doctype 的 HTML 片段**，CSS/JS 全内联，
+   构建时由 `scripts/build.mjs` 包装成完整页面
+2. 在 `scripts/build.mjs` 里加 `mkdirSync('worker/dist/lecNN')` 与对应的 `writeFileSync`
+3. `site/home.html` 加讲义卡片（把上一讲的「筹备中」占位替换掉），`README.md` 目录表加一行
+4. 预测题用**全局唯一**的 `data-predict` id（如 `p3-xxx`），并把 id 加进 `site/admin.html` 的
+   `QIDS` 与 `NAMES`（NAMES 前缀「三讲 · 」）
+5. `.github/workflows/release.yml` 的 Smoke test 里加两行断言（本次构建版本 + 标题关键词）
+6. 所有模拟参数先用 Node 脚本数值验证（阈值、时间窗、滑杆范围要和真实模拟一致）
+7. 用 Playwright 跑一遍全交互测试（见第 6 节）
+8. 走第 2 节的发布仪式
+
+### 可直接复用的页面组件（从 lec01/lec02 里抄）
+
+- `#rail` 左侧导航 + `#topbar`；两者都带返回主页链接：`.rail-home`（← 课程主页）与 `.tb-home`（⌂）——**每一讲都必须有**
+- `.scene` 分节、键盘 ← → 切换、`.wrap` 内容容器
+- `.predict`（先投票 → 揭晓）：`data-predict` id + `data-answer` 序号；同源 `/health` 应答时自动开启现场投票（`.p-live` 计票条），否则静默退回纯本地
+- `.rig` 仪器面板（固定深色，`RIG.*` 颜色常量）、`.gained` 徽章（✓ 已测得 …）、`.task` 动手卡、`details.think` / `details.deep` 折叠、`.mlb` 生物⇄ML 胶囊
+- 画布辅助：`fitCanvas` / `rigAxes` / `drawTrace` / `makeRng`（LCG）
+- 全局必须有 `[hidden] { display: none !important; }`（否则 `.task{display:flex}` 之类会把剧透卡片露出来）
+
+### 设计 token
+
+- 主色：浅色 `#6B4FA8`，深色 `#A78BDA`（cresyl violet）
+- 数据配色（已过色盲校验）：浅 `#5B3D99` `#C94F2B` `#2E6FB0` `#A0761F`；深 `#8F6CCB` `#D06336` `#3E86C7` `#A8842B`
+- 仪器面板固定深色，底 `#10141C`
+- 双主题三段式：`:root` / `@media (prefers-color-scheme: dark) :root:not([data-theme="light"])` / `:root[data-theme="dark"]`
+- 字体：IBM Plex Sans/Serif/Mono + 系统中文回退（唯一外部依赖）
+
+## 4. 两讲已讲了什么（做第三讲时避免重复、并接上钩子）
+
+**第一讲 · 神经元如何计算**：离子与 Nernst → 电导拔河 → 亲手解 Hodgkin–Huxley（标准枪乌贼参数，dt=0.01 ms，
+vtrap 保护）→ 全或无、不应期、时间求和 → LIF（τ=20 ms，E_L=−70 mV，R=10 MΩ，θ=−50 mV，V_reset=−65 mV，
+t_ref=4 ms，rheobase 2.0 nA）→ Type II f–I 曲线 + 去极化阻滞 → 从实测 f–I 拟合出 ReLU。
+投票 id：`p-na` `p-allornone` `p-refract` `p-sum` `p-fi` `p-ttx`。
+
+**第二讲 · 大脑如何学习**：突触传递慢放 → n·p·q（w 的物理实体）→ LTP/LTD/AP5 对照实验
+（HFS ×1.6 封顶 2.3 + 短时程增强 0.22、τ=2.5 min；LFS ×0.7 下限 0.45；AP5 只封锁长期台阶，短时程照常）
+→ NMDA 符合检测 → 亲手做 STDP 曲线（+80%/−30%，τ₊=17 ms、τ₋=34 ms，|Δt|<2 ms 散点）
+→ Hebb 写成方程 → 纯 Hebb = 无归一化幂迭代（|w| 指数爆炸，代码里封顶 1e12 防溢出）
+→ Oja 1982 修好 → 收敛到第一主成分（η 0.02–0.05，与数值解夹角 ~2–3.4°，|w|→1）
+→ 竞争学习农场（5×5 输入、4 个单元、距离最近者胜、η 0.15、输家 0.02、800 步）→ 朝向检测器
+→ 死单元与 leaky learning 救援 → 位置抖动导致失败（**留给第三讲的钩子：平移不变性**）
+→ 三因子规则与资格迹 → 最后一票「大脑在做反向传播吗」（强化学习那一讲要重投对照）。
+投票 id：`p2-ltp` `p2-stdp` `p2-pca` `p2-bars` `p2-bp`。
+
+## 5. 第三讲的既有约定（尚未动工）
+
+- 首页占位卡片写的是：**视觉皮层：大脑的卷积网络**——「不变性从哪来？睁眼之前，皮层拿什么当训练数据？」
+- 第二讲已经埋好两个钩子：①位置抖动打散朝向聚类 → 平移不变性 → 卷积/池化；②视网膜波（睁眼前的自发活动当训练数据）
+- 第二讲末尾承诺过：强化学习那一讲会重投 `p2-bp` 这道票，看全班分布挪了多少
+
+## 6. 测试与验证的做法（沿用）
+
+- **数值验证**：任何模拟参数上线前先写 Node 脚本跑一遍（例如 Oja 收敛角度、竞争农场成功率），
+  不许拍脑袋写阈值。第二讲的实测：默认种子 200/200 分家成功；位置抖动 5–6/30（可靠的失败演示）；
+  坏初始化 20/20 出死单元；leaky 救援 20/20 成功。
+- **交互测试**：`scripts/test-lec02.cjs` 是可直接跑的 Playwright 全交互回归脚本（自带 mock 投票后端），
+  新一讲照着复制一份改。跑法见该文件头部注释。
+- 沙箱里 `fonts.googleapis.com` 不可达（`ERR_CONNECTION_RESET`），是环境限制，不是页面 bug；线上正常。
+
+## 7. 未决事项（需要老师给口径）
+
+- **论文成绩的细则未定**：篇幅、选题范围、提交时间、评分标准都还没写。用户给了口径后，
+  补进 `GRADING.md` 和 `site/home.html` 的成绩构成一节（第 2 节的发布仪式照走）。
+- 第三讲的具体内容尚未与用户确认——开工前先把「这一讲只讲透哪一件事」定下来。
