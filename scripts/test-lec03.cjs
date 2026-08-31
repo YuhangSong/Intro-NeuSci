@@ -172,15 +172,15 @@ const ok = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); if 
   ok(/✓/.test(verdict), 'aligned trio passes: ' + verdict.trim());
   ok(await page.locator('#asm-payoff').isVisible(), 'assembly payoff visible');
   ok(!(await page.locator('#mp-asm .mp-reveal').isHidden()), 'mini-predict mp-asm revealed');
-  // 团块反例：清空，放紧凑一团，应不通过
+  // 装反方向反例：135° 三元组，45° 探针应不过阈值
   await page.click('#asm-clear');
-  for (const [r, c] of [[5, 5], [5, 6], [6, 5]]) {
+  for (const [r, c] of [[3, 3], [6, 6], [9, 9]]) {
     await page.locator('#asm-grid .asm-cell').nth(r * 12 + c).click();
   }
   await page.click('#asm-probe');
   await page.waitForTimeout(1400);
   verdict = await page.textContent('#asm-verdict');
-  ok(!/✓ 45/.test(verdict), 'clump correctly fails: ' + verdict.trim());
+  ok(!/✓ 45/.test(verdict), 'wrong-orientation trio fails: ' + verdict.trim());
   // 投第 6 道票（藏在 payoff 里）
   const psw = page.locator('[data-predict="p3-share-weights"]');
   await psw.scrollIntoViewIfNeeded();
@@ -200,12 +200,6 @@ const ok = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); if 
   await page.click('#cx-orth');
   ok(await page.locator('#cx-payoff').isVisible(), 'complex-cell payoff visible (4 datasets)');
   // 数值断言：复杂细胞 ±1.5° 平台
-  const cxAt = (ch, pos) => page.evaluate(([c, p]) => {
-    // 读图上数据不可行；直接检验读数
-    const s = document.getElementById('cx-pos');
-    s.value = p; s.dispatchEvent(new Event('input', { bubbles: true }));
-    return document.getElementById('cx-rate').textContent;
-  }, [ch, pos]);
   await page.click('#cx-ch-c');
   await setRange('#cx-pos', 1.5);
   const cxEdge = parseInt((await page.textContent('#cx-rate')).match(/(\d+)/)[1], 10);
@@ -251,25 +245,29 @@ const ok = (cond, msg) => { console.log((cond ? '  ✓ ' : '  ✗ ') + msg); if 
 
   console.log('— 第 9 节 · 视网膜波台 —');
   await page.locator('#rig-wave').scrollIntoViewIfNeeded();
-  // 电极：程序化放置 e1/e2（先近后远）
-  const placeEl = (c1, r1, c2, r2) => page.evaluate(([a, b, c, d]) => {
-    const cv = document.getElementById('wave-canvas');
-    const r = cv.getBoundingClientRect();
-    const u = Math.min(r.width, r.height) / 28;
-    const ox = r.left + (r.width - u * 28) / 2, oy = r.top + (r.height - u * 28) / 2;
-    const put = (col, row) => {
-      cv.dispatchEvent(new PointerEvent('pointerdown', { clientX: ox + (col + 0.5) * u, clientY: oy + (row + 0.5) * u, bubbles: true, pointerId: 1 }));
-      cv.dispatchEvent(new PointerEvent('pointerup', { clientX: ox + (col + 0.5) * u, clientY: oy + (row + 0.5) * u, bubbles: true, pointerId: 1 }));
-    };
-    put(a, b); put(c, d);
-  }, [c1, r1, c2, r2]);
-  // 4 对：近、中、中、远
-  const pairsToDo = [[10, 14, 11, 14], [10, 14, 15, 14], [8, 14, 14, 14], [5, 14, 22, 14]];
-  for (const [a, b, c, d] of pairsToDo) {
-    await placeEl(a, b, c, d);
-    await page.click('#wave-pair');
-    await page.waitForTimeout(150);
-  }
+  // 电极：真实拖拽（按下在当前位置 → 移动到目标 → 抬起），Node 侧跟踪两枚电极的位置
+  const ePos = { 1: [10, 14], 2: [13, 14] };   // 与页面初始值一致
+  const dragEl = async (n, col, row) => {
+    const [c0, r0] = ePos[n];
+    await page.evaluate(([a, b, c, d]) => {
+      const cv = document.getElementById('wave-canvas');
+      const r = cv.getBoundingClientRect();
+      const u = Math.min(r.width, r.height) / 28;
+      const ox = r.left + (r.width - u * 28) / 2, oy = r.top + (r.height - u * 28) / 2;
+      const P = (col2, row2) => [ox + (col2 + 0.5) * u, oy + (row2 + 0.5) * u];
+      const [x0, y0] = P(a, b), [x1, y1] = P(c, d);
+      cv.dispatchEvent(new PointerEvent('pointerdown', { clientX: x0, clientY: y0, bubbles: true, pointerId: 1 }));
+      cv.dispatchEvent(new PointerEvent('pointermove', { clientX: x1, clientY: y1, bubbles: true, pointerId: 1 }));
+      cv.dispatchEvent(new PointerEvent('pointerup', { clientX: x1, clientY: y1, bubbles: true, pointerId: 1 }));
+    }, [c0, r0, col, row]);
+    ePos[n] = [col, row];
+  };
+  // 4 对：近(1 格)、中、中、远(17 格)
+  await dragEl(2, 11, 14); await page.click('#wave-pair'); await page.waitForTimeout(150);
+  await dragEl(2, 15, 14); await page.click('#wave-pair'); await page.waitForTimeout(150);
+  await dragEl(2, 18, 14); await page.click('#wave-pair'); await page.waitForTimeout(150);
+  await dragEl(1, 5, 14); await dragEl(2, 22, 14);
+  await page.click('#wave-pair'); await page.waitForTimeout(150);
   await page.waitForFunction(() => /身份证到手/.test(document.getElementById('wave-story').textContent), null, { timeout: 5000 });
   ok(true, 'correlation-vs-distance task complete');
   await page.click('#wave-train');
