@@ -18,6 +18,7 @@
 |------|------|------|
 | 第一讲 | 神经元如何计算 —— 从离子到脉冲，再到人工神经元 | [`lectures/lec01-neuron/`](lectures/lec01-neuron/) |
 | 第二讲 | 大脑如何学习 —— 突触、Hebb 规则，与不用反向传播的学习 | [`lectures/lec02-synapse/`](lectures/lec02-synapse/) |
+| 第三讲 | 视觉皮层：大脑的卷积网络 —— 不变性从哪来？睁眼之前拿什么当训练数据？ | [`lectures/lec03-cortex/`](lectures/lec03-cortex/) |
 
 ## 成绩构成
 

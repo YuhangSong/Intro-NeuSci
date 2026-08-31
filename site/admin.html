@@ -37,7 +37,7 @@ button.danger:hover { border-color: #E8A0A0; }
   <input id="key" type="password" autocomplete="off" placeholder="ADMIN_KEY">
   <div class="row" id="btns"></div>
   <div class="row" style="margin-top:14px">
-    <button class="danger" id="reset-all">全部清零（两讲全部题目）</button>
+    <button class="danger" id="reset-all">全部清零（三讲全部题目）</button>
     <button id="show">查看当前票数</button>
   </div>
   <div id="log" aria-live="polite"></div>
@@ -46,7 +46,8 @@ button.danger:hover { border-color: #E8A0A0; }
 <script>
 'use strict';
 const QIDS = ['p-na', 'p-allornone', 'p-refract', 'p-sum', 'p-fi', 'p-ttx',
-  'p2-ltp', 'p2-stdp', 'p2-pca', 'p2-bars', 'p2-bp'];
+  'p2-ltp', 'p2-stdp', 'p2-pca', 'p2-bars', 'p2-bp',
+  'p3-slide', 'p3-shift', 'p3-share-weights', 'p3-complex', 'p3-equivariance', 'p3-dark'];
 const NAMES = {
   'p-na': '一讲 · Na⁺ 门全开', 'p-allornone': '一讲 · 全或无',
   'p-refract': '一讲 · 不应期', 'p-sum': '一讲 · 时间求和',
@@ -54,6 +55,9 @@ const NAMES = {
   'p2-ltp': '二讲 · 高频刺激之后', 'p2-stdp': '二讲 · STDP 时序',
   'p2-pca': '二讲 · w 转向哪里', 'p2-bars': '二讲 · 四张热图',
   'p2-bp': '二讲 · 大脑在做反向传播吗',
+  'p3-slide': '三讲 · 玻璃片的边缘', 'p3-shift': '三讲 · 光条平移',
+  'p3-share-weights': '三讲 · 同一份权重吗', 'p3-complex': '三讲 · 复杂细胞平移',
+  'p3-equivariance': '三讲 · 等变还是不变', 'p3-dark': '三讲 · 黑暗中的视网膜',
 };
 const $ = s => document.querySelector(s);
 const keyEl = $('#key'), log = $('#log');

@@ -139,8 +139,10 @@ jobs:
           poll "首页已是本次构建" has_ver "$WORKER_URL/"
           poll "第一讲已是本次构建" has_ver "$WORKER_URL/lec01/"
           poll "第二讲已是本次构建" has_ver "$WORKER_URL/lec02/"
+          poll "第三讲已是本次构建" has_ver "$WORKER_URL/lec03/"
           curl -s "$WORKER_URL/lec01/" | grep -q "神经元如何计算" && echo "✓ 第一讲标题在位"
           curl -s "$WORKER_URL/lec02/" | grep -q "大脑如何学习" && echo "✓ 第二讲标题在位"
+          curl -s "$WORKER_URL/lec03/" | grep -q "视觉皮层" && echo "✓ 第三讲标题在位"
           curl -s "$WORKER_URL/health" | jq -e '.ok and .votes' >/dev/null && echo "✓ /health 正常"
 
           curl -s -X POST -H 'content-type: application/json' \

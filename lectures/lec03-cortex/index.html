@@ -1,0 +1,2994 @@
+<title>视觉皮层：大脑的卷积网络</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* ============================================================
+   《神经科学导论》第三讲 · 视觉皮层：大脑的卷积网络
+   设计语言：电生理实验室 —— 纸面讲义 + 深色仪器面板（与第一二讲一致）
+   ============================================================ */
+
+:root {
+  /* 浅色主题（完整定义） */
+  --bg: #F5F6F8;
+  --surface: #FFFFFF;
+  --surface-2: #EDEFF3;
+  --ink: #1C222E;
+  --ink-2: #465062;
+  --muted: #7C8598;
+  --line: #D9DEE7;
+  --line-soft: #E6EAF0;
+  --accent: #6B4FA8;          /* 尼氏染色紫 cresyl violet */
+  --accent-soft: #EEE9F7;
+  --on-accent: #FFFFFF;
+  /* 数据色（浅色主题，已通过色觉安全验证） */
+  --c-v:  #5B3D99;   /* 主曲线 / 简单细胞 */
+  --c-na: #C94F2B;   /* 对照 / 高亮 */
+  --c-k:  #2E6FB0;   /* 第二通道 / 复杂细胞 */
+  --c-i:  #A0761F;   /* 刺激标记 */
+  --c-ref: #8A94A6;  /* 参考/理论曲线 */
+  --good: #2E7D4F;
+  --bad:  #C43D3D;
+  /* 仪器面板：两种主题下都保持深色（示波器传统） */
+  --rig-bg: #10141C;
+  --rig-panel: #171C27;
+  --rig-line: #2A3140;
+  --rig-ink: #C9D1E0;
+  --rig-muted: #7C8598;
+  --rig-v:  #BFA3EF;
+  --rig-na: #E07A50;
+  --rig-k:  #5F9FD8;
+  --rig-grid: #1E2531;
+  --shadow: 0 1px 2px rgba(15,20,30,.05), 0 8px 28px rgba(15,20,30,.07);
+  --sans: "IBM Plex Sans", -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+  --serif: "IBM Plex Serif", Georgia, "Songti SC", "Noto Serif CJK SC", serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151B;
+    --surface: #1A1E27;
+    --surface-2: #222835;
+    --ink: #E7EAF2;
+    --ink-2: #AEB7C9;
+    --muted: #8791A3;
+    --line: #2E3546;
+    --line-soft: #262D3C;
+    --accent: #A78BDA;
+    --accent-soft: #2A2440;
+    --on-accent: #14101F;
+    --c-v:  #8F6CCB;
+    --c-na: #D06336;
+    --c-k:  #3E86C7;
+    --c-i:  #A8842B;
+    --c-ref: #77839A;
+    --good: #4CAF79;
+    --bad:  #E06A6A;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 28px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12151B;
+  --surface: #1A1E27;
+  --surface-2: #222835;
+  --ink: #E7EAF2;
+  --ink-2: #AEB7C9;
+  --muted: #8791A3;
+  --line: #2E3546;
+  --line-soft: #262D3C;
+  --accent: #A78BDA;
+  --accent-soft: #2A2440;
+  --on-accent: #14101F;
+  --c-v:  #8F6CCB;
+  --c-na: #D06336;
+  --c-k:  #3E86C7;
+  --c-i:  #A8842B;
+  --c-ref: #77839A;
+  --good: #4CAF79;
+  --bad:  #E06A6A;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 28px rgba(0,0,0,.35);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .001s !important; transition-duration: .001s !important; }
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16.5px;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- 左侧导航栏 ---------- */
+#rail {
+  position: fixed; inset: 0 auto 0 0; width: 236px;
+  padding: 28px 18px 28px 26px;
+  border-right: 1px solid var(--line-soft);
+  background: var(--bg);
+  overflow-y: auto;
+  z-index: 40;
+  font-size: .85rem;
+}
+#rail .rail-course { font-size: .72rem; letter-spacing: .16em; color: var(--muted); margin-bottom: 4px; }
+#rail .rail-lec { font-weight: 700; font-size: .95rem; margin-bottom: 18px; line-height: 1.4; }
+#rail .rail-group { font-size: .7rem; letter-spacing: .14em; color: var(--muted); margin: 16px 0 6px; }
+#rail a {
+  display: block; padding: 5px 10px; margin: 1px 0;
+  color: var(--ink-2); text-decoration: none; border-radius: 7px;
+  line-height: 1.45;
+}
+#rail a:hover { background: var(--surface-2); color: var(--ink); }
+#rail a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+#rail .rail-hint { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--line-soft); color: var(--muted); font-size: .74rem; line-height: 1.7; }
+#rail kbd {
+  font-family: var(--mono); font-size: .72rem;
+  border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px;
+  padding: 0 4px; background: var(--surface);
+}
+#rail a.rail-home {
+  display: inline-block; font-size: .76rem; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 2px 12px; margin: 0 0 14px;
+}
+#rail a.rail-home:hover { color: var(--accent); border-color: var(--accent); background: transparent; }
+
+/* 顶部进度条 */
+#progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); width: 0; z-index: 60; }
+
+/* 窄屏顶栏 */
+#topbar {
+  display: none;
+  position: sticky; top: 0; z-index: 50;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line-soft);
+  padding: 10px 16px;
+  align-items: center; gap: 10px;
+  font-size: .85rem;
+}
+#topbar select {
+  flex: 1; min-width: 0;
+  font: inherit; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  padding: 6px 8px;
+}
+a.tb-home {
+  font-size: .95rem; font-weight: 600; text-decoration: none;
+  padding: 5px 12px; border-radius: 9px;
+  border: 1px solid var(--accent); color: var(--accent);
+}
+
+main { margin-left: 236px; }
+@media (max-width: 1080px) {
+  #rail { display: none; }
+  #topbar { display: flex; }
+  main { margin-left: 0; }
+}
+
+/* ---------- 版面 ---------- */
+.scene { padding: 9vh 0 10vh; border-top: 1px solid var(--line-soft); scroll-margin-top: 40px; }
+.scene:first-of-type { border-top: none; }
+.wrap { max-width: 880px; margin: 0 auto; padding: 0 28px; }
+.wrap.wide { max-width: 1120px; }
+@media (max-width: 640px) { .wrap { padding: 0 18px; } }
+
+.kicker {
+  font-size: .76rem; letter-spacing: .15em; color: var(--accent);
+  font-weight: 600; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.kicker .k-time { color: var(--muted); font-weight: 400; letter-spacing: .08em; }
+h2 {
+  font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+  line-height: 1.28; margin: 0 0 6px; font-weight: 700;
+  text-wrap: balance;
+}
+h3 { font-size: 1.22rem; margin: 2.4em 0 .5em; font-weight: 700; }
+h4 { font-size: 1.02rem; margin: 1.8em 0 .4em; font-weight: 600; }
+.lede { font-size: 1.1rem; color: var(--ink-2); margin: 8px 0 0; max-width: 62ch; }
+p { margin: 1em 0; max-width: 68ch; }
+.scene ul, .scene ol { max-width: 66ch; padding-left: 1.4em; }
+li { margin: .35em 0; }
+strong { font-weight: 650; }
+.term { font-family: var(--serif); font-style: italic; color: var(--muted); font-size: .92em; }
+.small, .note { font-size: .84rem; color: var(--muted); line-height: 1.7; }
+.note { max-width: 62ch; }
+a { color: var(--accent); }
+::selection { background: var(--accent); color: var(--on-accent); }
+:is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
+}
+[hidden] { display: none !important; }
+
+/* 高亮论点 */
+.thesis {
+  margin: 2em 0; padding: 22px 26px;
+  background: var(--surface); border: 1.5px solid var(--accent);
+  border-radius: 14px; box-shadow: var(--shadow);
+  font-size: 1.18rem; line-height: 1.7; font-weight: 500;
+  max-width: 640px;
+}
+.thesis .t-mark { display: block; font-size: .72rem; letter-spacing: .16em; color: var(--accent); font-weight: 700; margin-bottom: 6px; }
+
+/* 数字卡片 */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin: 1.6em 0; }
+.tile {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; padding: 16px 18px;
+}
+.tile .t-label { font-size: .76rem; color: var(--muted); letter-spacing: .06em; }
+.tile .t-num {
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: 1.65rem; font-weight: 600; line-height: 1.3; margin: 2px 0;
+}
+.tile .t-sub { font-size: .8rem; color: var(--ink-2); line-height: 1.5; }
+
+/* 思考卡片 */
+details.think {
+  margin: 1.8em 0; max-width: 66ch;
+  border: 1.5px dashed var(--line); border-radius: 12px;
+  background: var(--surface);
+}
+details.think summary {
+  cursor: pointer; padding: 14px 18px; font-weight: 600; list-style: none;
+  display: flex; gap: 10px; align-items: baseline;
+}
+details.think summary::-webkit-details-marker { display: none; }
+details.think summary .q-tag {
+  flex: none; font-size: .72rem; letter-spacing: .1em; color: var(--accent);
+  border: 1px solid var(--accent); border-radius: 999px; padding: 1px 9px;
+  font-weight: 700; transform: translateY(-1px);
+}
+details.think[open] summary { border-bottom: 1px dashed var(--line); }
+details.think .a { padding: 4px 18px 14px; color: var(--ink-2); }
+details.think .a p { margin: .7em 0; }
+
+/* 动手任务 */
+.task {
+  display: flex; gap: 12px; align-items: baseline;
+  margin: 1.4em 0; padding: 12px 16px; max-width: 66ch;
+  background: var(--accent-soft); border-radius: 10px;
+  font-size: .92rem; line-height: 1.7;
+}
+.task .task-tag { flex: none; font-size: .72rem; letter-spacing: .12em; font-weight: 700; color: var(--accent); }
+
+/* ---------- 仪器面板（两种主题下都是深色） ---------- */
+.rig {
+  background: var(--rig-bg); color: var(--rig-ink);
+  border: 1px solid var(--rig-line); border-radius: 16px;
+  margin: 1.8em 0; overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.rig-head {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 12px 18px; border-bottom: 1px solid var(--rig-line);
+  background: var(--rig-panel);
+}
+.rig-head .rig-name {
+  font-family: var(--mono); font-size: .8rem; letter-spacing: .12em;
+  color: var(--rig-ink); font-weight: 600;
+}
+.rig-head .led {
+  width: 8px; height: 8px; border-radius: 50%; background: #3A4254; flex: none;
+}
+.rig-head .led.on { background: #57D08A; box-shadow: 0 0 8px #57D08A88; }
+.rig-head .rig-spacer { flex: 1; }
+.rig-body { padding: 18px; }
+.rig canvas { display: block; width: 100%; border-radius: 8px; background: var(--rig-bg); }
+.rig .scope-frame { border: 1px solid var(--rig-line); border-radius: 10px; padding: 6px; background: var(--rig-bg); }
+
+/* 仪器上的控制件 */
+.ctl-row { display: flex; gap: 18px 26px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+.ctl { display: flex; flex-direction: column; gap: 4px; min-width: 150px; }
+.ctl .ctl-label { font-size: .74rem; letter-spacing: .06em; color: var(--rig-muted); display: flex; justify-content: space-between; gap: 8px; }
+.ctl .ctl-val { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--rig-ink); }
+.rig input[type="range"] { accent-color: var(--rig-v); width: 100%; margin: 0; }
+
+button.btn {
+  font: inherit; font-size: .88rem; font-weight: 600;
+  padding: 8px 18px; border-radius: 9px; cursor: pointer;
+  background: var(--accent); color: var(--on-accent);
+  border: 1px solid transparent;
+}
+button.btn:hover { filter: brightness(1.08); }
+button.btn:active { transform: translateY(1px); }
+button.btn.ghost {
+  background: transparent; color: var(--accent); border-color: var(--accent);
+}
+.rig button.btn { background: var(--rig-v); color: #14101F; }
+.rig button.btn.ghost { background: transparent; color: var(--rig-ink); border-color: var(--rig-line); }
+button.chip {
+  font: inherit; font-size: .8rem; font-weight: 600;
+  padding: 5px 14px; border-radius: 999px; cursor: pointer;
+  background: transparent; color: var(--rig-ink);
+  border: 1px solid var(--rig-line);
+}
+button.chip[aria-pressed="true"] { background: #3A2430; border-color: #B3574A; color: #F0A08C; }
+button.chip.chip-k[aria-pressed="true"] { background: #1E2C3E; border-color: #3E6EA0; color: #8FBCE8; }
+.chip-note { font-size: .74rem; color: var(--rig-muted); }
+
+/* 预设 / 模式按钮 */
+.presets { display: flex; gap: 6px; flex-wrap: wrap; }
+button.mini {
+  font-family: var(--mono); font-size: .74rem; font-weight: 600; cursor: pointer;
+  padding: 3px 10px; border-radius: 7px;
+  background: transparent; color: var(--rig-ink); border: 1px solid var(--rig-line);
+}
+button.mini:hover { border-color: var(--rig-v); color: var(--rig-v); }
+button.mini.on { background: var(--rig-v); color: #14101F; border-color: var(--rig-v); }
+.panel button.mini, .chart-card button.mini { color: var(--ink-2); border-color: var(--line); }
+.panel button.mini:hover, .chart-card button.mini:hover { border-color: var(--accent); color: var(--accent); }
+.panel button.mini.on, .chart-card button.mini.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+
+input.cnum {
+  font-family: var(--mono); font-size: .82rem; font-weight: 600;
+  width: 5ch; text-align: center;
+  background: #232B3B; color: #F5D67B;
+  border: 1px solid #3A4254; border-radius: 5px; padding: 1px 2px;
+  -moz-appearance: textfield; appearance: textfield;
+}
+input.cnum::-webkit-inner-spin-button { display: none; }
+input.cnum:focus { border-color: var(--rig-v); outline: none; }
+
+/* ---------- 浅色面板 ---------- */
+.panel {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px; box-shadow: var(--shadow); min-width: 0;
+}
+.panel .p-title { font-size: .85rem; font-weight: 650; color: var(--ink-2); margin-bottom: 12px; }
+.duel { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 1.8em 0; }
+@media (max-width: 780px) { .duel { grid-template-columns: 1fr; } }
+.duel .panel h4 { margin: 0 0 6px; }
+
+/* ---------- 封面 ---------- */
+.cover { padding-top: 12vh; }
+.cover .c-course { font-size: .8rem; letter-spacing: .22em; color: var(--muted); margin-bottom: 14px; }
+.cover h1 {
+  font-size: clamp(2.5rem, 6vw, 4.3rem); line-height: 1.15;
+  margin: 0 0 10px; font-weight: 700; letter-spacing: .01em; text-wrap: balance;
+}
+.cover .c-sub { font-size: clamp(1rem, 2vw, 1.25rem); color: var(--ink-2); max-width: 56ch; }
+
+/* ---------- 课间 / 收尾 ---------- */
+.interlude { text-align: center; padding: 7vh 0; }
+.interlude .i-mark { font-size: .78rem; letter-spacing: .3em; color: var(--muted); }
+.interlude .i-text { font-size: 1.3rem; font-weight: 600; margin-top: 8px; }
+.next-teaser {
+  margin: 2em 0 0; padding: 20px 24px; max-width: 640px;
+  border: 1px solid var(--line); border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent-soft), var(--surface));
+}
+.next-teaser .nt-tag { font-size: .74rem; letter-spacing: .16em; color: var(--accent); font-weight: 700; }
+.next-teaser .nt-title { font-size: 1.2rem; font-weight: 700; margin: 4px 0; }
+footer.colophon {
+  margin-left: 0; padding: 26px 28px 40px; border-top: 1px solid var(--line-soft);
+  font-size: .78rem; color: var(--muted);
+}
+
+/* 揭示动画 */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal { opacity: 0; transform: translateY(14px); transition: opacity .55s ease, transform .55s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+}
+
+/* ---------- 预测-投票组件 ---------- */
+.predict {
+  margin: 1.6em 0; max-width: 66ch;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 16px 18px;
+}
+.predict .pq { font-weight: 650; margin-bottom: 10px; line-height: 1.7; }
+.predict .pq .p-tag { display: inline-block; font-size: .7rem; letter-spacing: .12em; color: var(--on-accent); background: var(--accent); border-radius: 999px; padding: 2px 10px; font-weight: 700; margin-right: 8px; transform: translateY(-2px); }
+.predict .opts { display: flex; flex-direction: column; gap: 8px; }
+.predict .opts button {
+  font: inherit; font-size: .92rem; text-align: left; cursor: pointer;
+  padding: 9px 14px; border-radius: 9px;
+  background: var(--surface-2); color: var(--ink); border: 1.5px solid transparent;
+  line-height: 1.55;
+}
+.predict .opts button:hover { border-color: var(--accent); }
+.predict .opts button.chosen { border-color: var(--accent); background: var(--accent-soft); }
+.predict.revealed .opts button.right { border-color: var(--good); background: var(--surface); background: color-mix(in srgb, var(--good) 12%, var(--surface)); }
+.predict.revealed .opts button.chosen:not(.right) { border-color: var(--bad); }
+.predict .p-reveal { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); color: var(--ink-2); font-size: .92rem; line-height: 1.7; }
+.predict.revealed .p-reveal { display: block; }
+.predict .p-hint { font-size: .78rem; color: var(--muted); margin-top: 8px; }
+.rig .predict { background: var(--rig-panel); border-color: var(--rig-line); }
+.rig .predict .pq { color: var(--rig-ink); }
+.rig .predict .opts button { background: #202737; color: var(--rig-ink); }
+.rig .predict .p-reveal { color: var(--rig-ink); border-top-color: var(--rig-line); }
+.rig .predict .p-hint { color: var(--rig-muted); }
+
+/* 课堂现场投票 */
+.p-live { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: .82rem; }
+.p-live .pl-head { font-weight: 650; color: var(--ink-2); display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.p-live .pl-refresh {
+  font: inherit; font-size: .72rem; cursor: pointer;
+  background: transparent; color: var(--accent); border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px;
+}
+.p-live .pl-row { display: grid; grid-template-columns: 1.4em 1fr 3ch; gap: 8px; align-items: center; margin: 3px 0; }
+.p-live .pl-opt { font-family: var(--mono); font-size: .74rem; color: var(--muted); font-weight: 600; }
+.p-live .pl-bar { height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
+.p-live .pl-bar i { display: block; height: 100%; border-radius: 5px; background: var(--accent); transition: width .3s; }
+.p-live .pl-row.is-right .pl-bar i { background: var(--good); }
+.p-live .pl-n { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; color: var(--ink-2); }
+.rig .p-live { border-top-color: var(--rig-line); }
+.rig .p-live .pl-head { color: var(--rig-ink); }
+.rig .p-live .pl-refresh { color: var(--rig-v); border-color: var(--rig-line); }
+.rig .p-live .pl-bar { background: #202737; }
+.rig .p-live .pl-bar i { background: var(--rig-v); }
+.rig .p-live .pl-row.is-right .pl-bar i { background: #57D08A; }
+.rig .p-live .pl-n { color: var(--rig-ink); }
+
+/* ---------- 本地预测钮（不进投票系统） ---------- */
+.mini-predict {
+  margin: 14px 0; padding: 12px 14px; max-width: 66ch;
+  border: 1px dashed var(--rig-line); border-radius: 10px;
+  font-size: .88rem; line-height: 1.7;
+}
+.mini-predict .mp-q { font-weight: 650; margin-bottom: 8px; }
+.mini-predict .mp-opts { display: flex; gap: 8px; flex-wrap: wrap; }
+.mini-predict .mp-opts button {
+  font: inherit; font-size: .82rem; cursor: pointer;
+  padding: 6px 12px; border-radius: 8px; line-height: 1.5; text-align: left;
+  background: #202737; color: var(--rig-ink); border: 1.5px solid transparent;
+}
+.mini-predict .mp-opts button:hover { border-color: var(--rig-v); }
+.mini-predict .mp-opts button.chosen { border-color: var(--rig-v); background: #2A2440; }
+.mini-predict.locked .mp-opts button { cursor: default; }
+.mini-predict .mp-reveal { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--rig-line); color: var(--rig-muted); }
+.mini-predict .mp-reveal b { color: var(--rig-ink); }
+.panel .mini-predict, .scene > .wrap > .mini-predict {
+  border-color: var(--line); }
+.mini-predict.light { border-color: var(--line); }
+.mini-predict.light .mp-opts button { background: var(--surface-2); color: var(--ink); }
+.mini-predict.light .mp-opts button.chosen { border-color: var(--accent); background: var(--accent-soft); }
+.mini-predict.light .mp-reveal { border-top-color: var(--line); color: var(--ink-2); }
+.mini-predict.light .mp-reveal b { color: var(--ink); }
+
+/* ---------- 生物⇄ML 翻译胶囊 ---------- */
+.mlb {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: .78rem; line-height: 1.4; vertical-align: 2px;
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 2px 4px 2px 10px; margin: 0 3px;
+  background: var(--surface); white-space: nowrap;
+}
+.mlb .b { color: var(--ink-2); font-weight: 600; }
+.mlb .arr { color: var(--accent); font-weight: 700; }
+.mlb .m { font-family: var(--mono); font-size: .72rem; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 1px 9px; font-weight: 600; }
+
+/* ---------- 想深入折叠块 ---------- */
+details.deep {
+  margin: 1.6em 0; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface-2);
+}
+details.deep summary {
+  cursor: pointer; padding: 12px 18px; font-weight: 600; font-size: .92rem;
+  color: var(--ink-2); list-style: none; display: flex; gap: 10px; align-items: baseline;
+}
+details.deep summary::-webkit-details-marker { display: none; }
+details.deep summary::before { content: "+"; font-family: var(--mono); color: var(--accent); font-weight: 700; }
+details.deep[open] summary::before { content: "−"; }
+details.deep .deep-body { padding: 4px 18px 16px; background: var(--surface); border-radius: 0 0 12px 12px; }
+
+/* ---------- 装配徽章 ---------- */
+.gained {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin: 1.6em 0 0; padding: 8px 16px;
+  border: 1.5px solid var(--good); border-radius: 999px;
+  color: var(--good); font-size: .86rem; font-weight: 650;
+  background: var(--surface);
+  background: color-mix(in srgb, var(--good) 8%, var(--surface));
+}
+.gained .g-eq { font-family: var(--mono); font-size: .82rem; }
+.recap-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 1.2em 0; }
+.recap-row .gained { margin: 0; font-size: .8rem; padding: 5px 13px; }
+
+/* ---------- 结果徽标 ---------- */
+.outcome {
+  font-family: var(--mono); font-size: .84rem; font-weight: 600;
+  padding: 4px 12px; border-radius: 8px; display: inline-block;
+}
+.outcome.spike { color: #7BE3A5; background: #16301F; }
+.outcome.fail { color: #E8A0A0; background: #331C1C; }
+.outcome.idle { color: var(--rig-muted); background: var(--rig-panel); }
+
+/* 声音开关 */
+.snd-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: .8rem; color: var(--rig-muted); cursor: pointer; user-select: none; }
+.snd-toggle input { accent-color: var(--rig-v); }
+
+/* ---------- 实验布局 ---------- */
+.ap-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 920px) { .ap-grid { grid-template-columns: 1fr; } }
+.story {
+  background: var(--rig-panel); border: 1px solid var(--rig-line); border-radius: 10px;
+  padding: 12px 16px; font-size: .9rem; line-height: 1.75; color: var(--rig-ink);
+  min-height: 4.6em; margin-top: 12px;
+}
+.story b { color: var(--rig-v); }
+
+/* ---------- 权重热图（沿用 lec02 视觉） ---------- */
+.train-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 920px) { .train-grid { grid-template-columns: 1fr; } }
+.wmap-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.wmap-item { text-align: center; }
+.wmap {
+  display: grid; grid-template-columns: repeat(5, 17px); grid-auto-rows: 17px; gap: 1px;
+  padding: 6px; background: var(--rig-panel);
+  border: 1.5px solid var(--rig-line); border-radius: 8px;
+}
+.wmap.small { grid-template-columns: repeat(5, 12px); grid-auto-rows: 12px; }
+.wmap.win { border-color: #57D08A; box-shadow: 0 0 9px #57D08A55; }
+.wmap i { display: block; border-radius: 2px; background: #1A2030; }
+.wmap-label { font-family: var(--mono); font-size: .7rem; color: var(--rig-muted); margin-top: 5px; }
+.stim-wrap { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+/* 浅色版热图（第 1 节静态重放） */
+.panel .wmap { background: var(--surface-2); border-color: var(--line); }
+.panel .wmap i { background: var(--surface-2); }
+
+/* ---------- 装配台网格 ---------- */
+.asm-wrap { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.asm-grid {
+  display: grid; grid-template-columns: repeat(12, 26px); grid-auto-rows: 26px; gap: 2px;
+  padding: 8px; background: var(--rig-panel); border: 1px solid var(--rig-line); border-radius: 10px;
+  position: relative;
+}
+@media (max-width: 640px) { .asm-grid { grid-template-columns: repeat(12, 20px); grid-auto-rows: 20px; } }
+.asm-cell {
+  border-radius: 4px; background: #1A2030; cursor: pointer; position: relative;
+  border: none; padding: 0;
+}
+.asm-cell:hover { background: #232B3B; }
+.asm-cell.probe-path { background: #1E2839; }
+.asm-cell.unit { background: radial-gradient(circle at 50% 50%, #F0E6FF 0%, #BFA3EF 34%, #2A2440 62%, #1A2030 78%); }
+.asm-bars { min-width: 220px; flex: 1; }
+.asm-bar-row { display: grid; grid-template-columns: 3.2em 1fr 4.5ch; gap: 10px; align-items: center; margin: 8px 0; font-family: var(--mono); font-size: .8rem; }
+.asm-bar-row .ab-glyph { color: var(--rig-muted); }
+.asm-bar-row .ab-track { position: relative; height: 14px; background: var(--rig-grid); border-radius: 7px; overflow: visible; }
+.asm-bar-row .ab-fill { position: absolute; inset: 0 auto 0 0; border-radius: 7px; background: var(--rig-k); width: 0; transition: width .3s; }
+.asm-bar-row.pass .ab-fill { background: #57D08A; }
+.asm-bar-row .ab-theta { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--rig-na); }
+.asm-bar-row .ab-val { color: var(--rig-ink); text-align: right; }
+
+/* ---------- 等变条带（浅色内联组件，随主题） ---------- */
+.eqv-card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px; margin: 1.6em 0; box-shadow: var(--shadow); max-width: 760px;
+}
+.eqv-row { display: grid; grid-template-columns: 7.5em 1fr; gap: 12px; align-items: center; margin: 10px 0; }
+.eqv-row .er-label { font-size: .78rem; color: var(--muted); text-align: right; line-height: 1.4; }
+.eqv-row .er-label b { color: var(--ink-2); }
+.eqv-strip { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; }
+.eqv-strip i { display: block; aspect-ratio: 1; border-radius: 3px; background: var(--surface-2); border: 1px solid var(--line-soft); }
+.eqv-win-note { font-size: .74rem; color: var(--muted); font-family: var(--mono); }
+.eqv-pool-out {
+  width: 46px; height: 46px; border-radius: 10px; border: 2px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-weight: 700; font-size: 1rem; color: var(--accent);
+  background: var(--accent-soft);
+}
+.eqv-slider-row { display: flex; gap: 14px; align-items: center; margin-top: 14px; }
+.eqv-slider-row input[type="range"] { flex: 1; accent-color: var(--accent); }
+.eqv-zone { font-size: .76rem; color: var(--muted); }
+
+/* ---------- 视网膜波台 ---------- */
+.wave-grid-wrap { position: relative; display: inline-block; }
+.wave-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .74rem; color: var(--rig-muted); margin-top: 8px; }
+.wave-legend .wl { display: inline-flex; align-items: center; gap: 6px; }
+.wave-legend .sw { width: 10px; height: 10px; border-radius: 50%; }
+.wave-units { display: flex; gap: 10px; flex-wrap: wrap; }
+.wave-unit { text-align: center; }
+.wave-unit .wu-map { display: grid; grid-template-columns: repeat(9, 9px); grid-auto-rows: 9px; gap: 1px; padding: 4px; background: var(--rig-panel); border: 1px solid var(--rig-line); border-radius: 6px; }
+.wave-unit .wu-map i { display: block; border-radius: 1px; background: #1A2030; }
+.wave-unit .wu-label { font-family: var(--mono); font-size: .66rem; color: var(--rig-muted); margin-top: 3px; }
+.wave-readout { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+.progressbar { flex: 1; min-width: 120px; height: 8px; border-radius: 4px; background: var(--rig-grid); overflow: hidden; }
+.progressbar i { display: block; height: 100%; background: var(--rig-v); width: 0; border-radius: 4px; }
+
+/* ---------- 通路一行图 / 家谱 ---------- */
+.pathway-fig { margin: 1.6em 0; }
+.pathway-fig svg { width: 100%; max-width: 720px; height: auto; display: block; }
+.lineage-fig { margin: 1.8em 0; }
+.lineage-fig svg { width: 100%; max-width: 880px; height: auto; display: block; }
+
+/* ---------- 图表卡 ---------- */
+.chart-card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px; margin: 1.6em 0; box-shadow: var(--shadow);
+}
+.chart-card canvas { display: block; width: 100%; }
+.chart-title { font-size: .85rem; font-weight: 600; color: var(--ink-2); margin-bottom: 10px; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: .8rem; color: var(--ink-2); margin-top: 10px; }
+.legend .li { display: flex; align-items: center; gap: 6px; }
+.legend .sw { width: 14px; height: 3px; border-radius: 2px; }
+</style>
+
+<div id="progress" role="presentation"></div>
+
+<nav id="rail" aria-label="课程目录">
+  <a class="rail-home" href="/">← 课程主页</a>
+  <div class="rail-course">神经科学导论</div>
+  <div class="rail-lec">第三讲<br>视觉皮层：大脑的卷积网络</div>
+  <div class="rail-group">第一课时 · 一根光条测穿一台机器</div>
+  <a href="#s0" data-sec="s0">引言 · 旧案重开</a>
+  <a href="#s1" data-sec="s1">1 · 视网膜不传像素</a>
+  <a href="#s2" data-sec="s2">2 · 1958 · 一根光条</a>
+  <a href="#s3" data-sec="s3">3 · 位置这一刀</a>
+  <a href="#s4" data-sec="s4">4 · 拼出一枚卷积核</a>
+  <div class="rail-group">第二课时 · 不变性与它的训练数据</div>
+  <a href="#s5" data-sec="s5">5 · 复杂细胞</a>
+  <a href="#s6" data-sec="s6">6 · 等变与不变</a>
+  <a href="#s7" data-sec="s7">7 · 复诊</a>
+  <a href="#s8" data-sec="s8">8 · 家谱一页</a>
+  <a href="#s9" data-sec="s9">9 · 睁眼之前</a>
+  <a href="#s10" data-sec="s10">10 · 下课</a>
+  <div class="rail-hint">
+    键盘 <kbd>←</kbd> <kbd>→</kbd> 切换小节<br>
+    所有仪器都可以动手操作
+  </div>
+</nav>
+
+<div id="topbar">
+  <a class="tb-home" href="/" aria-label="课程主页">⌂</a>
+  <button class="btn ghost" id="tb-prev" aria-label="上一节" style="padding:6px 12px">←</button>
+  <select id="tb-select" aria-label="跳转到小节"></select>
+  <button class="btn ghost" id="tb-next" aria-label="下一节" style="padding:6px 12px">→</button>
+</div>
+
+<main>
+
+<!-- ============ 引言 · 旧案重开 ============ -->
+<section class="scene cover" id="s0" data-title="引言 · 旧案重开">
+  <div class="wrap">
+    <div class="c-course">神经科学导论 · 南京大学人工智能学院 · 第三讲</div>
+    <h1>视觉皮层：大脑的卷积网络</h1>
+    <p class="c-sub">不变性从哪来？睁眼之前，皮层拿什么当训练数据？</p>
+
+    <p style="max-width:60ch;margin-top:26px">上一讲下课前留了两桩悬案：光条挪个位置，竞争学习就认不出——<strong>不变性从哪来？</strong>睁眼之前，皮层拿什么当训练数据？还许了一个愿：看 CNN 从大脑身上抄走了哪几样。今天两案并一案审。</p>
+
+    <div class="panel" style="margin:1.8em 0">
+      <div class="p-title">第二讲结案照（原参数重放）：同一台竞争学习农场，只差一个开关</div>
+      <div style="display:flex;gap:34px;flex-wrap:wrap">
+        <div>
+          <div class="wmap-row" id="replay-clean" style="gap:8px"></div>
+          <div class="wmap-label" style="color:var(--muted)">位置固定 → 四张热图干净分家</div>
+        </div>
+        <div>
+          <div class="wmap-row" id="replay-jitter" style="gap:8px"></div>
+          <div class="wmap-label" style="color:var(--bad);font-weight:700">位置抖动 ±1 格 → 散</div>
+        </div>
+      </div>
+    </div>
+
+    <p style="max-width:60ch">而你自己的眼睛每秒都在做比 ±1 格狠得多的事：微眼跳<span class="term">microsaccade</span>让视网膜上的像不停跳动，你却从没觉得世界在抖。真实皮层不怕光条挪一格。它靠什么？今天把电极插进真实的视觉系统，把答案<strong>一级一级测出来</strong>。</p>
+
+    <div class="tiles">
+      <div class="tile">
+        <div class="t-label">每只眼给大脑的带宽</div>
+        <div class="t-num">~10⁶ 根轴突</div>
+        <div class="t-sub">视神经的全部纤维——1 亿多个光感受器最后挤过这根管道</div>
+      </div>
+      <div class="tile">
+        <div class="t-label">微眼跳</div>
+        <div class="t-num">1–3 次/秒</div>
+        <div class="t-sub">视网膜上的像素永远在抖，你的知觉却稳如相机架</div>
+      </div>
+      <div class="tile">
+        <div class="t-label">猕猴皮层里管视觉的</div>
+        <div class="t-num">≈50%</div>
+        <div class="t-sub">大脑给视觉下的本钱比任何感官都重</div>
+      </div>
+      <div class="tile">
+        <div class="t-label">V1 里来自 LGN 的突触</div>
+        <div class="t-num">~5%</div>
+        <div class="t-sub">前馈只是零头——这笔账下课前再算</div>
+      </div>
+    </div>
+
+    <div class="thesis reveal">
+      <span class="t-mark">本讲唯一要讲透的一件事</span>
+      平移不变性不是学出来的技能，是<strong>「模板匹配 → 池化」两级接线</strong>造出来的产物；而这套接线在睁眼之前，就已经被视网膜<strong>自己造的训练数据</strong>用第二讲的局部规则预训练过。
+    </div>
+
+    <div class="pathway-fig" aria-hidden="false">
+      <svg viewBox="0 0 720 96" role="img" aria-label="今天的测量路线：视网膜到LGN到V1（简单细胞、复杂细胞），只走这一条主干">
+        <g font-size="13.5" font-weight="600" text-anchor="middle">
+          <rect x="16" y="26" width="130" height="42" rx="10" fill="var(--surface)" stroke="var(--line)"/>
+          <text x="81" y="52" fill="var(--ink)">视网膜</text>
+          <rect x="196" y="26" width="130" height="42" rx="10" fill="var(--surface)" stroke="var(--line)"/>
+          <text x="261" y="52" fill="var(--ink)">LGN</text>
+          <rect x="376" y="26" width="328" height="42" rx="10" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.6"/>
+          <text x="540" y="52" fill="var(--ink)">V1：简单细胞 → 复杂细胞</text>
+        </g>
+        <g stroke="var(--muted)" stroke-width="1.6" fill="var(--muted)">
+          <path d="M146 47 h40"/><polygon points="186,42 196,47 186,52"/>
+          <path d="M326 47 h40"/><polygon points="366,42 376,47 366,52"/>
+        </g>
+        <text x="16" y="88" font-size="11" fill="var(--muted)">测量路线：只走这一条主干；每站插一根电极，先猜再测</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1 · 视网膜不传像素 ============ -->
+<section class="scene" id="s1" data-title="1 · 视网膜不传像素">
+  <div class="wrap wide">
+    <div class="kicker">第 1 节 <span class="k-time">第一课时</span></div>
+    <h2>视网膜不传像素</h2>
+    <p class="lede">通路第一站。电极插进外侧膝状体<span class="term">lateral geniculate nucleus, LGN</span>——视网膜到皮层的中继站，它的细胞和视网膜输出细胞讲同一种话。先猜，再测。</p>
+
+    <div class="rig" id="rig-lgn">
+      <div class="rig-head">
+        <span class="led" id="lgn-led"></span>
+        <span class="rig-name">LGN PROBE · 单细胞记录 · 刺激屏 10°×10°</span>
+        <span class="rig-spacer"></span>
+        <label class="snd-toggle"><input type="checkbox" id="lgn-snd">扬声器（放电咔嗒声）</label>
+      </div>
+      <div class="rig-body">
+        <div class="mini-predict" id="mp-lgn">
+          <div class="mp-q">先按下你的猜测：把整个屏幕一次点亮，这只细胞的放电会？</div>
+          <div class="mp-opts">
+            <button data-i="0">猛增——光子最多</button>
+            <button data-i="1">几乎不变</button>
+            <button data-i="2">被压到基线以下</button>
+          </div>
+          <div class="mp-reveal" hidden>你刚测到了：满屏照明，它<b>几乎不理你</b>。中心的「亮」被周边的「亮」抵消——它汇报的不是这里有多亮，是<b>这里和旁边差多少</b>。</div>
+        </div>
+        <div class="ap-grid">
+          <div>
+            <div class="scope-frame"><canvas id="lgn-screen" height="340" role="img" aria-label="刺激屏：可拖动的光斑；细胞感受野位置未知，需要自己找"></canvas></div>
+            <div class="ctl-row">
+              <div class="ctl" style="flex:1;min-width:180px">
+                <span class="ctl-label"><span>光斑直径</span><span class="ctl-val" id="lgn-d-val">1.0°</span></span>
+                <input type="range" id="lgn-d" min="0.2" max="8" step="0.1" value="1" aria-label="光斑直径（度）">
+              </div>
+              <button class="btn ghost" id="lgn-full">满屏照明</button>
+              <button class="btn ghost" id="lgn-reset">清空记录</button>
+            </div>
+            <div class="chip-note" style="margin-top:8px">拖动光斑找细胞。光斑停住 0.6 s 自动把「直径 → 放电率」记成右图一个点（只在放电明显高于基线时有位置意义——先把位置找对）。</div>
+          </div>
+          <div>
+            <div class="scope-frame"><canvas id="lgn-scope" height="90" role="img" aria-label="示波器：当前放电的脉冲刻线"></canvas></div>
+            <div class="ctl-row" style="align-items:baseline">
+              <span class="outcome idle" id="lgn-rate">— Hz</span>
+              <span class="chip-note" id="lgn-note" aria-live="polite">基线自发放电约 5 Hz。电极已就位，光斑在你手上。</span>
+            </div>
+            <div class="scope-frame" style="margin-top:12px"><canvas id="lgn-chart" height="210" role="img" aria-label="直径-响应曲线：光斑直径对放电率"></canvas></div>
+          </div>
+        </div>
+        <div class="task"><span class="task-tag">动手</span><span>①拖动光斑，找到让这只细胞放电最猛的<strong>位置和直径</strong>；②把直径继续放大，测出「更大反而更弱」；③按「满屏照明」再测一次。</span></div>
+        <div class="story" id="lgn-story" aria-live="polite">屏幕上任何地方都可能藏着这只细胞的地盘。移动光斑，听放电。</div>
+      </div>
+    </div>
+
+    <div id="lgn-payoff" hidden>
+      <p>你测出的这个结构叫<strong>中心-周边拮抗</strong><span class="term">center–surround antagonism</span>：中心一小片光推它，套在外面的一圈光拉它。光斑盖住中心时最猛；再放大就压到周边，响应反而掉；满屏时推拉相抵，几乎回到基线。</p>
+      <p>所以视网膜与 LGN 传给皮层的<strong>不是亮度图，是局部对比图</strong>。还有一件此刻值得亲手确认的事：这只细胞对朝向<strong>毫无偏好</strong>——转动的条、斜的条、竖的条，只要盖住中心的量一样，它一视同仁。朝向选择性此刻在这条通路上还<strong>不存在</strong>。<span class="mlb"><span class="b">中心-周边</span><span class="arr">⇄</span><span class="m">DoG / 边缘增强预处理</span></span></p>
+      <div class="gained">✓ 已测得 <span class="g-eq">中心-周边拮抗</span>——报告对比，不报告亮度</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2 · 1958 · 一根光条 ============ -->
+<section class="scene" id="s2" data-title="2 · 1958 · 一根光条">
+  <div class="wrap wide">
+    <div class="kicker">第 2 节 <span class="k-time">第一课时</span></div>
+    <h2>1958 · 一根光条</h2>
+    <p class="lede">电极前进到初级视皮层 V1。1958 年，Hubel 和 Wiesel 对着一只麻醉猫的 V1 细胞投光点，投了几个小时——细胞几乎不响。他们靠扬声器听放电，屏幕上是一片令人绝望的安静。</p>
+
+    <div class="predict" data-predict="p3-slide" data-answer="1">
+      <div class="pq"><span class="p-tag">先投票</span>后来它突然疯狂放电。触发它的是什么？</div>
+      <div class="opts">
+        <button data-i="0">光点终于挪对了位置</button>
+        <button data-i="1">换幻灯片时，玻璃片的边缘扫过了屏幕</button>
+        <button data-i="2">麻醉变浅，猫动了一下</button>
+        <button data-i="3">电极滑到了另一只细胞上</button>
+      </div>
+      <div class="p-reveal">是玻璃片的边。那个年代的投影仪要往里插玻璃幻灯片，换片时<b>玻璃片的暗边缘扫过屏幕</b>——细胞瞬间开火，像机枪。光点不行、亮面不行，一条<b>带朝向的边</b>一扫就着。他们抓住这个意外，把接下来二十多年花在了这条边上（实验 1958 年，论文 1959 年）。你手里这根光条，就是那片玻璃的边。</div>
+    </div>
+
+    <div class="rig" id="rig-bar">
+      <div class="rig-head">
+        <span class="led" id="bar-led"></span>
+        <span class="rig-name">V1 PROBE · 光条台 · 旋转模式</span>
+        <span class="rig-spacer"></span>
+        <label class="snd-toggle"><input type="checkbox" id="bar-snd">扬声器</label>
+      </div>
+      <div class="rig-body">
+        <div class="ap-grid">
+          <div>
+            <div class="scope-frame"><canvas id="bar-screen" height="340" role="img" aria-label="刺激屏：中央光条，可旋转"></canvas></div>
+            <div class="ctl-row">
+              <div class="ctl" style="flex:1;min-width:200px">
+                <span class="ctl-label"><span>光条朝向</span><span class="ctl-val" id="bar-ang-val">0°</span></span>
+                <input type="range" id="bar-ang" min="0" max="180" step="5" value="0" aria-label="光条朝向（度）">
+              </div>
+              <button class="btn ghost" id="bar-m15">−15°</button>
+              <button class="btn ghost" id="bar-p15">+15°</button>
+              <button class="btn ghost" id="bar-spot">光点（1.2°）</button>
+            </div>
+          </div>
+          <div>
+            <div class="scope-frame"><canvas id="bar-scope" height="90" role="img" aria-label="示波器：脉冲刻线"></canvas></div>
+            <div class="ctl-row" style="align-items:baseline">
+              <span class="outcome idle" id="bar-rate">— Hz</span>
+              <span class="chip-note" id="bar-note" aria-live="polite">光条已就位。转出它最喜欢的角度。</span>
+            </div>
+            <div class="scope-frame" style="margin-top:12px"><canvas id="bar-chart" height="210" role="img" aria-label="朝向调谐曲线：放电率对朝向"></canvas></div>
+            <div class="ctl-row">
+              <div class="ctl" style="flex:1;min-width:200px">
+                <span class="ctl-label"><span>你的答案 · 最佳朝向</span><span class="ctl-val" id="bar-dial-val">90°</span></span>
+                <input type="range" id="bar-dial" min="0" max="180" step="1" value="90" aria-label="报出最佳朝向（度）">
+              </div>
+              <button class="btn" id="bar-submit">报出答案</button>
+            </div>
+          </div>
+        </div>
+        <div class="task"><span class="task-tag">动手</span><span>①先按「光点」打这只 V1 细胞，记下它的冷淡；②换光条，每 15° 测一点、至少测 6 个角度，让调谐曲线从你的点里浮现；③把你的答案拨到「最佳朝向」上报出，误差 ±10° 以内。</span></div>
+        <div class="story" id="bar-story" aria-live="polite">上一节的 LGN 细胞爱光斑。这只不一样——它在等一个特定的角度。</div>
+      </div>
+    </div>
+
+    <div id="bar-payoff" hidden>
+      <p>这条曲线叫<strong>朝向调谐曲线</strong><span class="term">orientation tuning curve</span>：只在一个窄窗口里开火，转开 30° 就掉一半，转到垂直就装死。这样的细胞铺满整个 V1，各自钟情一个角度。而它楼下的 LGN 对朝向毫无感觉——<strong>朝向选择性是 V1 亲手造出来的</strong>。怎么造的？第 4 节你亲手接一遍。这条曲线本身，也是第 4 节的验收标准。</p>
+      <div class="gained">✓ 已测得 <span class="g-eq">朝向调谐曲线</span>——挑食的第一种口味：朝向</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3 · 位置这一刀 ============ -->
+<section class="scene" id="s3" data-title="3 · 位置这一刀">
+  <div class="wrap wide">
+    <div class="kicker">第 3 节 <span class="k-time">第一课时</span></div>
+    <h2>位置这一刀</h2>
+    <p class="lede">一次投票，一次测量，别的不讲。</p>
+
+    <div class="predict" data-predict="p3-shift" data-answer="0">
+      <div class="pq"><span class="p-tag">先投票</span>保持最佳朝向<strong>一动不动</strong>，把光条平移出刚才那片区域。这只细胞会？</div>
+      <div class="opts">
+        <button data-i="0">几乎不响了</button>
+        <button data-i="1">照样响——它认的是朝向</button>
+        <button data-i="2">反转成抑制</button>
+      </div>
+      <div class="p-reveal">很多人押 B——「它是朝向检测器，位置无所谓」。一分钟后你自己测出答案：它有一片自己的<b>感受野</b><span style="font-style:italic;color:var(--muted)"> receptive field</span>，光条出了这片地，朝向再对也白搭。</div>
+    </div>
+
+    <div class="rig" id="rig-bar2">
+      <div class="rig-head">
+        <span class="led" id="bar2-led"></span>
+        <span class="rig-name">V1 PROBE · 光条台 · 平移模式</span>
+      </div>
+      <div class="rig-body">
+        <div class="ap-grid">
+          <div>
+            <div class="scope-frame"><canvas id="bar2-screen" height="300" role="img" aria-label="刺激屏：光条锁定最佳朝向，沿垂直导轨平移"></canvas></div>
+            <div class="ctl-row">
+              <div class="ctl" style="flex:1;min-width:220px">
+                <span class="ctl-label"><span>位置（垂直于光条）</span><span class="ctl-val" id="bar2-pos-val">0.0°</span></span>
+                <input type="range" id="bar2-pos" min="-3" max="3" step="0.25" value="0" aria-label="光条位置（度）">
+              </div>
+            </div>
+            <div class="chip-note" style="margin-top:8px">朝向已锁定在你第 2 节测出的最佳角度。停住 0.6 s 自动记一个点。</div>
+          </div>
+          <div>
+            <div class="scope-frame"><canvas id="bar2-chart" height="240" role="img" aria-label="位置-响应曲线：归一化响应对位置"></canvas></div>
+            <div class="ctl-row" style="align-items:baseline">
+              <span class="outcome idle" id="bar2-rate">— %</span>
+              <span class="chip-note" id="bar2-note" aria-live="polite">从中央开始，一步一步往外挪。</span>
+            </div>
+          </div>
+        </div>
+        <div class="task"><span class="task-tag">动手</span><span>保持最佳朝向一动不动，把光条一步一步移出这片区域：测出响应从峰值掉到 <strong>20% 以下</strong>的位置（两侧都试，至少 5 个位置点、覆盖到 |位置| ≥ 2°）。</span></div>
+        <div class="story" id="bar2-story" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div id="bar2-payoff" hidden>
+      <p>落点一句：这只细胞<strong>挑朝向，也挑位置</strong>。这就是上一讲抖动实验里发生的事——同一朝向换个位置，检测器就不认了。第二讲农场的病，在皮层第一级的单细胞身上<strong>原样存在</strong>。皮层显然没停在这一级；但先把这一级本身看明白。</p>
+      <div class="gained">✓ 已测得 <span class="g-eq">位置敏感</span>——感受野是一片有边界的地</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4 · 拼出一枚卷积核 ============ -->
+<section class="scene" id="s4" data-title="4 · 拼出一枚卷积核">
+  <div class="wrap wide">
+    <div class="kicker">第 4 节 <span class="k-time">第一课时</span></div>
+    <h2>拼出一枚卷积核</h2>
+    <p class="lede">你刚测的那种细胞，Hubel 与 Wiesel 叫它<strong>简单细胞</strong><span class="term">simple cell</span>。1962 年他们在论文里画了一张接线猜想图：朝向选择性不用魔法——把几只 LGN 细胞的中心<strong>排成一条线</strong>，汇到一起，再加一道阈值，就够了。下面这台装配台，让你亲手验证这张图。</p>
+
+    <div class="rig" id="rig-asm">
+      <div class="rig-head">
+        <span class="led" id="asm-led"></span>
+        <span class="rig-name">ASSEMBLY BENCH · 简单细胞装配台</span>
+        <span class="rig-spacer"></span>
+        <span class="chip-note">已放 <b id="asm-count" style="color:var(--rig-ink)">0</b>/5 个 LGN 单元</span>
+      </div>
+      <div class="rig-body">
+        <div class="mini-predict" id="mp-asm">
+          <div class="mp-q">先按下你的猜测：把三个 LGN 中心（每个都是圆的、无朝向偏好）排成一条斜线，输出细胞会？</div>
+          <div class="mp-opts">
+            <button data-i="0">有朝向偏好——沿排列方向</button>
+            <button data-i="1">有朝向偏好——垂直于排列方向</button>
+            <button data-i="2">没有偏好——圆的叠加还是圆的</button>
+          </div>
+          <div class="mp-reveal" hidden>探针会揭晓。「圆的叠加还是圆的」错在哪：单个部件确实各向同性，但<b>排列本身有方向</b>——沿线的光条同时喂饱所有中心，横过来的只喂到一个。方向藏在接线里，不在部件里。</div>
+        </div>
+        <div class="asm-wrap">
+          <div>
+            <div class="asm-grid" id="asm-grid" role="group" aria-label="12×12 接线网格：点击放置或移除 LGN 单元"></div>
+            <div class="chip-note" style="margin-top:8px">点击格子放置 / 移除 LGN 单元（亮心暗环）。探针光条沿对角线与中线扫过<strong>网格中心</strong>——淡色路径已标出。</div>
+          </div>
+          <div class="asm-bars">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <svg width="72" height="44" viewBox="0 0 72 44" aria-hidden="true">
+                <text x="8" y="27" font-size="15" fill="#C9D1E0" font-family="serif" font-style="italic">Σ</text>
+                <path d="M26 33 h12 l10 -22" stroke="#BFA3EF" stroke-width="2.2" fill="none"/>
+                <text x="30" y="14" font-size="9" fill="#7C8598">ReLU</text>
+              </svg>
+              <span class="chip-note">求和 → 阈值。这道拐弯就是第一讲从实测 f–I 曲线里拟合出的那条 ReLU。</span>
+            </div>
+            <div id="asm-bar-rows"></div>
+            <div class="ctl-row">
+              <button class="btn" id="asm-probe">探针 ×4（扫四个朝向）</button>
+              <button class="btn ghost" id="asm-clear">清空</button>
+              <span class="outcome idle" id="asm-verdict">—</span>
+            </div>
+          </div>
+        </div>
+        <div class="task"><span class="task-tag">动手</span><span>用不超过 5 个 LGN 单元，接出一只「<strong>45° 通过、135° 不通过</strong>」的细胞：45° 光条响应过阈值线，135° 不过。接通之后，把你的排布和 1962 年论文里的接线图对一眼。</span></div>
+        <div class="story" id="asm-story" aria-live="polite">网格是空的。回忆一下你在第 1、2 节测到的两种细胞，把楼下的零件接成楼上的挑食者。</div>
+      </div>
+    </div>
+
+    <div id="asm-payoff" hidden>
+      <div class="panel" style="margin:1.6em 0">
+        <div class="p-title">把三张图放在一起看</div>
+        <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start">
+          <div class="wmap-item"><canvas id="asm-cmp-you" width="120" height="120" style="width:120px;border-radius:8px"></canvas><div class="wmap-label" style="color:var(--muted)">你的排布</div></div>
+          <div class="wmap-item"><svg id="asm-cmp-hw" width="120" height="120" viewBox="0 0 120 120" aria-label="Hubel 与 Wiesel 1962 接线示意重绘：一排圆形感受野汇聚到一个椭圆形感受野"><g fill="none" stroke="var(--ink-2)"><circle cx="30" cy="90" r="13"/><circle cx="52" cy="68" r="13"/><circle cx="74" cy="46" r="13"/><circle cx="30" cy="90" r="5" fill="var(--accent)" stroke="none"/><circle cx="52" cy="68" r="5" fill="var(--accent)" stroke="none"/><circle cx="74" cy="46" r="5" fill="var(--accent)" stroke="none"/><ellipse cx="52" cy="68" rx="44" ry="20" transform="rotate(-45 52 68)" stroke="var(--accent)" stroke-dasharray="5 4"/></g><text x="6" y="16" font-size="10" fill="var(--muted)">H&amp;W 1962（示意重绘）</text></svg><div class="wmap-label" style="color:var(--muted)">1962 年的接线猜想</div></div>
+          <div class="wmap-item"><div class="wmap small" id="asm-cmp-farm" style="background:var(--surface-2);border-color:var(--line)"></div><div class="wmap-label" style="color:var(--muted)">第二讲农场学出的权重</div></div>
+        </div>
+        <p class="small" style="margin:12px 0 0">同一个形状出现了三次：你手动接的、1962 年猜想的、上一讲局部规则自己长出来的。1962 年画在论文示意图上，1980 年被 Neocognitron 抄走，一直抄到你们的 conv1。<span class="mlb"><span class="b">对齐的 LGN 中心 + ReLU</span><span class="arr">⇄</span><span class="m">卷积核的一次乘加 + 激活</span></span></p>
+      </div>
+
+      <p>注意此刻你手里只有<strong>一个位置的一份模板</strong>。隔壁位置还有一只同款 45° 细胞——于是一个直击要害的问题：</p>
+
+      <div class="predict" data-predict="p3-share-weights" data-answer="1">
+        <div class="pq"><span class="p-tag">先投票</span>隔壁位置那只同款 45° 细胞，和你刚接好的这只，用的是<strong>同一份权重</strong>吗？</div>
+        <div class="opts">
+          <button data-i="0">同一份——像卷积核在两处复用</button>
+          <button data-i="1">不是——两套独立的突触，各自长出来</button>
+          <button data-i="2">大部分共享，边角各自微调</button>
+        </div>
+        <div class="p-reveal">不是。<b>没有哪根轴突负责把权重复制过去</b>——皮层里不存在任何让相隔几毫米的两组突触保持同一份数值的机制。每个位置都是一套独立的接线，独立地长。卷积核的 Ctrl+C，皮层做不了。<b>那各处的检测器怎么长得差不多？这个问题先记下，第 9 节回答。</b></div>
+      </div>
+
+      <div class="gained">✓ 已接通 <span class="g-eq">卷积核</span>——排列造出朝向，阈值把它剪利索</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 课间 ============ -->
+<section class="scene interlude" id="break" data-title="课间">
+  <div class="wrap">
+    <div class="i-mark">第一课时完 · 课间休息</div>
+    <div class="i-text">上半场测到手的：报告对比的 LGN、挑朝向也挑位置的简单细胞、你亲手接通的卷积核。<br>还有一个没着落的问题：没有 Ctrl+C，各处的卷积核怎么长得一样？</div>
+    <p class="small" style="margin-top:14px">下半场先治第二讲的抖动病，再回答这个问题。</p>
+  </div>
+</section>
+
+<!-- ============ 5 · 复杂细胞 ============ -->
+<section class="scene" id="s5" data-title="5 · 复杂细胞">
+  <div class="wrap wide">
+    <div class="kicker">第 5 节 <span class="k-time">第二课时</span></div>
+    <h2>复杂细胞</h2>
+    <p class="lede">电极再进一步，换到一只新细胞。它也爱光条、也挑朝向——但先别急着下结论。</p>
+
+    <div class="predict" data-predict="p3-complex" data-answer="1">
+      <div class="pq"><span class="p-tag">先投票</span>同一根光条、还是它最爱的朝向，在这只新细胞的感受野内<strong>平移</strong>——它会？</div>
+      <div class="opts">
+        <button data-i="0">和上一只一样，挪出去就哑</button>
+        <button data-i="1">移到哪都响</button>
+        <button data-i="2">变得对什么朝向都响</button>
+      </div>
+      <div class="p-reveal">用下面的仪器把两只细胞<b>对着测</b>——一条曲线一只细胞，四组数据一张图。测完再看它是怎么办到的。</div>
+    </div>
+
+    <div class="rig" id="rig-cx">
+      <div class="rig-head">
+        <span class="led" id="cx-led"></span>
+        <span class="rig-name">DUAL PROBE · 双通道位置容忍台</span>
+        <span class="rig-spacer"></span>
+        <div class="presets" role="group" aria-label="记录通道">
+          <button class="mini on" id="cx-ch-s" aria-pressed="true">通道 A · 简单细胞</button>
+          <button class="mini" id="cx-ch-c" aria-pressed="false">通道 B · 新细胞</button>
+        </div>
+      </div>
+      <div class="rig-body">
+        <div class="ap-grid">
+          <div>
+            <div class="scope-frame"><canvas id="cx-screen" height="300" role="img" aria-label="刺激屏：光条锁定最佳朝向，沿导轨平移"></canvas></div>
+            <div class="ctl-row">
+              <div class="ctl" style="flex:1;min-width:220px">
+                <span class="ctl-label"><span>位置（垂直于光条）</span><span class="ctl-val" id="cx-pos-val">0.0°</span></span>
+                <input type="range" id="cx-pos" min="-3" max="3" step="0.25" value="0" aria-label="光条位置（度）">
+              </div>
+              <button class="btn ghost" id="cx-orth">转 90° 对照</button>
+            </div>
+            <div class="chip-note" style="margin-top:8px">两只细胞的感受野对齐在同一片视野上；停住 0.6 s 自动把当前通道记一个点。</div>
+          </div>
+          <div>
+            <div class="scope-frame"><canvas id="cx-chart" height="270" role="img" aria-label="位置容忍曲线：简单细胞与新细胞的归一化响应对位置，另有两个90度对照点"></canvas></div>
+            <div class="ctl-row" style="align-items:baseline">
+              <span class="outcome idle" id="cx-rate">— %</span>
+              <span class="chip-note" id="cx-note" aria-live="polite">通道 A 在录。先把熟悉的那条曲线补齐。</span>
+            </div>
+          </div>
+        </div>
+        <div class="task"><span class="task-tag">动手</span><span>给两只细胞各测一条位置容忍曲线（各至少 5 个位置点、覆盖 ≥4° 跨度），再各补一个「转 90°」的对照点——<strong>四组数据画在同一张图上</strong>。</span></div>
+        <div class="story" id="cx-story" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div id="cx-payoff" hidden>
+      <p>图上就是结论：新细胞<strong>挑朝向、不挑位置</strong>——平移到哪都响，转 90° 立刻哑。Hubel 与 Wiesel 叫它<strong>复杂细胞</strong><span class="term">complex cell</span>。</p>
+      <p>它是怎么办到的？他们的猜想接线：复杂细胞把<strong>一排「同朝向、不同位置」的简单细胞</strong>的报告汇总上来。任何一个下属看到光条，它就响——<strong>位置信息在汇总中被抹掉，朝向信息留下来</strong>。它不是不看位置，是把一排看不同位置的报告收上来，汇总的时候把「在哪」扔掉了。</p>
+      <svg viewBox="0 0 640 150" role="img" aria-label="复杂细胞接线图：一排同朝向、错开位置的简单细胞汇聚到一只复杂细胞" style="width:100%;max-width:560px;height:auto">
+        <g fill="none" stroke="var(--ink-2)">
+          <ellipse cx="70" cy="44" rx="34" ry="13" transform="rotate(-45 70 44)" />
+          <ellipse cx="170" cy="44" rx="34" ry="13" transform="rotate(-45 170 44)" />
+          <ellipse cx="270" cy="44" rx="34" ry="13" transform="rotate(-45 270 44)" />
+          <ellipse cx="370" cy="44" rx="34" ry="13" transform="rotate(-45 370 44)" />
+        </g>
+        <g stroke="var(--accent)" stroke-width="1.6" fill="none">
+          <path d="M70 78 Q220 118 500 108"/>
+          <path d="M170 78 Q260 116 500 110"/>
+          <path d="M270 78 Q330 112 500 112"/>
+          <path d="M370 78 Q420 108 500 114"/>
+        </g>
+        <rect x="500" y="92" width="112" height="40" rx="10" fill="var(--accent-soft)" stroke="var(--accent)"/>
+        <text x="556" y="117" font-size="13" font-weight="600" text-anchor="middle" fill="var(--ink)">复杂细胞</text>
+        <text x="8" y="16" font-size="11.5" fill="var(--muted)">同一朝向 · 错开位置的简单细胞</text>
+        <text x="500" y="82" font-size="11.5" fill="var(--muted)">汇总：留下「是什么」，扔掉「在哪」</text>
+      </svg>
+      <p><span class="mlb"><span class="b">复杂细胞</span><span class="arr">⇄</span><span class="m">池化 pooling</span></span> 选择性与不变性由<strong>不同的两级</strong>分别制造：简单细胞管「是不是这个朝向」，复杂细胞管「别管在哪」。</p>
+      <details class="deep">
+        <summary>汇总用的是什么运算：能量模型，与 max 的关系</summary>
+        <div class="deep-body">
+          <p style="margin-top:12px">定量模型里最常用的是<strong>能量模型</strong><span class="term">energy model</span>：取一对相位正交的简单细胞样感受野，响应平方后相加再开方——对相位与位置的敏感在平方和里被抹平。它更接近 <strong>L2 池化</strong>：把一组数收成它们的平方和开方。你们代码里的 max pooling（取最强者）是它的<strong>工程近似</strong>——保不变性的效果相同，运算更糙也更快。本页仪器里的复杂细胞就是按 L2 池化建模的，参数与简单细胞完全同一份。</p>
+          <p class="small" style="margin-bottom:0">边界：真实复杂细胞不全是「简单细胞的下一层」——有些一步到位直接从 LGN 组装，池化更像一族计算策略，不是一条固定导线。层级图是有用的简化，不是解剖判决。</p>
+        </div>
+      </details>
+      <div class="gained">✓ 已测得 <span class="g-eq">位置容忍曲线</span>——挑朝向、不挑位置的第二级</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6 · 等变与不变 ============ -->
+<section class="scene" id="s6" data-title="6 · 等变与不变">
+  <div class="wrap">
+    <div class="kicker">第 6 节 <span class="k-time">第二课时</span></div>
+    <h2>等变与不变</h2>
+    <p class="lede">掉头考一考你们的母语。</p>
+
+    <div class="predict" data-predict="p3-equivariance" data-answer="1">
+      <div class="pq"><span class="p-tag">先投票</span>一个<strong>只有卷积层、没有池化</strong>的网络：输入图像右移 3 个像素，输出特征图会？</div>
+      <div class="opts">
+        <button data-i="0">不变——卷积天生平移不变</button>
+        <button data-i="1">整张跟着右移 3 个像素</button>
+        <button data-i="2">无规律地变化</button>
+      </div>
+      <div class="p-reveal">「卷积 = 平移不变」大概是流传最广的一句错话。权值共享买到的是<b>等变</b><span style="font-style:italic;color:var(--muted)"> equivariant</span>：输入移多少，特征图整张跟着移多少——信息一点没丢，只是搬了家。要把「搬家」吸收掉、换成<b>不变</b><span style="font-style:italic;color:var(--muted)"> invariant</span>，还差一步：把一段窗口收成一个数。用下面的条带亲手核对。</div>
+    </div>
+
+    <div class="eqv-card">
+      <div class="chart-title">一维条带：拖动光条，盯住三行的变化</div>
+      <div class="eqv-row">
+        <span class="er-label"><b>输入</b>（光条）</span>
+        <div class="eqv-strip" id="eqv-in" role="img" aria-label="输入条带"></div>
+      </div>
+      <div class="eqv-row">
+        <span class="er-label"><b>卷积特征图</b><br><span class="eqv-win-note">同一份核逐位置点乘</span></span>
+        <div>
+          <div class="eqv-win-note" id="eqv-win-note" style="margin-bottom:3px"></div>
+          <div class="eqv-strip" id="eqv-feat" role="img" aria-label="卷积特征图条带"></div>
+        </div>
+      </div>
+      <div class="eqv-row">
+        <span class="er-label"><b>池化单元</b><br><span class="eqv-win-note">对窗口取 max</span></span>
+        <div style="display:flex;align-items:center;gap:14px">
+          <div class="eqv-pool-out" id="eqv-pool">0.0</div>
+          <span class="eqv-zone" id="eqv-zone-note"></span>
+        </div>
+      </div>
+      <div class="eqv-slider-row">
+        <span class="eqv-zone">光条位置</span>
+        <input type="range" id="eqv-slider" min="0" max="21" step="1" value="4" aria-label="光条位置">
+      </div>
+      <p class="small" style="margin:12px 0 0">窗口有多宽，不变性就有多宽；出了窗口照样掉。所以 CNN 里池化要一层一层叠——皮层也是：一级复杂细胞只吸收一小片位移，更大的不变性靠往上再堆。</p>
+    </div>
+
+    <p>落点：<strong>选择性与不变性由不同的两级分别制造</strong>——卷积层管「是什么特征」，池化层管「别管在哪」。皮层的分工同构：简单细胞是等变的那层（处处有一只，谁看见谁报告），复杂细胞是压成不变的那层。<span class="mlb"><span class="b">简单细胞层</span><span class="arr">⇄</span><span class="m">等变 equivariant</span></span><span class="mlb"><span class="b">复杂细胞层</span><span class="arr">⇄</span><span class="m">不变 invariant</span></span></p>
+    <p>上一节的复杂细胞，就是这枚池化单元的正主。你们写 <span style="font-family:var(--mono);font-size:.9em">max_pool</span> 那一行代码时买到的东西，猫的皮层在 1962 年之前就已经接好了。</p>
+  </div>
+</section>
+
+<!-- ============ 7 · 复诊 ============ -->
+<section class="scene" id="s7" data-title="7 · 复诊">
+  <div class="wrap wide">
+    <div class="kicker">第 7 节 <span class="k-time">第二课时</span></div>
+    <h2>复诊：给农场装上这两级</h2>
+    <p class="lede">把第二讲的竞争学习农场原样搬回来——同一套规则、同一组参数、同样的 800 步。唯一的改动：在它眼前垫一层可切换的前端。</p>
+
+    <div class="rig" id="rig-farm2">
+      <div class="rig-head">
+        <span class="led" id="farm2-led"></span>
+        <span class="rig-name">FEATURE FARM 2.0 · 复诊台</span>
+        <span class="rig-spacer"></span>
+        <div class="presets" role="group" aria-label="前端选择">
+          <button class="mini on" id="farm2-t0" aria-pressed="true">直通（上一讲原样）</button>
+          <button class="mini" id="farm2-t1" aria-pressed="false">只滤波</button>
+          <button class="mini" id="farm2-t2" aria-pressed="false">滤波 + 池化</button>
+        </div>
+        <span class="chip-note">种子 <input class="cnum" id="farm2-seed" value="42" style="width:6ch" aria-label="随机种子"></span>
+      </div>
+      <div class="rig-body">
+        <div class="mini-predict" id="mp-farm2">
+          <div class="mp-q">先按下你的猜测：前端换成「滤波 + 池化」，抖动照开，同样再训 800 步——这次会？</div>
+          <div class="mp-opts">
+            <button data-i="0">还是散</button>
+            <button data-i="1">干净分家</button>
+            <button data-i="2">能分家，但要多几倍步数</button>
+          </div>
+          <div class="mp-reveal" hidden>训完看探针。注意「多几倍步数」也押错了方向：<b>步数、学习率、规则一个字没改</b>——改的只是这条规则看到的表示。</div>
+        </div>
+        <div class="ap-grid">
+          <div>
+            <div class="stim-wrap">
+              <div class="wmap-item">
+                <div class="wmap" id="farm2-stim" role="img" aria-label="当前刺激"></div>
+                <div class="wmap-label">当前刺激（抖动开）</div>
+              </div>
+              <div class="story" style="flex:1;min-width:220px;margin-top:0" id="farm2-story" aria-live="polite">前端在「直通」档：四个神经元直接看 25 个像素——上一讲抖动实验的原样复刻。先跑一遍，确认病还在。</div>
+            </div>
+            <div id="farm2-frontrow" style="margin-top:12px" hidden>
+              <div class="chip-note" style="margin-bottom:6px">前端流水线：12 个位置模板（4 朝向 × 3 位置）<span id="farm2-pool-note"> → 每朝向取 max → 4 个通道</span></div>
+              <div class="wmap-row" id="farm2-templates" style="gap:6px"></div>
+            </div>
+            <div class="ctl-row">
+              <button class="btn" id="farm2-train">▶ 训练 ×800</button>
+              <button class="btn ghost" id="farm2-reset">重置</button>
+            </div>
+            <div class="ctl-row">
+              <span class="chip-note">探针（训练后按）：</span>
+              <div class="presets">
+                <button class="mini" data-probe="0">─</button>
+                <button class="mini" data-probe="1">│</button>
+                <button class="mini" data-probe="2">╱</button>
+                <button class="mini" data-probe="3">╲</button>
+              </div>
+              <span class="outcome idle" id="farm2-verdict">—</span>
+            </div>
+          </div>
+          <div>
+            <div class="wmap-row" id="farm2-maps"></div>
+            <div class="chip-note" style="margin-top:10px" id="farm2-maps-note">四个神经元的权重（25 像素热图）；下方数字是胜场。</div>
+          </div>
+        </div>
+        <div class="task"><span class="task-tag">动手</span><span>①「直通」档训练 800 步，探针验收——亲眼确认病还在；②前端选「<strong>滤波 + 池化</strong>」，抖动照旧，再训 800 步，探针验收：四种朝向各归一家；③前端退回「<strong>只滤波</strong>」，同样参数再训一遍，看它照样散。<strong>学习规则、学习率、步数与上一讲一字未改。</strong></span></div>
+      </div>
+    </div>
+
+    <div id="farm2-payoff" hidden>
+      <p>「只滤波」这一档是第 6 节的活教材：处处都有朝向检测器还不够——12 个模板的报告<strong>仍然跟着位置跑</strong>（等变），同一朝向换个位置，激活的是另一批维度，在距离上照样比异朝向还远。把三个位置收成一个数（池化）之后，抖动 ±1 恰好落进不变区，下游看到的 4 维表示对同朝向刺激几乎不动——这才治好。</p>
+      <p>点题：<strong>不变性从表示的层级里来，不从学习规则里来。</strong>我们没有改学习规则一个字，改的是学习规则看到的世界。<span class="mlb"><span class="b">药方</span><span class="arr">⇄</span><span class="m">改表示，不改规则</span></span></p>
+      <div class="gained">✓ 已治好 <span class="g-eq">抖动病</span>——两级接线，一副药</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8 · 家谱一页 ============ -->
+<section class="scene" id="s8" data-title="8 · 家谱一页">
+  <div class="wrap">
+    <div class="kicker">第 8 节 <span class="k-time">第二课时</span></div>
+    <h2>家谱一页</h2>
+    <p class="lede">「模板 → 池化」这一次迭代，往上再堆一摞，就是灵长类认物体的主干道。</p>
+
+    <div class="lineage-fig">
+      <svg viewBox="0 0 880 210" role="img" aria-label="腹侧通路层级：V1 的简单/复杂细胞到 V2、V4、IT，感受野逐级放大、偏好逐级复杂；下方时间轴标注 1962、1980、1998 与现代 CNN">
+        <g font-size="12.5" text-anchor="middle">
+          <rect x="20" y="30" width="150" height="64" rx="10" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="95" y="55" fill="var(--ink)" font-weight="600">V1</text>
+          <text x="95" y="76" fill="var(--muted)" font-size="11">简单 → 复杂（边）</text>
+          <rect x="220" y="30" width="130" height="64" rx="10" fill="var(--surface)" stroke="var(--line)"/>
+          <text x="285" y="55" fill="var(--ink)" font-weight="600">V2</text>
+          <text x="285" y="76" fill="var(--muted)" font-size="11">折角 · 拼接</text>
+          <rect x="400" y="30" width="130" height="64" rx="10" fill="var(--surface)" stroke="var(--line)"/>
+          <text x="465" y="55" fill="var(--ink)" font-weight="600">V4</text>
+          <text x="465" y="76" fill="var(--muted)" font-size="11">曲率 · 局部形状</text>
+          <rect x="580" y="30" width="150" height="64" rx="10" fill="var(--surface)" stroke="var(--line)"/>
+          <text x="655" y="55" fill="var(--ink)" font-weight="600">IT</text>
+          <text x="655" y="76" fill="var(--muted)" font-size="11">物体 · 换位置换大小仍认得</text>
+        </g>
+        <g stroke="var(--muted)" stroke-width="1.6" fill="var(--muted)">
+          <path d="M170 62 h40"/><polygon points="210,57 220,62 210,67"/>
+          <path d="M350 62 h40"/><polygon points="390,57 400,62 390,67"/>
+          <path d="M530 62 h40"/><polygon points="570,57 580,62 570,67"/>
+        </g>
+        <g fill="none" stroke="var(--accent)" opacity="0.75">
+          <circle cx="95" cy="126" r="7"/>
+          <circle cx="285" cy="126" r="13"/>
+          <circle cx="465" cy="126" r="22"/>
+          <circle cx="655" cy="126" r="34"/>
+        </g>
+        <text x="20" y="130" font-size="11" fill="var(--muted)">感受野</text>
+        <g font-size="11" fill="var(--muted)" text-anchor="middle">
+          <line x1="40" y1="182" x2="840" y2="182" stroke="var(--line)" stroke-width="1.5"/>
+          <g fill="var(--accent)" font-weight="600">
+            <text x="95" y="202">1962 层级猜想</text>
+            <text x="330" y="202">1980 Neocognitron</text>
+            <text x="560" y="202">1998 LeNet</text>
+            <text x="790" y="202">现代 CNN</text>
+          </g>
+          <circle cx="95" cy="182" r="3.5" fill="var(--accent)"/>
+          <circle cx="330" cy="182" r="3.5" fill="var(--accent)"/>
+          <circle cx="560" cy="182" r="3.5" fill="var(--accent)"/>
+          <circle cx="790" cy="182" r="3.5" fill="var(--accent)"/>
+        </g>
+      </svg>
+    </div>
+
+    <p>沿腹侧通路<span class="term">ventral stream</span>往上走，每一站都在重复同一个动作：拼更大的模板，再抹掉更多的「在哪」。感受野越来越大，偏好越来越复杂，不变性越来越强——到颞下皮层 IT，一只细胞可以认一个物体，任凭它换位置、换大小。</p>
+    <p>师承是明线：1962 年 Hubel 与 Wiesel 画出层级猜想；1980 年福岛邦彦的 Neocognitron 把「简单/复杂」直接抄成 S 层与 C 层；1989–1998 年 LeCun 的 LeNet 加上反向传播训练；再往后你们都认识。这一摞往上堆的逻辑，你们每天都在 import。<span class="mlb"><span class="b">简单/复杂交替堆叠</span><span class="arr">⇄</span><span class="m">conv / pool 层层相间</span></span></p>
+    <details class="deep">
+      <summary>抄作业的学生，后来反过来当了先生</summary>
+      <div class="deep-body">
+        <p style="margin-top:12px">Yamins 与 DiCarlo（2014）把为物体识别训练出的深度 CNN 拿去对照猕猴腹侧通路的真实放电，发现网络中层预测 V4、高层预测 IT 的响应，比当时任何手工模型都准。从大脑抄走的架构，兜了一圈，成了预测大脑的最好工具。这不证明皮层就是 CNN——但说明这套「模板 + 池化 + 堆叠」抓住了某种两边共享的计算逻辑。</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ============ 9 · 睁眼之前 ============ -->
+<section class="scene" id="s9" data-title="9 · 睁眼之前">
+  <div class="wrap wide">
+    <div class="kicker">第 9 节 <span class="k-time">第二课时</span></div>
+    <h2>睁眼之前</h2>
+    <p class="lede">现在接回第 4 节挂起的问题：没有 Ctrl+C，各个位置的检测器怎么长得差不多？</p>
+
+    <p>答案分两步。第一步：<strong>皮层不共享权重，共享的是数据统计。</strong>睁眼之后，自然世界对每一小块视野的统计是同一份——边、角、纹理处处出现。第二讲的局部规则在每个位置独立开工，看的是同一种数据，殊途同归地长出同一款检测器。<strong>大脑不能 Ctrl+C 权重，它 Ctrl+C 了数据。</strong></p>
+    <p>第二步是真正的难题：第二讲末尾就说过，雪貂<strong>睁眼之前</strong>就已有朝向选择性——粗糙，但方向对。经验还来不及当老师。再补一笔粗账：突触以百万亿（~10¹⁴）计，人的基因组约 3×10⁹ 碱基对——写得下发育规则，写不下连线表（这是笔粗账，不是判决书）。两头都指向第三个来源：<strong>数据是系统自己造的。</strong></p>
+
+    <div class="predict" data-predict="p3-dark" data-answer="2">
+      <div class="pq"><span class="p-tag">先投票</span>出生之前、完全黑暗中的视网膜在干什么？</div>
+      <div class="opts">
+        <button data-i="0">静默——没有光就没有信号</button>
+        <button data-i="1">各细胞独立地随机放电</button>
+        <button data-i="2">成片的活动波，一场一场缓慢扫过</button>
+      </div>
+      <div class="p-reveal">1991 年 Meister、Wong、Baylor 与 Shatz 把新生动物的视网膜铺在多电极阵列上：黑暗中它一点也不安静——<b>成片的活动波</b>一场一场缓慢扫过，相邻细胞一起烧，远处细胞各烧各的。这就是视网膜波<span style="font-style:italic;color:var(--muted)"> retinal waves</span>。它长什么样、能不能当训练数据，下面亲手测。</div>
+    </div>
+
+    <div class="rig" id="rig-wave">
+      <div class="rig-head">
+        <span class="led" id="wave-led"></span>
+        <span class="rig-name">RETINAL WAVES · 波观察台 + 学习器机架</span>
+        <span class="rig-spacer"></span>
+        <span class="chip-note">种子 <input class="cnum" id="wave-seed" value="42" style="width:6ch" aria-label="随机种子"></span>
+      </div>
+      <div class="rig-body">
+        <div class="ap-grid">
+          <div>
+            <div class="scope-frame"><canvas id="wave-canvas" height="380" role="img" aria-label="28×28 视网膜细胞点阵：活动波扫过；两个可拖电极 e1 e2；六个下游单元的投射野方框"></canvas></div>
+            <div class="wave-legend">
+              <span class="wl"><span class="sw" style="background:#E8A050"></span>正在放电</span>
+              <span class="wl"><span class="sw" style="background:#2A3550"></span>不应期</span>
+              <span class="wl"><span class="sw" style="background:#232B3B"></span>静息</span>
+              <span class="wl">时间已压缩：波速约 ×5，波间隔约 ×30</span>
+            </div>
+            <div class="ctl-row">
+              <button class="btn ghost" id="wave-pair">记录这一对电极</button>
+              <span class="outcome idle" id="wave-r">e1–e2：— </span>
+              <span class="chip-note" id="wave-pair-note">拖动 e1、e2 两个电极；相关按爆发时间窗（±2 帧平滑）计。</span>
+            </div>
+            <div class="scope-frame" style="margin-top:12px"><canvas id="wave-chart" height="180" role="img" aria-label="相关-距离图：电极对的相关系数对间距"></canvas></div>
+          </div>
+          <div>
+            <div class="chip-note" style="margin-bottom:8px">学习器机架：6 个下游单元，每个只看视网膜上自己的一小块（9×9，方框已画在左图）。规则牌：<b style="color:var(--rig-ink)">Oja（第二讲原样）</b>。</div>
+            <div class="wave-units" id="wave-units"></div>
+            <div class="ctl-row">
+              <button class="btn" id="wave-train">▶ 喂波训练</button>
+              <button class="btn ghost" id="wave-shuffle">▶ 打乱重训（对照）</button>
+              <button class="btn ghost" id="wave-reset">重置</button>
+            </div>
+            <div class="wave-readout">
+              <span class="outcome idle" id="wave-L">结构 L = —</span>
+              <span class="outcome idle" id="wave-S">相似 S = —</span>
+              <div class="progressbar"><i id="wave-prog"></i></div>
+            </div>
+            <div class="chip-note" style="margin-top:8px">「打乱」的定义：每一帧的总放电量原封不动，只把「谁在哪」洗掉。结构 L：权重图的空间平滑度（邻格相关）；相似 S：六份权重两两的重合度（|cos|，展示时按符号归一）。</div>
+            <div class="story" id="wave-story" aria-live="polite">波在黑暗里一场一场地来。先用电极量清楚它的结构，再看第二讲的规则能不能吃这种数据。</div>
+          </div>
+        </div>
+        <div class="task"><span class="task-tag">动手</span><span>①把 e2 从 e1 旁边一步步拖远，至少记录 4 对，画出相关–距离曲线：拿到紧挨的一对（间距 ≤1.5 格）r ≥ 0.6、远端一对（≥14 格）r ≤ 0.2；②按「喂波训练」，等六个单元收敛：结构 L ≥ 0.45、相似 S ≥ 0.8；③按「打乱重训」，同样步数，看这两个数上不上得去。</span></div>
+      </div>
+    </div>
+
+    <div id="wave-payoff" hidden>
+      <p>结论摆在机架上：Hebb 需要的全部养分——<strong>「谁和谁总一起亮」</strong>——波里都有；打乱对照证明起作用的是波的<strong>时空结构</strong>，不是放电总量。六份彼此没有商量过的突触，长成了同一款平滑的局部接线——<strong>这就是第 4 节那个问题的答案</strong>：不共享权重，共享数据统计；睁眼之前，统计由视网膜自产自销。</p>
+      <p>波里没有猫、没有光条，只有一件事——相邻的点总是一起亮。对 Hebb 规则来说，这就够开课了。<span class="mlb"><span class="b">视网膜波</span><span class="arr">⇄</span><span class="m">先造数据的预训练</span></span></p>
+      <div class="note" style="border:1px solid var(--line);border-radius:10px;padding:12px 16px;max-width:66ch">脚注 · 证据的边界：波被扎实证明负责的是<strong>拓扑映射的精化与双眼通路的分离</strong>——在眼内阻断波，视网膜→LGN 的精细接线成不了形（Penn 等 1998；McLaughlin 等 2003；综述见 Katz &amp; Shatz 1996）。朝向选择性确实在睁眼前出现（Chapman &amp; Stryker 1993，雪貂），但波是不是<strong>它</strong>的老师，尚未定论——这台仪器演示的是前者一类的接线塑形。「各处因同一份统计而趋同」是模型层面的解释，不是已测得的生物学事实。出生后关键期内的视觉经验仍要接手精调——第二讲提过的剥夺实验就是这扇窗的证据。</div>
+      <div class="gained">✓ 已验证 <span class="g-eq">波就是训练数据</span>——结构在，规则就能学</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 10 · 下课 ============ -->
+<section class="scene" id="s10" data-title="10 · 下课">
+  <div class="wrap">
+    <div class="kicker">第 10 节 <span class="k-time">第二课时</span></div>
+    <h2>一句话，然后下课</h2>
+
+    <div class="thesis">
+      <span class="t-mark">一句话带走</span>
+      今天测穿了一台机器：LGN 报告对比，简单细胞用对齐的模板挑出朝向（卷积），复杂细胞把一排位置的报告收成一个数（池化），一摞堆上去就是腹侧通路（深度）；而这套接线在睁眼之前，就被视网膜自己写的训练数据（波）用第二讲的规则练过了。<span class="small">CNN 从大脑身上抄走了局部感受野和两级分工，唯独权值共享抄不来——大脑不共享权重，它共享数据。</span>
+    </div>
+
+    <div class="recap-row">
+      <span class="gained">✓ 中心-周边拮抗 · 报告对比</span>
+      <span class="gained">✓ 朝向调谐曲线 · 1958 的边</span>
+      <span class="gained">✓ 位置敏感 · 感受野有边界</span>
+      <span class="gained">✓ 卷积核 · 亲手接通 1962</span>
+      <span class="gained">✓ 位置容忍曲线 · 复杂细胞=池化</span>
+      <span class="gained">✓ 抖动病治好 · 改表示不改规则</span>
+      <span class="gained">✓ 波就是训练数据 · 打乱就失效</span>
+    </div>
+
+    <p class="note">边界一并带走：①生物没有权值共享——各位置独立接线，「靠共享数据统计趋同」是模型层面的解释；②这台机器不是严格前馈——V1 神经元的突触里来自 LGN 的只占约 5%（Peters &amp; Payne 1993），横向与反馈接线占大头，今天的图纸只画了它的一小半；③池化只是复杂细胞的简化模型，能量模型也是漫画；④波之于朝向选择性未定论，出生后关键期的经验仍要精调。</p>
+
+    <details class="think">
+      <summary><span class="q-tag">思考</span>如果给你一台不许用权值共享的框架，你会怎么让各处的卷积核自己长成一样？</summary>
+      <div class="a"><p>提示：今天的第 9 节就是一份参考实现——独立初始化、局部规则、共享的输入统计。真去掉共享的 CNN（locally connected network）在大数据下确实能逼近卷积的表现，但参数量与样本效率的代价可观。大脑的解法是把代价付在「造数据」上。</p></div>
+    </details>
+
+    <div class="next-teaser">
+      <div class="nt-tag">下一讲预告</div>
+      <div class="nt-title">强化学习：多巴胺与第三因子</div>
+      <p style="margin:.4em 0 0;font-size:.95rem">今天从头到尾，没人给过农场一个「对/错」，也没发过一分「奖励」——它学会分家，靠的全是相关性。可是一个大脑总得学会「做对了才有饭吃」。第二讲结尾见过名字的第三因子——多巴胺——下一讲出场。</p>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer class="colophon">
+  《神经科学导论》第三讲 · 南京大学人工智能学院 · 键盘 ← → 切换小节
+</footer>
+<script>
+'use strict';
+/* ================= 基础设施（与第一二讲一致） ================= */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+
+function fitCanvas(cv) {
+  if (!cv.dataset.h) cv.dataset.h = cv.getAttribute('height') || 240;
+  const hCss = +cv.dataset.h;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.style.height = hCss + 'px';
+  const wCss = cv.clientWidth || (cv.parentElement ? cv.parentElement.clientWidth : 600) || 600;
+  const W = Math.max(50, Math.round(wCss * dpr)), H = Math.round(hCss * dpr);
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w: wCss, h: hCss };
+}
+
+const redraws = new Set();
+function requestRedrawAll() { redraws.forEach(f => { try { f(); } catch (e) {} }); }
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => setTimeout(requestRedrawAll, 30));
+new MutationObserver(() => setTimeout(requestRedrawAll, 30))
+  .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+let resizeTimer = null;
+addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(requestRedrawAll, 120); });
+
+function visibilityFlag(el) {
+  const state = { visible: false };
+  new IntersectionObserver(es => es.forEach(e => { state.visible = e.isIntersecting; }), { rootMargin: '80px' }).observe(el);
+  return state;
+}
+
+const RIG = {
+  bg: '#10141C', grid: '#1E2531', axis: '#3A4254', text: '#7C8598',
+  v: '#BFA3EF', na: '#E07A50', k: '#5F9FD8', i: '#C9A43F',
+  good: '#7BE3A5', bad: '#E8A0A0', dim: 'rgba(191,163,239,0.35)'
+};
+function chartColors() {
+  return {
+    ink: cssVar('--ink'), muted: cssVar('--muted'), line: cssVar('--line'),
+    v: cssVar('--c-v'), na: cssVar('--c-na'), k: cssVar('--c-k'), i: cssVar('--c-i'), ref: cssVar('--c-ref'),
+    accent: cssVar('--accent'), surface: cssVar('--surface')
+  };
+}
+function rigAxes(ctx, w, h, pad, xr, yr, xlabel, ylabel, xticks, yticks) {
+  ctx.fillStyle = RIG.bg; ctx.fillRect(0, 0, w, h);
+  const X = x => pad.l + (x - xr[0]) / (xr[1] - xr[0]) * (w - pad.l - pad.r);
+  const Y = y => h - pad.b - (y - yr[0]) / (yr[1] - yr[0]) * (h - pad.t - pad.b);
+  ctx.strokeStyle = RIG.grid; ctx.lineWidth = 1; ctx.beginPath();
+  (xticks || []).forEach(t => { ctx.moveTo(X(t), pad.t); ctx.lineTo(X(t), h - pad.b); });
+  (yticks || []).forEach(t => { ctx.moveTo(pad.l, Y(t)); ctx.lineTo(w - pad.r, Y(t)); });
+  ctx.stroke();
+  ctx.strokeStyle = RIG.axis; ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, h - pad.b); ctx.lineTo(w - pad.r, h - pad.b); ctx.stroke();
+  ctx.fillStyle = RIG.text; ctx.font = '11px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  (xticks || []).forEach(t => ctx.fillText(t, X(t), h - pad.b + 5));
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  (yticks || []).forEach(t => ctx.fillText(t, pad.l - 6, Y(t)));
+  if (xlabel) { ctx.textAlign = 'right'; ctx.textBaseline = 'bottom'; ctx.fillText(xlabel, w - pad.r, h - 4); }
+  if (ylabel) { ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillText(ylabel, 6, 4); }
+  return { X, Y };
+}
+function drawTrace(ctx, X, Y, ts, vs, color, lw) {
+  ctx.strokeStyle = color; ctx.lineWidth = lw || 2; ctx.lineJoin = 'round'; ctx.beginPath();
+  for (let i = 0; i < ts.length; i++) {
+    const x = X(ts[i]), y = Y(vs[i]);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+/* 可复现随机数 */
+function makeRng(seed) {
+  let s = (seed >>> 0) || 1;
+  return () => { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; };
+}
+
+/* ================= 导航 ================= */
+(function nav() {
+  const scenes = $$('.scene');
+  const links = $$('#rail a[data-sec]');
+  const sel = $('#tb-select');
+  scenes.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.id; o.textContent = s.dataset.title || s.id;
+    sel.appendChild(o);
+  });
+  const byId = id => scenes.findIndex(s => s.id === id);
+  let current = 0;
+  const io = new IntersectionObserver(es => {
+    es.forEach(e => {
+      if (e.isIntersecting) {
+        current = byId(e.target.id);
+        links.forEach(a => a.classList.toggle('active', a.dataset.sec === e.target.id));
+        sel.value = e.target.id;
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  scenes.forEach(s => io.observe(s));
+  const go = i => { const s = scenes[clamp(i, 0, scenes.length - 1)]; if (s) s.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' }); };
+  sel.addEventListener('change', () => go(byId(sel.value)));
+  $('#tb-prev').addEventListener('click', () => go(current - 1));
+  $('#tb-next').addEventListener('click', () => go(current + 1));
+  addEventListener('keydown', e => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(current + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(current - 1); }
+  });
+  addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const p = doc.scrollTop / (doc.scrollHeight - doc.clientHeight || 1);
+    $('#progress').style.width = (p * 100).toFixed(2) + '%';
+  }, { passive: true });
+  const rio = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); rio.unobserve(e.target); } }), { threshold: 0.2 });
+  $$('.reveal').forEach(el => rio.observe(el));
+})();
+
+/* ================= 预测-投票组件（含课堂现场投票，与前两讲一致） ================= */
+const LIVE = { on: false };
+const livePromise = (async () => {
+  if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+  try {
+    const r = await fetch('/health', { cache: 'no-store' });
+    if (r.ok) { const j = await r.json(); if (j && j.votes) LIVE.on = true; }
+  } catch (e) {}
+})();
+function liveTally(p, qid, myChoice) {
+  const nOpts = p.querySelectorAll('.opts button').length;
+  const right = +p.dataset.answer;
+  try {
+    fetch('/api/vote', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ qid, choice: myChoice })
+    }).catch(() => {});
+  } catch (e) {}
+  const box = document.createElement('div');
+  box.className = 'p-live';
+  box.innerHTML = '<div class="pl-head">现场投票 · 汇总中… <button class="pl-refresh" type="button">刷新</button></div>';
+  p.appendChild(box);
+  const refresh = async () => {
+    try {
+      const r = await fetch('/api/votes?qid=' + encodeURIComponent(qid), { cache: 'no-store' });
+      if (!r.ok) return;
+      const counts = ((await r.json()).counts || []).slice(0, nOpts).map(c => c || 0);
+      const total = counts.reduce((a, b) => a + b, 0);
+      const max = Math.max(1, ...counts);
+      box.innerHTML = '<div class="pl-head">现场投票 · ' + total + ' 人 <button class="pl-refresh" type="button">刷新</button></div>' +
+        counts.map((c, i) =>
+          '<div class="pl-row' + (i === right ? ' is-right' : '') + '">' +
+          '<span class="pl-opt">' + 'ABCD'[i] + '</span>' +
+          '<span class="pl-bar"><i style="width:' + Math.round(c / max * 100) + '%"></i></span>' +
+          '<span class="pl-n">' + c + '</span></div>').join('');
+      box.querySelector('.pl-refresh').addEventListener('click', refresh);
+    } catch (e) {}
+  };
+  box.querySelector('.pl-refresh').addEventListener('click', refresh);
+  setTimeout(refresh, 500);
+  let n = 0;
+  const iv = setInterval(() => { refresh(); if (++n >= 12) clearInterval(iv); }, 2500);
+}
+$$('.predict').forEach(p => {
+  p.querySelectorAll('.opts button').forEach(b => b.addEventListener('click', async () => {
+    if (p.classList.contains('revealed')) return;
+    b.classList.add('chosen');
+    p.classList.add('revealed');
+    const right = p.dataset.answer;
+    p.querySelectorAll('.opts button').forEach(x => { if (x.dataset.i === right) x.classList.add('right'); });
+    await livePromise;
+    if (LIVE.on && p.dataset.predict) liveTally(p, p.dataset.predict, +b.dataset.i);
+  }));
+});
+
+/* ================= 本地预测钮（锁定选择，完成动手后揭晓） ================= */
+const MP = {
+  lock(id) { /* 点击即锁定，由下面的通用接线完成 */ },
+  reveal(id) {
+    const box = document.getElementById(id);
+    if (!box) return;
+    const r = box.querySelector('.mp-reveal');
+    if (r) r.hidden = false;
+    box.classList.add('locked');
+  }
+};
+$$('.mini-predict').forEach(box => {
+  box.querySelectorAll('.mp-opts button').forEach(b => b.addEventListener('click', () => {
+    if (box.classList.contains('locked') || box.querySelector('.mp-opts button.chosen')) return;
+    b.classList.add('chosen');
+  }));
+});
+
+/* ================= 共享响应模型（与 scripts/verify-lec03.mjs 同一份常量，改动必须两边同步并重跑验证） ================= */
+const C3 = {
+  fov: 10,
+  sigC: 0.5, sigRatio: 3, balance: 0.95,
+  lgnBase: 5, lgnPeak: 42, lgnTheta: 0.05,
+  nSub: 3, subSpacing: 1.1, barLen: 4, barWid: 1.2,
+  simpleBase: 2, simplePeak: 55, thetaFrac: 0.25,
+  poolOffsets: [-1.5, -1, -0.5, 0, 0.5, 1, 1.5],
+  spotProbe: 1.2,
+  asmN: 12, asmCell: 0.55, asmThetaFrac: 0.78,
+  stripN: 24, stripKernel: [0.25, 0.5, 0.25], stripWin: [8, 17], stripBar: 3,
+};
+const SIG_S = C3.sigC * C3.sigRatio;
+function dogVal(dx, dy) {
+  const r2 = dx * dx + dy * dy;
+  const fc = Math.exp(-r2 / (2 * C3.sigC * C3.sigC)) / (2 * Math.PI * C3.sigC * C3.sigC);
+  const fs = Math.exp(-r2 / (2 * SIG_S * SIG_S)) / (2 * Math.PI * SIG_S * SIG_S);
+  return fc - C3.balance * fs;
+}
+function diskDrive(d, ox, oy) {
+  const R = d / 2, step = Math.min(0.08, Math.max(0.02, R / 30));
+  let s = 0;
+  for (let x = -R; x <= R; x += step) for (let y = -R; y <= R; y += step) {
+    if (x * x + y * y <= R * R) s += dogVal(x + ox, y + oy) * step * step;
+  }
+  return s;
+}
+const FULL_DRIVE = (() => {
+  let s = 0; const step = 0.15, L = 6;
+  for (let x = -L; x <= L; x += step) for (let y = -L; y <= L; y += step) s += dogVal(x, y) * step * step;
+  return s;
+})();
+function barDriveCore(subCenters, bx, by, theta, len, wid) {
+  const ct = Math.cos(theta), st = Math.sin(theta);
+  const sl = 0.08, sw = 0.05;
+  let s = 0;
+  for (let u = -len / 2; u <= len / 2; u += sl) for (let v = -wid / 2; v <= wid / 2; v += sw) {
+    const x = bx + u * ct - v * st, y = by + u * st + v * ct;
+    for (const c of subCenters) s += dogVal(x - c[0], y - c[1]) * sl * sw;
+  }
+  return s;
+}
+function subCentersAt(phi, ox, oy) {
+  const out = [];
+  const ct = Math.cos(phi), st = Math.sin(phi);
+  for (let k = -(C3.nSub - 1) / 2; k <= (C3.nSub - 1) / 2; k++)
+    out.push([(ox || 0) + k * C3.subSpacing * ct, (oy || 0) + k * C3.subSpacing * st]);
+  return out;
+}
+/* LGN 输出（Hz） */
+let LGN_PEAK_DRIVE = 0, LGN_BEST_D = 0;
+for (let d = 0.2; d <= 8; d += 0.1) { const v = diskDrive(d, 0, 0); if (v > LGN_PEAK_DRIVE) { LGN_PEAK_DRIVE = v; LGN_BEST_D = d; } }
+const LGN_GAIN = (C3.lgnPeak - C3.lgnBase) / (LGN_PEAK_DRIVE - C3.lgnTheta);
+const lgnRate = drive => Math.max(0, C3.lgnBase + LGN_GAIN * (drive - C3.lgnTheta));
+/* 简单细胞（给定最佳朝向 phi0 预标定） */
+function makeSimpleCell(phi0deg) {
+  const phi = phi0deg * Math.PI / 180;
+  const subs = subCentersAt(phi, 0, 0);
+  const dP = barDriveCore(subs, 0, 0, phi, C3.barLen, C3.barWid);
+  const dO = barDriveCore(subs, 0, 0, phi + Math.PI / 2, C3.barLen, C3.barWid);
+  const th = dO + C3.thetaFrac * (dP - dO);
+  const gain = (C3.simplePeak - C3.simpleBase) / (dP - th);
+  return {
+    phi0: phi0deg, subs, drivePeak: dP, theta: th,
+    rateBar(angleDeg, pos) {
+      // pos：沿垂直于最佳朝向方向的平移（°）
+      const bx = -(pos || 0) * Math.sin(phi), by = (pos || 0) * Math.cos(phi);
+      const d = barDriveCore(subs, bx, by, angleDeg * Math.PI / 180, C3.barLen, C3.barWid);
+      return d > th ? C3.simpleBase + gain * (d - th) : C3.simpleBase;
+    },
+    normBar(angleDeg, pos) {
+      const bx = -(pos || 0) * Math.sin(phi), by = (pos || 0) * Math.cos(phi);
+      const d = barDriveCore(subs, bx, by, angleDeg * Math.PI / 180, C3.barLen, C3.barWid);
+      return d > th ? (d - th) / (dP - th) : 0;
+    },
+    rateSpot(d, ox, oy) {
+      let s = 0; const R = d / 2, st2 = 0.04;
+      for (let x = -R; x <= R; x += st2) for (let y = -R; y <= R; y += st2)
+        if (x * x + y * y <= R * R) { for (const c of subs) s += dogVal(x + (ox || 0) - c[0], y + (oy || 0) - c[1]) * st2 * st2; }
+      return s > th ? C3.simpleBase + gain * (s - th) : C3.simpleBase;
+    },
+    normComplex(angleDeg, pos) {
+      // 复杂细胞：同朝向子单元行在垂直方向的一排位置上做 L2 池化
+      let sum = 0;
+      for (const off of C3.poolOffsets) {
+        const sc = subCentersAt(phi, -off * Math.sin(phi), off * Math.cos(phi));
+        const bx = -(pos || 0) * Math.sin(phi), by = (pos || 0) * Math.cos(phi);
+        const d = barDriveCore(sc, bx, by, angleDeg * Math.PI / 180, C3.barLen, C3.barWid);
+        const r = d > th ? (d - th) / (dP - th) : 0;
+        sum += r * r;
+      }
+      return Math.sqrt(sum);
+    },
+  };
+}
+/* 讲内共享状态（第 2 节测得的细胞供 3、5 节复用） */
+const LEC3 = { trueOri: null, dialOri: null, cxNorm: 1 };
+
+/* ================= 放电声与示波器条带 ================= */
+const AUDIO = { ctx: null };
+function spikeClick() {
+  try {
+    if (!AUDIO.ctx) AUDIO.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const c = AUDIO.ctx, t = c.currentTime;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = 'square'; o.frequency.value = 2200;
+    g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.012);
+    o.connect(g); g.connect(c.destination);
+    o.start(t); o.stop(t + 0.014);
+  } catch (e) {}
+}
+/* 滚动脉冲条带：rateFn() 给当前 Hz；sndFn() 给声音开关状态 */
+function makeScope(cv, rateFn, sndFn) {
+  const spikes = [];   // 各 spike 的「屏龄」秒
+  let acc = 0, last = null;
+  const vis = visibilityFlag(cv);
+  const rng = makeRng(1234 + Math.floor(Math.random() * 1e6));
+  function draw() {
+    const { ctx, w, h } = fitCanvas(cv);
+    ctx.fillStyle = RIG.bg; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = RIG.grid; ctx.beginPath();
+    ctx.moveTo(0, h * 0.62); ctx.lineTo(w, h * 0.62); ctx.stroke();
+    ctx.strokeStyle = RIG.good; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (const age of spikes) {
+      const x = w - age / 2 * w;   // 2 秒窗
+      if (x < 0) continue;
+      ctx.moveTo(x, h * 0.2); ctx.lineTo(x, h * 0.78);
+    }
+    ctx.stroke();
+    ctx.fillStyle = RIG.text; ctx.font = '10px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('2 s', 4, 4);
+  }
+  if (REDUCED) {
+    // 静态渲染：按当前速率画均匀刻线，参数变化时重画
+    const rerender = () => {
+      spikes.length = 0;
+      const r = rateFn();
+      const n = Math.round(r * 2);
+      for (let i = 0; i < n; i++) spikes.push(2 * (i + 0.35 + 0.3 * rng()) / Math.max(1, n));
+      draw();
+    };
+    redraws.add(rerender);
+    rerender();
+    return { poke: rerender };
+  }
+  (function loop(now) {
+    requestAnimationFrame(loop);
+    if (!vis.visible) { last = now; return; }
+    if (last === null) last = now;
+    const dt = Math.min(0.1, (now - last) / 1000); last = now;
+    for (let i = spikes.length - 1; i >= 0; i--) { spikes[i] += dt; if (spikes[i] > 2.1) spikes.splice(i, 1); }
+    acc += rateFn() * dt;
+    while (acc >= 1) {
+      acc -= 1;
+      spikes.push(0.002 * rng());
+      if (sndFn && sndFn()) spikeClick();
+    }
+    draw();
+  })(performance.now());
+  return { poke: () => {} };
+}
+/* 驻留自动记录：参数稳定 600 ms 后回调一次 */
+function makeDwell(ms, fn) {
+  let timer = null;
+  return () => { clearTimeout(timer); timer = setTimeout(fn, ms); };
+}
+
+/* ================= 引言 · 第二讲结案照（离线重放数据，lec02 原参数） ================= */
+(function replay() {
+  const clean = [[0.94,0.08,0.1,0.05,0.05,0.07,0.96,0.06,0.05,0.05,0.06,0.07,0.94,0.1,0.09,0.1,0.02,0.05,0.96,0.09,0.06,0.07,0.09,0.07,0.95],
+    [0.04,0.1,0.06,0.1,0.06,0.09,0.05,0.08,0.05,0.07,0.96,0.97,0.92,0.94,0.95,0.01,0.04,0.09,0.04,0.1,0.03,0.07,0.1,0.07,0.04],
+    [0.09,0.03,0.94,0.08,0.05,0.03,0.04,0.9,0.05,0.08,0.01,0.06,0.95,0.04,0.06,0.03,0.12,0.96,0.04,0.07,0.09,0.11,0.93,0.04,0.06],
+    [0.02,0.06,0.04,0.1,0.94,0.08,0.08,0.03,0.98,0.09,0.03,0.04,0.93,0.03,0.04,0.01,0.93,0.05,0.06,0.06,0.92,0.06,0.06,0.09,0.1]];
+  const jit = [[0.63,0.04,0.04,0.03,0.06,0.07,0.63,0.07,0.1,0.06,0.07,0.06,0.64,0.07,0.06,0.36,0.38,0.32,0.96,0.36,0.02,0.03,0.04,0.02,0.63],
+    [0.03,0.07,0.52,0.35,0.06,0.26,0.05,0.67,0.06,0.04,0.05,0.53,0.49,0.02,0.06,0.32,0.07,0.71,0.07,0.1,0.07,0.05,0.47,0.23,0.04],
+    [0.04,0.08,0.05,0.1,0.34,0.07,0.04,0.05,0.44,0.12,0.61,0.63,0.93,0.61,0.61,0.06,0.33,0.1,0.09,0.07,0.4,0.07,0.02,0.07,0.06],
+    [0.11,0.5,0.11,0.29,0.03,0.32,0.5,0.45,0.47,0.3,0.08,0.26,0.07,0.48,0.05,0.07,0.29,0.07,0.27,0.3,0.05,0.31,0.05,0.22,0.09]];
+  function render(rootId, data) {
+    const root = document.getElementById(rootId);
+    if (!root) return;
+    data.forEach(w => {
+      const m = document.createElement('div');
+      m.className = 'wmap small';
+      m.setAttribute('role', 'img');
+      m.setAttribute('aria-label', '权重热图');
+      for (let i = 0; i < 25; i++) {
+        const c = document.createElement('i');
+        const v = clamp(w[i], 0, 1);
+        c.style.background = 'color-mix(in srgb, var(--accent) ' + Math.round(v * 92) + '%, var(--surface-2))';
+        m.appendChild(c);
+      }
+      root.appendChild(m);
+    });
+  }
+  render('replay-clean', clean);
+  render('replay-jitter', jit);
+})();
+</script>
+<script>
+'use strict';
+/* ================= 第 1 节 · LGN 探测台 ================= */
+(function lgnRig() {
+  const cv = $('#lgn-screen'); if (!cv) return;
+  const chart = $('#lgn-chart');
+  const RFS = [[1.5, 0], [-1.5, 0], [0, 1.5], [0, -1.5]];
+  const rf = RFS[Math.floor(Math.random() * 4)];
+  const st = { sx: -2.5, sy: -2, d: 1, full: false, reveal: false };
+  const pts = new Map();           // d(0.1 圆整) -> rate（仅在光斑对准 RF 时记录）
+  const flags = { peak: false, weakBig: false, full: false, done: false };
+  let fullTimer = null;
+
+  const curRate = () => st.full ? lgnRate(FULL_DRIVE) : lgnRate(diskDrive(st.d, st.sx - rf[0], st.sy - rf[1]));
+  let rateCache = curRate();
+  const centered = () => Math.hypot(st.sx - rf[0], st.sy - rf[1]) <= 0.6;
+
+  function drawScreen() {
+    const { ctx, w, h } = fitCanvas(cv);
+    const sc = Math.min(w, h) / C3.fov;
+    const X = x => w / 2 + x * sc, Y = y => h / 2 + y * sc;
+    ctx.fillStyle = st.full ? '#6B7688' : '#3A4150';
+    ctx.fillRect(0, 0, w, h);
+    if (!st.full) {
+      const g = ctx.createRadialGradient(X(st.sx), Y(st.sy), 0, X(st.sx), Y(st.sy), Math.max(2, st.d / 2 * sc));
+      g.addColorStop(0, '#F2EFE6'); g.addColorStop(0.85, '#E8E2D2'); g.addColorStop(1, 'rgba(230,225,210,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(X(st.sx), Y(st.sy), st.d / 2 * sc, 0, 7); ctx.fill();
+    }
+    if (st.reveal) {
+      ctx.strokeStyle = 'rgba(191,163,239,0.8)'; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.arc(X(rf[0]), Y(rf[1]), C3.sigC * 1.6 * sc, 0, 7); ctx.stroke();
+      ctx.strokeStyle = 'rgba(95,159,216,0.7)';
+      ctx.beginPath(); ctx.arc(X(rf[0]), Y(rf[1]), SIG_S * 1.4 * sc, 0, 7); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(201,209,224,0.85)'; ctx.font = '11px "IBM Plex Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('中心 + / 周边 −', X(rf[0]), Y(rf[1]) - SIG_S * 1.4 * sc - 7);
+    }
+    ctx.fillStyle = 'rgba(201,209,224,0.6)'; ctx.font = '10.5px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('10° × 10°', 8, 6);
+  }
+  function drawChart() {
+    const { ctx, w, h } = fitCanvas(chart);
+    const { X, Y } = rigAxes(ctx, w, h, { l: 44, r: 12, t: 14, b: 30 }, [0, 8], [0, 50],
+      '光斑直径 (°)', 'Hz', [0, 2, 4, 6, 8], [0, 10, 20, 30, 40, 50]);
+    ctx.strokeStyle = RIG.grid; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(X(0), Y(C3.lgnBase)); ctx.lineTo(X(8), Y(C3.lgnBase)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = RIG.text; ctx.font = '10px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText('基线', X(6.7), Y(C3.lgnBase) - 2);
+    if (flags.done) {
+      // 揭晓：完整直径-响应包络
+      const ts = [], vs = [];
+      for (let d = 0.2; d <= 8; d += 0.15) { ts.push(d); vs.push(lgnRate(diskDrive(d, 0, 0))); }
+      drawTrace(ctx, X, Y, ts, vs, RIG.dim, 2);
+    }
+    ctx.fillStyle = RIG.v;
+    [...pts.entries()].forEach(([d, r]) => { ctx.beginPath(); ctx.arc(X(d), Y(clamp(r, 0, 49)), 3.6, 0, 7); ctx.fill(); });
+    if (!pts.size) {
+      ctx.fillStyle = RIG.text; ctx.font = '12px "IBM Plex Sans", sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('对准细胞后，这里会长出你的曲线', w / 2, h / 2 - 10);
+    }
+  }
+  function refresh() {
+    rateCache = curRate();
+    const el = $('#lgn-rate');
+    el.textContent = rateCache.toFixed(0) + ' Hz';
+    el.className = 'outcome ' + (rateCache >= 15 ? 'spike' : 'idle');
+    scope.poke();
+    drawScreen();
+  }
+  function judge() {
+    if (flags.done) return;
+    const arr = [...pts.entries()];
+    flags.peak = arr.some(([, r]) => r >= 3 * C3.lgnBase);
+    flags.weakBig = arr.some(([dA, rA]) => rA >= 3 * C3.lgnBase &&
+      arr.some(([dB, rB]) => dB >= 2 * dA && rB <= 0.6 * rA));
+    if (flags.peak && flags.weakBig && flags.full) {
+      flags.done = true; st.reveal = true;
+      $('#lgn-led').classList.add('on');
+      $('#lgn-payoff').hidden = false;
+      MP.reveal('mp-lgn');
+      $('#lgn-story').innerHTML = '<b>三项测量到手。</b>感受野已在屏上标出：中心一小片推它，套在外面的一圈拉它。往下看这意味着什么。';
+      drawChart(); drawScreen();
+    }
+  }
+  const dwell = makeDwell(600, () => {
+    if (st.full || flags.done) return;
+    if (!centered()) return;
+    if (rateCache < C3.lgnBase * 1.15 && st.d < 6) return;  // 太弱的散点不记（保持曲线可读）
+    pts.set(Math.round(st.d * 10) / 10, rateCache);
+    drawChart(); judge();
+    if (!flags.done) $('#lgn-story').innerHTML = '已记 ' + pts.size + ' 个点。换直径继续——把「最猛」和「更大反而更弱」都测出来。';
+  });
+  function proximityStory() {
+    if (flags.done || st.full) return;
+    const d = Math.hypot(st.sx - rf[0], st.sy - rf[1]);
+    if (rateCache >= 15) $('#lgn-story').innerHTML = '<b>找到了——放电炸开了。</b>停住别动，让它自动记点；然后只动直径滑杆。';
+    else if (d < 2.2) $('#lgn-story').textContent = '有动静了。它的地盘就在附近。';
+    else $('#lgn-story').textContent = '很冷清——这里不是它的地盘。继续拖。';
+  }
+  // 拖拽
+  let dragging = false;
+  const toDeg = e => {
+    const r = cv.getBoundingClientRect();
+    const sc = Math.min(r.width, r.height) / C3.fov;
+    return [(e.clientX - r.left - r.width / 2) / sc, (e.clientY - r.top - r.height / 2) / sc];
+  };
+  cv.addEventListener('pointerdown', e => { dragging = true; cv.setPointerCapture(e.pointerId); onMove(e); });
+  cv.addEventListener('pointermove', e => { if (dragging) onMove(e); });
+  cv.addEventListener('pointerup', () => { dragging = false; });
+  function onMove(e) {
+    const [x, y] = toDeg(e);
+    st.sx = clamp(x, -4.6, 4.6); st.sy = clamp(y, -4.6, 4.6);
+    if (st.full) endFull();
+    refresh(); proximityStory(); dwell();
+  }
+  $('#lgn-d').addEventListener('input', () => {
+    st.d = +$('#lgn-d').value;
+    $('#lgn-d-val').textContent = st.d.toFixed(1) + '°';
+    if (st.full) endFull();
+    refresh(); dwell();
+  });
+  function endFull() { st.full = false; clearTimeout(fullTimer); refresh(); }
+  $('#lgn-full').addEventListener('click', () => {
+    st.full = true; refresh();
+    flags.full = true;
+    $('#lgn-note').textContent = '满屏照明：' + rateCache.toFixed(0) + ' Hz——和基线几乎没差。';
+    $('#lgn-story').innerHTML = '光子给到最多，它反而<b>不动声色</b>。这一票你押对了吗？';
+    judge();
+    clearTimeout(fullTimer);
+    fullTimer = setTimeout(endFull, 1600);
+  });
+  $('#lgn-reset').addEventListener('click', () => { pts.clear(); drawChart(); });
+  const scope = makeScope($('#lgn-scope'), () => rateCache, () => $('#lgn-snd').checked);
+  redraws.add(() => { drawScreen(); drawChart(); });
+  refresh(); drawChart();
+})();
+
+/* ================= 第 2 节 · 光条台（旋转模式） ================= */
+(function barRig() {
+  const cv = $('#bar-screen'); if (!cv) return;
+  const chart = $('#bar-chart');
+  const trueOri = [30, 60, 120, 150][Math.floor(Math.random() * 4)] + Math.round(Math.random() * 10 - 5);
+  const cell = makeSimpleCell(trueOri);
+  LEC3.trueOri = trueOri; LEC3.cell = cell;
+  const truePeakRate = cell.rateBar(trueOri, 0);
+  const st = { ang: 0, spot: false, done: false };
+  const pts = new Map();           // ang -> rate
+  let spotDone = false, spotTimer = null;
+  let rateCache = cell.rateBar(0, 0);
+
+  function drawScreen() {
+    const { ctx, w, h } = fitCanvas(cv);
+    const sc = Math.min(w, h) / C3.fov;
+    ctx.fillStyle = '#3A4150'; ctx.fillRect(0, 0, w, h);
+    const cx = w / 2, cy = h / 2;
+    if (st.spot) {
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, C3.spotProbe / 2 * sc);
+      g.addColorStop(0, '#F2EFE6'); g.addColorStop(1, 'rgba(230,225,210,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(cx, cy, C3.spotProbe / 2 * sc, 0, 7); ctx.fill();
+    } else {
+      ctx.save();
+      ctx.translate(cx, cy); ctx.rotate(-st.ang * Math.PI / 180);
+      ctx.fillStyle = '#F0EDE2';
+      const L = C3.barLen * sc, W2 = C3.barWid * sc;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(-L / 2, -W2 / 2, L, W2, W2 / 2); else ctx.rect(-L / 2, -W2 / 2, L, W2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.fillStyle = 'rgba(201,209,224,0.6)'; ctx.font = '10.5px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText(st.spot ? '光点 1.2°' : '光条 4° × 1.2° · ' + st.ang + '°', 8, 6);
+  }
+  function drawChart() {
+    const { ctx, w, h } = fitCanvas(chart);
+    const { X, Y } = rigAxes(ctx, w, h, { l: 44, r: 12, t: 14, b: 30 }, [0, 180], [0, 60],
+      '朝向 (°)', 'Hz', [0, 45, 90, 135, 180], [0, 20, 40, 60]);
+    ctx.strokeStyle = RIG.grid; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(X(0), Y(C3.simpleBase)); ctx.lineTo(X(180), Y(C3.simpleBase)); ctx.stroke();
+    ctx.setLineDash([]);
+    if (st.done) {
+      const ts = [], vs = [];
+      for (let a = 0; a <= 180; a += 2) { ts.push(a); vs.push(cell.rateBar(a, 0)); }
+      drawTrace(ctx, X, Y, ts, vs, RIG.dim, 2);
+    }
+    ctx.fillStyle = RIG.v;
+    [...pts.entries()].forEach(([a, r]) => { ctx.beginPath(); ctx.arc(X(a), Y(clamp(r, 0, 59)), 3.6, 0, 7); ctx.fill(); });
+    if (!pts.size) {
+      ctx.fillStyle = RIG.text; ctx.font = '12px "IBM Plex Sans", sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('坐标是空的——曲线要靠你逐角度测出来', w / 2, h / 2 - 10);
+    }
+  }
+  function refresh() {
+    rateCache = st.spot ? cell.rateSpot(C3.spotProbe, 0, 0) : cell.rateBar(st.ang, 0);
+    const el = $('#bar-rate');
+    el.textContent = rateCache.toFixed(0) + ' Hz';
+    el.className = 'outcome ' + (rateCache >= 20 ? 'spike' : 'idle');
+    scope.poke(); drawScreen();
+  }
+  const dwell = makeDwell(600, () => {
+    if (st.spot || st.done) return;
+    pts.set(st.ang, rateCache);
+    drawChart();
+    $('#bar-story').innerHTML = '已测 ' + pts.size + ' 个角度。' + (rateCache >= 40 ? '<b>这个角度它很兴奋。</b>附近再细测两个点，钉死峰的位置。' : '继续转——别忘了离峰远的角度也要测，曲线两边都要有脚。');
+  });
+  function setAng(a) {
+    st.ang = ((Math.round(a / 5) * 5) % 180 + 180) % 180;
+    $('#bar-ang').value = st.ang;
+    $('#bar-ang-val').textContent = st.ang + '°';
+    if (st.spot) { st.spot = false; clearTimeout(spotTimer); }
+    refresh(); dwell();
+  }
+  $('#bar-ang').addEventListener('input', () => setAng(+$('#bar-ang').value));
+  $('#bar-m15').addEventListener('click', () => setAng(st.ang - 15));
+  $('#bar-p15').addEventListener('click', () => setAng(st.ang + 15));
+  $('#bar-spot').addEventListener('click', () => {
+    st.spot = true; spotDone = true; refresh();
+    $('#bar-note').textContent = '光点响应：' + rateCache.toFixed(0) + ' Hz——LGN 的最爱，到这里只剩冷淡。';
+    $('#bar-story').innerHTML = '光点几乎叫不醒它——<b>1958 年的那几个小时就是这种安静。</b>换光条。';
+    clearTimeout(spotTimer);
+    spotTimer = setTimeout(() => { st.spot = false; refresh(); }, 1600);
+  });
+  $('#bar-dial').addEventListener('input', () => { $('#bar-dial-val').textContent = $('#bar-dial').value + '°'; });
+  $('#bar-submit').addEventListener('click', () => {
+    if (st.done) return;
+    const dial = +$('#bar-dial').value;
+    let err = Math.abs(dial - trueOri); if (err > 90) err = 180 - err;
+    const maxR = Math.max(0, ...pts.values());
+    const missing = [];
+    if (!spotDone) missing.push('先按「光点」记录它的冷淡');
+    if (pts.size < 6) missing.push('至少测 6 个角度（已测 ' + pts.size + '）');
+    if (maxR < 0.8 * truePeakRate) missing.push('曲线的峰还没真正测到——最猛的角度附近再找找');
+    if (missing.length) { $('#bar-story').innerHTML = '还差：' + missing.join('；') + '。'; return; }
+    if (err > 10) { $('#bar-story').innerHTML = '答案拨得不对——看你自己的图，峰在哪个角度上？'; return; }
+    st.done = true;
+    $('#bar-led').classList.add('on');
+    $('#bar-payoff').hidden = false;
+    LEC3.dialOri = dial;
+    $('#bar-note').textContent = '最佳朝向 ' + trueOri + '°，你报 ' + dial + '°——误差 ' + err + '°。';
+    $('#bar-story').innerHTML = '<b>验收通过。</b>完整调谐曲线已叠在你的点上。这只细胞的口味，你现在有实测数据了。';
+    drawChart();
+  });
+  const scope = makeScope($('#bar-scope'), () => rateCache, () => $('#bar-snd').checked);
+  redraws.add(() => { drawScreen(); drawChart(); });
+  refresh(); drawChart();
+})();
+
+/* ================= 第 3 节 · 光条台（平移模式） ================= */
+(function bar2Rig() {
+  const cv = $('#bar2-screen'); if (!cv) return;
+  const chart = $('#bar2-chart');
+  const cell = () => LEC3.cell;
+  const lockAng = () => (LEC3.dialOri !== null ? LEC3.dialOri : LEC3.trueOri);
+  const st = { pos: 0, done: false };
+  const pts = new Map();          // pos -> pct
+  let normAt0 = null;
+  const pct = p => {
+    if (normAt0 === null) normAt0 = Math.max(1e-9, cell().normBar(lockAng(), 0));
+    return clamp(cell().normBar(lockAng(), p) / normAt0 * 100, 0, 110);
+  };
+  function drawScreen() {
+    const { ctx, w, h } = fitCanvas(cv);
+    const sc = Math.min(w, h) / C3.fov;
+    ctx.fillStyle = '#3A4150'; ctx.fillRect(0, 0, w, h);
+    const phi = lockAng() * Math.PI / 180;
+    // 导轨（垂直于光条）
+    ctx.strokeStyle = 'rgba(201,209,224,0.25)'; ctx.setLineDash([4, 5]); ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(w / 2 - 3.2 * -Math.sin(phi) * sc, h / 2 - 3.2 * Math.cos(phi) * sc);
+    ctx.lineTo(w / 2 + 3.2 * -Math.sin(phi) * sc, h / 2 + 3.2 * Math.cos(phi) * sc);
+    ctx.stroke(); ctx.setLineDash([]);
+    ctx.save();
+    ctx.translate(w / 2 + st.pos * -Math.sin(phi) * sc, h / 2 + st.pos * Math.cos(phi) * sc);
+    ctx.rotate(-phi);
+    ctx.fillStyle = '#F0EDE2';
+    const L = C3.barLen * sc, W2 = C3.barWid * sc;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(-L / 2, -W2 / 2, L, W2, W2 / 2); else ctx.rect(-L / 2, -W2 / 2, L, W2);
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = 'rgba(201,209,224,0.6)'; ctx.font = '10.5px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('朝向锁定 ' + lockAng() + '° · 位置 ' + st.pos.toFixed(2) + '°', 8, 6);
+  }
+  function drawChart() {
+    const { ctx, w, h } = fitCanvas(chart);
+    const { X, Y } = rigAxes(ctx, w, h, { l: 46, r: 12, t: 14, b: 30 }, [-3, 3], [0, 105],
+      '位置 (°)', '% 峰值', [-3, -2, -1, 0, 1, 2, 3], [0, 20, 50, 80, 100]);
+    ctx.strokeStyle = RIG.axis; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(X(-3), Y(20)); ctx.lineTo(X(3), Y(20)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = RIG.text; ctx.font = '10px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText('20%', X(2.55), Y(20) - 2);
+    if (st.done) {
+      const ts = [], vs = [];
+      for (let p = -3; p <= 3.001; p += 0.1) { ts.push(p); vs.push(pct(p)); }
+      drawTrace(ctx, X, Y, ts, vs, RIG.dim, 2);
+    }
+    ctx.fillStyle = RIG.v;
+    [...pts.entries()].forEach(([p, v]) => { ctx.beginPath(); ctx.arc(X(p), Y(clamp(v, 0, 104)), 3.6, 0, 7); ctx.fill(); });
+  }
+  function refresh() {
+    const v = pct(st.pos);
+    const el = $('#bar2-rate');
+    el.textContent = v.toFixed(0) + ' %';
+    el.className = 'outcome ' + (v >= 50 ? 'spike' : v <= 20 ? 'fail' : 'idle');
+    drawScreen();
+  }
+  function judge() {
+    if (st.done) return;
+    const arr = [...pts.entries()];
+    const far = arr.some(([p]) => Math.abs(p) >= 2);
+    const low = arr.some(([, v]) => v <= 20);
+    const both = arr.some(([p]) => p > 0) && arr.some(([p]) => p < 0);
+    if (arr.length >= 5 && far && low && both) {
+      st.done = true;
+      $('#bar2-led').classList.add('on');
+      $('#bar2-payoff').hidden = false;
+      $('#bar2-story').innerHTML = '<b>测出来了：出了这片地，朝向再对也白搭。</b>完整曲线已叠上。';
+      drawChart();
+    }
+  }
+  const dwell = makeDwell(600, () => {
+    if (st.done) return;
+    pts.set(st.pos, pct(st.pos));
+    drawChart(); judge();
+    if (!st.done) $('#bar2-story').innerHTML = '已记 ' + pts.size + ' 个位置点。两侧都要测到 2° 开外，并拿到一个 20% 以下的点。';
+  });
+  $('#bar2-pos').addEventListener('input', () => {
+    st.pos = +$('#bar2-pos').value;
+    $('#bar2-pos-val').textContent = st.pos.toFixed(2) + '°';
+    normAt0 = null;
+    refresh(); dwell();
+  });
+  $('#bar2-story').textContent = '朝向已锁定。把滑杆当电极推进器，一格一格挪。';
+  redraws.add(() => { drawScreen(); drawChart(); });
+  refresh(); drawChart();
+})();
+</script>
+<script>
+'use strict';
+/* ================= 第 4 节 · 简单细胞装配台 ================= */
+(function asmRig() {
+  const grid = $('#asm-grid'); if (!grid) return;
+  const A = C3.asmN, cell = C3.asmCell;
+  const gridPos = (r, c) => [(c - (A - 1) / 2) * cell, ((A - 1) / 2 - r) * cell];
+  const units = new Set();       // r*A+c
+  const cells = [];
+  const PROBES = [0, 45, 90, 135];
+  const GLYPH = { 0: '─ 0°', 45: '╱ 45°', 90: '│ 90°', 135: '╲ 135°' };
+  function asmDrive(list, deg) {
+    const centers = list.map(k => gridPos(Math.floor(k / A), k % A));
+    return barDriveCore(centers, 0, 0, deg * Math.PI / 180, A * cell * 1.1, 1.2 * cell);
+  }
+  const refTrio = [8 * A + 3, 6 * A + 5, 4 * A + 7];
+  const refR45 = asmDrive(refTrio, 45);
+  const theta = C3.asmThetaFrac * refR45;
+  const barMax = refR45 * 1.25;
+  // 网格与探针路径
+  for (let r = 0; r < A; r++) for (let c = 0; c < A; c++) {
+    const b = document.createElement('button');
+    b.className = 'asm-cell';
+    b.setAttribute('aria-label', '格 ' + (r + 1) + '-' + (c + 1));
+    const [x, y] = gridPos(r, c);
+    const onPath = PROBES.some(a => {
+      const rad = a * Math.PI / 180;
+      return Math.abs(-x * Math.sin(rad) + y * Math.cos(rad)) <= 0.33;
+    });
+    if (onPath) b.classList.add('probe-path');
+    b.addEventListener('click', () => {
+      const k = r * A + c;
+      if (units.has(k)) units.delete(k);
+      else { if (units.size >= 5) { $('#asm-story').textContent = '最多 5 个单元——先移掉一个再放。'; return; } units.add(k); }
+      b.classList.toggle('unit', units.has(k));
+      $('#asm-count').textContent = units.size;
+      probed = false;
+      $('#asm-verdict').textContent = '—'; $('#asm-verdict').className = 'outcome idle';
+    });
+    grid.appendChild(b);
+    cells.push(b);
+  }
+  // 响应表
+  const rows = {};
+  PROBES.forEach(a => {
+    const row = document.createElement('div');
+    row.className = 'asm-bar-row';
+    row.innerHTML = '<span class="ab-glyph">' + GLYPH[a] + '</span>' +
+      '<span class="ab-track"><i class="ab-fill"></i><span class="ab-theta" style="left:' + (theta / barMax * 100).toFixed(1) + '%"></span></span>' +
+      '<span class="ab-val">—</span>';
+    $('#asm-bar-rows').appendChild(row);
+    rows[a] = row;
+  });
+  let probed = false, done = false;
+  function setRow(a, v) {
+    const row = rows[a];
+    row.querySelector('.ab-fill').style.width = clamp(v / barMax * 100, 0, 100).toFixed(1) + '%';
+    row.querySelector('.ab-val').textContent = v.toFixed(2);
+    row.classList.toggle('pass', v >= theta);
+  }
+  function drawYou() {
+    const cvy = $('#asm-cmp-you'); if (!cvy) return;
+    const ctx = cvy.getContext('2d');
+    const S = 120, u = S / A;
+    ctx.clearRect(0, 0, S, S);
+    ctx.fillStyle = cssVar('--surface-2'); ctx.fillRect(0, 0, S, S);
+    ctx.strokeStyle = cssVar('--line');
+    for (let i = 0; i <= A; i++) {
+      ctx.beginPath(); ctx.moveTo(i * u, 0); ctx.lineTo(i * u, S); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, i * u); ctx.lineTo(S, i * u); ctx.stroke();
+    }
+    units.forEach(k => {
+      const r = Math.floor(k / A), c = k % A;
+      ctx.fillStyle = cssVar('--accent');
+      ctx.beginPath(); ctx.arc((c + 0.5) * u, (r + 0.5) * u, u * 0.42, 0, 7); ctx.fill();
+      ctx.strokeStyle = cssVar('--muted');
+      ctx.beginPath(); ctx.arc((c + 0.5) * u, (r + 0.5) * u, u * 0.85, 0, 7); ctx.stroke();
+    });
+  }
+  function farmThumb() {
+    const el = $('#asm-cmp-farm'); if (!el || el.children.length) return;
+    const m = new Array(25).fill(0.08);
+    for (let i = 0; i < 5; i++) m[(4 - i) * 5 + i] = 0.85;
+    for (let i = 0; i < 25; i++) {
+      const c = document.createElement('i');
+      c.style.background = 'color-mix(in srgb, var(--accent) ' + Math.round(m[i] * 92) + '%, var(--surface-2))';
+      el.appendChild(c);
+    }
+  }
+  $('#asm-probe').addEventListener('click', () => {
+    if (!units.size) { $('#asm-story').textContent = '网格还是空的——先放单元。'; return; }
+    const list = [...units];
+    const resp = {};
+    PROBES.forEach(a => { resp[a] = asmDrive(list, a); });
+    const show = i => {
+      if (i >= PROBES.length) { verdict(resp); return; }
+      setRow(PROBES[i], resp[PROBES[i]]);
+      if (REDUCED) show(i + 1); else setTimeout(() => show(i + 1), 260);
+    };
+    PROBES.forEach(a => setRow(a, 0));
+    show(0);
+  });
+  function verdict(resp) {
+    probed = true;
+    MP.reveal('mp-asm');
+    const ok = resp[45] >= theta && resp[135] < theta;
+    const v = $('#asm-verdict');
+    if (ok) {
+      v.textContent = '✓ 45° 通过 · 135° 不通过'; v.className = 'outcome spike';
+      if (!done) {
+        done = true;
+        $('#asm-led').classList.add('on');
+        $('#asm-payoff').hidden = false;
+        drawYou(); farmThumb();
+        $('#asm-story').innerHTML = '<b>接通了。</b>朝向从排列里来，不从部件里来——往下把你的图和 1962 年的对一眼。';
+      }
+    } else if (resp[45] >= theta) {
+      v.textContent = '135° 也过了——不够挑食'; v.className = 'outcome fail';
+      $('#asm-story').innerHTML = '它对 45° 响应了，但 135° 也拦不住——排布太<b>团</b>了。把单元拉成一条 45° 的线，让横过来的光条一次只能喂到一个。';
+    } else {
+      v.textContent = '45° 没过阈值'; v.className = 'outcome fail';
+      $('#asm-story').innerHTML = '45° 的响应还不过线。单元要<b>排在 45° 探针的路径上</b>（淡色格），彼此拉开一点，让同一根光条能同时压住所有中心。';
+    }
+  }
+  $('#asm-clear').addEventListener('click', () => {
+    units.clear();
+    cells.forEach(b => b.classList.remove('unit'));
+    $('#asm-count').textContent = '0';
+    PROBES.forEach(a => { setRow(a, 0); rows[a].querySelector('.ab-val').textContent = '—'; });
+    $('#asm-verdict').textContent = '—'; $('#asm-verdict').className = 'outcome idle';
+  });
+  redraws.add(() => { if (done) { drawYou(); } });
+})();
+
+/* ================= 第 5 节 · 双通道位置容忍台 ================= */
+(function cxRig() {
+  const cv = $('#cx-screen'); if (!cv) return;
+  const chart = $('#cx-chart');
+  const cell = () => LEC3.cell;
+  const lockAng = () => (LEC3.dialOri !== null ? LEC3.dialOri : LEC3.trueOri);
+  const st = { pos: 0, ch: 's', done: false };
+  const data = { s: new Map(), c: new Map() };
+  const orth = { s: null, c: null };
+  let norm0 = null, cPeak = null;
+  function norms() {
+    if (norm0 === null) { norm0 = Math.max(1e-9, cell().normBar(lockAng(), 0)); cPeak = Math.max(1e-9, cell().normComplex(lockAng(), 0)); }
+  }
+  const val = (ch, pos, angOff) => {
+    norms();
+    const a = lockAng() + (angOff || 0);
+    return ch === 's'
+      ? clamp(cell().normBar(a, pos) / norm0 * 100, 0, 110)
+      : clamp(cell().normComplex(a, pos) / cPeak * 100, 0, 110);
+  };
+  function drawScreen() {
+    const { ctx, w, h } = fitCanvas(cv);
+    const sc = Math.min(w, h) / C3.fov;
+    ctx.fillStyle = '#3A4150'; ctx.fillRect(0, 0, w, h);
+    const phi = lockAng() * Math.PI / 180;
+    ctx.strokeStyle = 'rgba(201,209,224,0.25)'; ctx.setLineDash([4, 5]); ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(w / 2 - 3.2 * -Math.sin(phi) * sc, h / 2 - 3.2 * Math.cos(phi) * sc);
+    ctx.lineTo(w / 2 + 3.2 * -Math.sin(phi) * sc, h / 2 + 3.2 * Math.cos(phi) * sc);
+    ctx.stroke(); ctx.setLineDash([]);
+    ctx.save();
+    ctx.translate(w / 2 + st.pos * -Math.sin(phi) * sc, h / 2 + st.pos * Math.cos(phi) * sc);
+    ctx.rotate(-phi);
+    ctx.fillStyle = '#F0EDE2';
+    const L = C3.barLen * sc, W2 = C3.barWid * sc;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(-L / 2, -W2 / 2, L, W2, W2 / 2); else ctx.rect(-L / 2, -W2 / 2, L, W2);
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = 'rgba(201,209,224,0.6)'; ctx.font = '10.5px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('通道 ' + (st.ch === 's' ? 'A · 简单细胞' : 'B · 新细胞') + ' · 位置 ' + st.pos.toFixed(2) + '°', 8, 6);
+  }
+  function drawChart() {
+    const { ctx, w, h } = fitCanvas(chart);
+    const { X, Y } = rigAxes(ctx, w, h, { l: 46, r: 64, t: 14, b: 30 }, [-3, 3], [0, 105],
+      '位置 (°)', '% 峰值', [-3, -2, -1, 0, 1, 2, 3], [0, 15, 30, 80, 100]);
+    [[80, '80%'], [30, '30%'], [15, '15%']].forEach(([yy, lb]) => {
+      ctx.strokeStyle = RIG.grid; ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(X(-3), Y(yy)); ctx.lineTo(X(3), Y(yy)); ctx.stroke();
+      ctx.setLineDash([]);
+    });
+    if (st.done) {
+      const t1 = [], v1 = [], t2 = [], v2 = [];
+      for (let p = -3; p <= 3.001; p += 0.1) { t1.push(p); v1.push(val('s', p)); t2.push(p); v2.push(val('c', p)); }
+      drawTrace(ctx, X, Y, t1, v1, 'rgba(191,163,239,0.4)', 2);
+      drawTrace(ctx, X, Y, t2, v2, 'rgba(95,159,216,0.4)', 2);
+    }
+    const dot = (m, color, square) => {
+      ctx.fillStyle = color;
+      [...m.entries()].forEach(([p, v]) => {
+        if (square) { ctx.fillRect(X(p) - 3.4, Y(clamp(v, 0, 104)) - 3.4, 6.8, 6.8); }
+        else { ctx.beginPath(); ctx.arc(X(p), Y(clamp(v, 0, 104)), 3.6, 0, 7); ctx.fill(); }
+      });
+    };
+    dot(data.s, RIG.v, false);
+    dot(data.c, RIG.k, true);
+    // 右缘专栏：90° 对照
+    const xo = w - 34;
+    ctx.strokeStyle = RIG.axis; ctx.beginPath(); ctx.moveTo(w - 56, 14); ctx.lineTo(w - 56, h - 30); ctx.stroke();
+    ctx.fillStyle = RIG.text; ctx.font = '10px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('⊥90°', xo, 16);
+    if (orth.s !== null) { ctx.fillStyle = RIG.v; ctx.font = '12px "IBM Plex Mono", monospace'; ctx.textBaseline = 'middle'; ctx.fillText('⊥', xo - 10, Y(clamp(orth.s, 0, 104))); }
+    if (orth.c !== null) { ctx.fillStyle = RIG.k; ctx.font = '12px "IBM Plex Mono", monospace'; ctx.textBaseline = 'middle'; ctx.fillText('⊥', xo + 10, Y(clamp(orth.c, 0, 104))); }
+    // 图例
+    ctx.font = '10px "IBM Plex Mono", monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillStyle = RIG.v; ctx.fillText('● 简单', X(-2.9), 16);
+    ctx.fillStyle = RIG.k; ctx.fillText('■ 新细胞', X(-2.9), 30);
+  }
+  function refresh() {
+    const v = val(st.ch, st.pos);
+    const el = $('#cx-rate');
+    el.textContent = v.toFixed(0) + ' %';
+    el.className = 'outcome ' + (v >= 60 ? 'spike' : v <= 20 ? 'fail' : 'idle');
+    drawScreen();
+  }
+  function judge() {
+    if (st.done) return;
+    const span = m => { const ps = [...m.keys()]; return ps.length ? Math.max(...ps) - Math.min(...ps) : 0; };
+    if (data.s.size >= 5 && data.c.size >= 5 && span(data.s) >= 4 && span(data.c) >= 4 && orth.s !== null && orth.c !== null) {
+      st.done = true;
+      $('#cx-led').classList.add('on');
+      $('#cx-payoff').hidden = false;
+      $('#cx-story').innerHTML = '<b>四组数据都在图上了。</b>两条曲线一平一尖，两个 ⊥ 一起趴在地板上——往下看它怎么办到的。';
+      drawChart();
+    }
+  }
+  const dwell = makeDwell(600, () => {
+    if (st.done) return;
+    data[st.ch].set(st.pos, val(st.ch, st.pos));
+    drawChart(); judge();
+    if (!st.done) $('#cx-story').innerHTML = '通道 ' + (st.ch === 's' ? 'A' : 'B') + ' 已记 ' + data[st.ch].size + ' 点。两条曲线各要 5 点、跨度 4°，再各补一个 90° 对照。';
+  });
+  function setCh(ch) {
+    st.ch = ch;
+    norm0 = null;
+    $('#cx-ch-s').classList.toggle('on', ch === 's');
+    $('#cx-ch-c').classList.toggle('on', ch === 'c');
+    $('#cx-ch-s').setAttribute('aria-pressed', ch === 's');
+    $('#cx-ch-c').setAttribute('aria-pressed', ch === 'c');
+    $('#cx-note').textContent = ch === 's' ? '通道 A 在录：这是你第 2、3 节测过的那类细胞。' : '通道 B 在录：新细胞。同一根光条，重复刚才的平移。';
+    refresh(); dwell();
+  }
+  $('#cx-ch-s').addEventListener('click', () => setCh('s'));
+  $('#cx-ch-c').addEventListener('click', () => setCh('c'));
+  $('#cx-pos').addEventListener('input', () => {
+    st.pos = +$('#cx-pos').value;
+    $('#cx-pos-val').textContent = st.pos.toFixed(2) + '°';
+    refresh(); dwell();
+  });
+  $('#cx-orth').addEventListener('click', () => {
+    orth[st.ch] = val(st.ch, 0, 90);
+    $('#cx-note').textContent = '90° 对照（通道 ' + (st.ch === 's' ? 'A' : 'B') + '）：' + orth[st.ch].toFixed(0) + '%。';
+    drawChart(); judge();
+  });
+  $('#cx-story').textContent = '先补齐通道 A 的位置曲线，再切通道 B 重测一遍。';
+  redraws.add(() => { drawScreen(); drawChart(); });
+  refresh(); drawChart();
+})();
+
+/* ================= 第 6 节 · 等变条带 ================= */
+(function eqvStrip() {
+  const inEl = $('#eqv-in'); if (!inEl) return;
+  const N = C3.stripN, K = C3.stripKernel, [w0, w1] = C3.stripWin, BW = C3.stripBar;
+  const featEl = $('#eqv-feat');
+  const inCells = [], featCells = [];
+  for (let i = 0; i < N; i++) {
+    const a = document.createElement('i'); inEl.appendChild(a); inCells.push(a);
+    const b = document.createElement('i'); featEl.appendChild(b); featCells.push(b);
+    if (i >= w0 && i <= w1) b.style.borderColor = 'var(--accent)';
+  }
+  $('#eqv-win-note').textContent = '池化窗口 = 第 ' + (w0 + 1) + '–' + (w1 + 1) + ' 格（描边）';
+  function render() {
+    const p = +$('#eqv-slider').value;
+    const x = new Array(N).fill(0);
+    for (let i = 0; i < BW; i++) if (p + i < N) x[p + i] = 1;
+    const f = new Array(N).fill(0);
+    for (let i = 0; i < N; i++) {
+      let s = 0;
+      for (let k = 0; k < K.length; k++) { const j = i + k - 1; if (j >= 0 && j < N) s += K[k] * x[j]; }
+      f[i] = s;
+    }
+    inCells.forEach((c, i) => { c.style.background = 'color-mix(in srgb, var(--c-i) ' + Math.round(x[i] * 88) + '%, var(--surface-2))'; });
+    featCells.forEach((c, i) => { c.style.background = 'color-mix(in srgb, var(--accent) ' + Math.round(clamp(f[i], 0, 1) * 90) + '%, var(--surface-2))'; });
+    let m = 0; for (let i = w0; i <= w1; i++) m = Math.max(m, f[i]);
+    $('#eqv-pool').textContent = m.toFixed(1);
+    const inside = p >= w0 && p + BW - 1 <= w1;
+    $('#eqv-zone-note').textContent = inside
+      ? '光条在窗内挪——特征图整张在动（等变），池化输出纹丝不动（不变）'
+      : '出了窗口——池化输出掉下去了';
+    $('#eqv-pool').style.borderColor = inside ? 'var(--good)' : 'var(--line)';
+    $('#eqv-pool').style.color = inside ? 'var(--good)' : 'var(--muted)';
+  }
+  $('#eqv-slider').addEventListener('input', render);
+  redraws.add(render);
+  render();
+})();
+</script>
+<script>
+'use strict';
+/* ================= 第 7 节 · 农场 2.0（lec02 农场逐字常量 + 可切换前端） ================= */
+(function farm2() {
+  const stimEl = $('#farm2-stim'); if (!stimEl) return;
+  const F = { etaWin: 0.15, steps: 800, noise: 0.25, thetaF: 1.2 };   // 与 scripts/verify-lec03.mjs 同源
+  const GLYPH = ['─', '│', '╱', '╲'];
+  function barPix(o, off) {
+    const img = new Array(25).fill(0);
+    for (let i = 0; i < 5; i++) {
+      let r, c;
+      if (o === 0) { r = 2 + off; c = i; }
+      else if (o === 1) { r = i; c = 2 + off; }
+      else if (o === 2) { r = 4 - i + off; c = i; }
+      else { r = i + off; c = i; }
+      if (r < 0 || r > 4) continue;
+      img[r * 5 + c] = 1;
+    }
+    return img;
+  }
+  function noisyBar(rng, o, jitter) {
+    const off = jitter ? Math.floor(rng() * 3) - 1 : 0;
+    const img = barPix(o, off);
+    for (let i = 0; i < 25; i++) img[i] = clamp(img[i] + F.noise * (rng() * 2 - 1), 0, 1);
+    return img;
+  }
+  const TPL = [];
+  for (let o = 0; o < 4; o++) { const per = []; for (let off = -1; off <= 1; off++) {
+    const t = barPix(o, off); const n = Math.sqrt(t.reduce((a, v) => a + v * v, 0));
+    per.push(t.map(v => v / n)); } TPL.push(per); }
+  const feat12 = x => TPL.flatMap(per => per.map(t => { let s = 0; for (let i = 0; i < 25; i++) s += t[i] * x[i]; return Math.max(0, s - F.thetaF); }));
+  const feat4 = x => { const f = feat12(x); return [0, 1, 2, 3].map(o => Math.max(f[o * 3], f[o * 3 + 1], f[o * 3 + 2])); };
+  const TIERS = { direct: { enc: x => x, D: 25 }, filter: { enc: feat12, D: 12 }, pool: { enc: feat4, D: 4 } };
+
+  const lerp = (a, b, t) => Math.round(a + (b - a) * t);
+  const cellColor = v => {
+    v = clamp(v, 0, 1);
+    return 'rgb(' + lerp(26, 191, v) + ',' + lerp(32, 163, v) + ',' + lerp(48, 239, v) + ')';
+  };
+  function paint(mapEl, vals, scale) {
+    [...mapEl.children].forEach((c, i) => { c.style.background = cellColor((vals[i] || 0) / (scale || 1)); });
+  }
+  // 刺激格
+  for (let i = 0; i < 25; i++) stimEl.appendChild(document.createElement('i'));
+  // 前端模板可视条
+  const tplMaps = [];
+  for (let o = 0; o < 4; o++) for (let k = 0; k < 3; k++) {
+    const item = document.createElement('div');
+    item.className = 'wmap-item';
+    const m = document.createElement('div');
+    m.className = 'wmap small';
+    for (let i = 0; i < 25; i++) m.appendChild(document.createElement('i'));
+    paint(m, TPL[o][k].map(v => v * 2.2));
+    item.appendChild(m);
+    const lb = document.createElement('div');
+    lb.className = 'wmap-label';
+    lb.textContent = GLYPH[o] + (k === 0 ? '↑' : k === 1 ? '·' : '↓');
+    item.appendChild(lb);
+    $('#farm2-templates').appendChild(item);
+    tplMaps.push(m);
+  }
+  // 四个单元的权重显示（随档位重建）
+  let tier = 'direct', W = [], wins = [], remaining = F.steps, running = false, raf = null, rng = null;
+  const unitMaps = [], unitLabels = [];
+  function buildUnitMaps() {
+    const box = $('#farm2-maps');
+    box.innerHTML = ''; unitMaps.length = 0; unitLabels.length = 0;
+    const D = TIERS[tier].D;
+    for (let k = 0; k < 4; k++) {
+      const item = document.createElement('div');
+      item.className = 'wmap-item';
+      const m = document.createElement('div');
+      m.className = 'wmap';
+      if (tier === 'direct') { /* 默认 5×17px */ }
+      else m.setAttribute('style', 'grid-template-columns:repeat(' + (tier === 'filter' ? 12 : 4) + ',15px);grid-auto-rows:15px');
+      for (let i = 0; i < D; i++) m.appendChild(document.createElement('i'));
+      m.setAttribute('role', 'img');
+      m.setAttribute('aria-label', k + ' 号神经元权重');
+      item.appendChild(m);
+      const lb = document.createElement('div');
+      lb.className = 'wmap-label';
+      lb.textContent = k + ' 号 · 胜 0';
+      item.appendChild(lb);
+      box.appendChild(item);
+      unitMaps.push(m); unitLabels.push(lb);
+    }
+    $('#farm2-maps-note').textContent = tier === 'direct'
+      ? '四个神经元的权重（25 像素热图）；下方数字是胜场。'
+      : tier === 'filter'
+        ? '四个神经元的权重（12 维：4 朝向 × 3 位置）；同一朝向的三格分开亮——报告跟着位置跑。'
+        : '四个神经元的权重（4 维：每朝向一格）；位置已在前端被 max 吸收。';
+  }
+  const seedOf = () => {
+    const p = parseInt($('#farm2-seed').value, 10);
+    return (Number.isFinite(p) ? Math.abs(p) : 42) * 7919 + 13;
+  };
+  const jitterOn = () => true;
+  let probeOwners = {}, sawPoolPass = false, sawFilterFail = false, done = false, trained = false;
+  function renderAll(stim) {
+    if (stim) {
+      paint(stimEl, stim);
+      if (tier !== 'direct') {
+        const f = feat12(stim);
+        tplMaps.forEach((m, i) => m.classList.toggle('win', f[i] > 0.15));
+      }
+    }
+    const scale = tier === 'direct' ? 1 : 1.4;
+    unitMaps.forEach((m, k) => paint(m, W[k], scale));
+    unitLabels.forEach((lb, k) => { lb.textContent = k + ' 号 · 胜 ' + wins[k]; });
+  }
+  function reset() {
+    stopTrain();
+    rng = makeRng(seedOf());
+    const D = TIERS[tier].D;
+    W = [];
+    for (let k = 0; k < 4; k++) { const w = []; for (let i = 0; i < D; i++) w.push(0.2 + 0.15 * rng()); W.push(w); }
+    wins = [0, 0, 0, 0];
+    remaining = F.steps; trained = false; probeOwners = {};
+    $('#farm2-verdict').textContent = '—'; $('#farm2-verdict').className = 'outcome idle';
+    $('#farm2-train').textContent = '▶ 训练 ×800';
+    buildUnitMaps();
+    renderAll(new Array(25).fill(0));
+    $('#farm2-story').innerHTML = tier === 'direct'
+      ? '前端在「直通」档：四个神经元直接看 25 个像素——上一讲抖动实验的原样复刻。先跑一遍，确认病还在。'
+      : tier === 'filter'
+        ? '前端在「只滤波」档：12 个位置模板先各自打分，农场看这 12 个数。猜猜够不够？'
+        : '前端在「滤波 + 池化」档：每个朝向的 3 个位置分数被 max 收成 1 个，农场只看 4 个数。';
+  }
+  function step() {
+    const { enc, D } = TIERS[tier];
+    const o = Math.floor(rng() * 4);
+    const raw = noisyBar(rng, o, jitterOn());
+    const x = enc(raw);
+    let best = 0, bestD = 1e18;
+    for (let k = 0; k < 4; k++) { let d = 0; for (let i = 0; i < D; i++) { const e = x[i] - W[k][i]; d += e * e; } if (d < bestD) { bestD = d; best = k; } }
+    wins[best]++;
+    for (let i = 0; i < D; i++) W[best][i] += F.etaWin * (x[i] - W[best][i]);
+    return raw;
+  }
+  function stopTrain() { running = false; if (raf) cancelAnimationFrame(raf); $('#farm2-led').classList.remove('on'); }
+  function finish() {
+    stopTrain(); trained = true; remaining = F.steps;
+    $('#farm2-train').textContent = '▶ 再训练 ×800';
+    $('#farm2-story').innerHTML = '训练完成（800 步，抖动开）。<b>用探针验收</b>：四个朝向各按一次，看各归谁家。';
+  }
+  function train() {
+    if (running) { stopTrain(); $('#farm2-train').textContent = '▶ 继续'; return; }
+    if (trained || remaining <= 0) { reset(); }
+    running = true;
+    $('#farm2-train').textContent = '训练中…';
+    $('#farm2-led').classList.add('on');
+    if (REDUCED) {
+      let x = null;
+      while (remaining > 0) { x = step(); remaining--; }
+      renderAll(x); finish(); return;
+    }
+    (function loop() {
+      if (!running) return;
+      raf = requestAnimationFrame(loop);
+      let x = null;
+      for (let i = 0; i < 5 && remaining > 0; i++, remaining--) x = step();
+      renderAll(x);
+      if (remaining <= 0) finish();
+    })();
+  }
+  function probe(o) {
+    if (!trained) { $('#farm2-story').textContent = '先训练，再验收。'; return; }
+    const { enc, D } = TIERS[tier];
+    const prng = makeRng(seedOf() + 1000 + o * 7);   // 探针独立随机流：与按键顺序无关
+    const raw = noisyBar(prng, o, false);
+    const x = enc(raw);
+    let best = 0, bestD = 1e18;
+    for (let k = 0; k < 4; k++) { let d = 0; for (let i = 0; i < D; i++) { const e = x[i] - W[k][i]; d += e * e; } if (d < bestD) { bestD = d; best = k; } }
+    renderAll(raw);
+    unitMaps.forEach((m, k) => m.classList.toggle('win', k === best));
+    setTimeout(() => unitMaps.forEach(m => m.classList.remove('win')), 1200);
+    probeOwners[o] = best;
+    const got = Object.keys(probeOwners).length;
+    if (got < 4) {
+      $('#farm2-verdict').textContent = GLYPH[o] + ' → ' + best + ' 号（' + got + '/4）';
+      $('#farm2-verdict').className = 'outcome idle';
+      return;
+    }
+    const distinct = new Set(Object.values(probeOwners)).size === 4;
+    const v = $('#farm2-verdict');
+    v.textContent = distinct ? '✓ 4/4 各归一家' : '✗ 散（有单元被重复认领）';
+    v.className = 'outcome ' + (distinct ? 'spike' : 'fail');
+    if (distinct && tier === 'pool') {
+      sawPoolPass = true;
+      $('#farm2-story').innerHTML = '<b>治好了。</b>抖动照旧、规则照旧，4 维的池化表示把位置吸收掉了。' + (sawFilterFail ? '' : '还差一步：退回「只滤波」再训一遍，看看没有池化行不行。');
+    } else if (!distinct && tier === 'filter') {
+      sawFilterFail = true;
+      $('#farm2-story').innerHTML = '<b>只滤波不够。</b>处处有检测器，报告仍跟着位置跑——等变治不了病。' + (sawPoolPass ? '' : '现在切「滤波 + 池化」，同样参数再训。');
+    } else if (!distinct && tier === 'direct') {
+      $('#farm2-story').innerHTML = '<b>病还在</b>——和上一讲一样散。现在给它配前端：先试「只滤波」，再试「滤波 + 池化」。';
+    } else if (distinct) {
+      $('#farm2-story').innerHTML = '这一档分家了。按任务清单把该看的失败也看了，结论才完整。';
+    }
+    MP.reveal('mp-farm2');
+    if (sawPoolPass && sawFilterFail && !done) {
+      done = true;
+      $('#farm2-payoff').hidden = false;
+      $('#farm2-story').innerHTML = '<b>两头都验完：只滤波散，加池化分家。</b>处方在下面。';
+    }
+  }
+  function setTier(t) {
+    tier = t;
+    $('#farm2-t0').classList.toggle('on', t === 'direct');
+    $('#farm2-t1').classList.toggle('on', t === 'filter');
+    $('#farm2-t2').classList.toggle('on', t === 'pool');
+    $('#farm2-t0').setAttribute('aria-pressed', t === 'direct');
+    $('#farm2-t1').setAttribute('aria-pressed', t === 'filter');
+    $('#farm2-t2').setAttribute('aria-pressed', t === 'pool');
+    $('#farm2-frontrow').hidden = t === 'direct';
+    $('#farm2-pool-note').style.display = t === 'pool' ? '' : 'none';
+    tplMaps.forEach(m => m.classList.remove('win'));
+    reset();
+  }
+  $('#farm2-t0').addEventListener('click', () => setTier('direct'));
+  $('#farm2-t1').addEventListener('click', () => setTier('filter'));
+  $('#farm2-t2').addEventListener('click', () => setTier('pool'));
+  $('#farm2-train').addEventListener('click', train);
+  $('#farm2-reset').addEventListener('click', reset);
+  $('#farm2-seed').addEventListener('change', reset);
+  $('#farm2-seed').addEventListener('focus', e => e.target.select());
+  $$('#rig-farm2 [data-probe]').forEach(b => b.addEventListener('click', () => probe(+b.dataset.probe)));
+  setTier('direct');
+})();
+
+/* ================= 第 9 节 · 视网膜波台 ================= */
+(function waveRig() {
+  const cv = $('#wave-canvas'); if (!cv) return;
+  const chart = $('#wave-chart');
+  const WV = {   // 与 scripts/verify-lec03.mjs 同源
+    N: 28, pIgnite: 0.03, recruitQ: 0.28, dwell: 3, refrac: 48,
+    fieldR: 4, etaOja: 0.05, etaOjaEnd: 0.012, trainFrames: 14000,
+    centersX: [6, 9, 12, 15, 18, 21], centerY: 13,
+  };
+  const N = WV.N, NN = N * N;
+  function waveGen(rng) {
+    const state = new Int16Array(NN);
+    return () => {
+      const recruit = [];
+      let nActive = 0;
+      for (let i = 0; i < NN; i++) if (state[i] > 0) nActive++;
+      if (nActive > 0) {
+        for (let i = 0; i < NN; i++) {
+          if (state[i] !== 0) continue;
+          const r = Math.floor(i / N), c = i % N;
+          let na = 0;
+          for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+            if (!dr && !dc) continue;
+            const rr = r + dr, cc = c + dc;
+            if (rr < 0 || rr >= N || cc < 0 || cc >= N) continue;
+            if (state[rr * N + cc] > 0) na++;
+          }
+          if (na > 0 && rng() < 1 - Math.pow(1 - WV.recruitQ, na)) recruit.push(i);
+        }
+      } else if (rng() < WV.pIgnite) {
+        const r0 = 1 + Math.floor(rng() * (N - 3)), c0 = 1 + Math.floor(rng() * (N - 3));
+        for (const d of [[0, 0], [0, 1], [1, 0], [1, 1]])
+          if (state[(r0 + d[0]) * N + c0 + d[1]] === 0) recruit.push((r0 + d[0]) * N + c0 + d[1]);
+      }
+      for (let i = 0; i < NN; i++) {
+        if (state[i] > 0) { state[i]--; if (state[i] === 0) state[i] = -WV.refrac; }
+        else if (state[i] < 0) state[i]++;
+      }
+      for (const i of recruit) state[i] = WV.dwell;
+      const frame = new Float64Array(NN);
+      for (let i = 0; i < NN; i++) if (state[i] > 0) frame[i] = 1;
+      return { frame, state };
+    };
+  }
+  const seedOf = () => {
+    const p = parseInt($('#wave-seed').value, 10);
+    return (Number.isFinite(p) ? Math.abs(p) : 42) * 7919 + 13;
+  };
+  const wins = WV.centersX.map(cx => {
+    const idx = [];
+    for (let dy = -WV.fieldR; dy <= WV.fieldR; dy++) for (let dx = -WV.fieldR; dx <= WV.fieldR; dx++)
+      idx.push((WV.centerY + dy) * N + (cx + dx));
+    return idx;
+  });
+  function structL(w) {
+    const S = 2 * WV.fieldR + 1;
+    let m = 0; for (const v of w) m += v; m /= w.length;
+    let varr = 0; for (const v of w) varr += (v - m) ** 2; varr /= w.length;
+    if (varr < 1e-12) return 0;
+    let cov = 0, n = 0;
+    for (let r = 0; r < S; r++) for (let c = 0; c < S; c++) {
+      if (c + 1 < S) { cov += (w[r * S + c] - m) * (w[r * S + c + 1] - m); n++; }
+      if (r + 1 < S) { cov += (w[r * S + c] - m) * (w[(r + 1) * S + c] - m); n++; }
+    }
+    return cov / n / varr;
+  }
+  function simFn(Wts) {
+    let sSum = 0, sN = 0;
+    for (let a = 0; a < Wts.length; a++) for (let b = a + 1; b < Wts.length; b++) {
+      let dot = 0, na = 0, nb = 0;
+      for (let i = 0; i < 81; i++) { dot += Wts[a][i] * Wts[b][i]; na += Wts[a][i] ** 2; nb += Wts[b][i] ** 2; }
+      sSum += Math.abs(dot) / Math.sqrt(na * nb); sN++;
+    }
+    return sSum / sN;
+  }
+  // 电极
+  const el1 = { c: 10, r: 14 }, el2 = { c: 13, r: 14 };
+  const pairs = [];   // {d, r}
+  const flags = { corr: false, wave: false, shuf: false, done: false };
+  // 学习器
+  let W6 = null, trainedKind = null;
+  function initW(rng) {
+    W6 = wins.map(() => { const w = new Float64Array(81); for (let i = 0; i < 81; i++) w[i] = 0.05 + 0.05 * rng(); return w; });
+  }
+  // 单元热图
+  const unitMaps = [], unitLbls = [];
+  wins.forEach((_, u) => {
+    const item = document.createElement('div');
+    item.className = 'wave-unit';
+    const m = document.createElement('div');
+    m.className = 'wu-map';
+    m.setAttribute('role', 'img');
+    m.setAttribute('aria-label', '单元 ' + (u + 1) + ' 的 9×9 权重');
+    for (let i = 0; i < 81; i++) m.appendChild(document.createElement('i'));
+    item.appendChild(m);
+    const lb = document.createElement('div');
+    lb.className = 'wu-label';
+    lb.textContent = 'u' + (u + 1);
+    item.appendChild(lb);
+    $('#wave-units').appendChild(item);
+    unitMaps.push(m); unitLbls.push(lb);
+  });
+  function paintUnits() {
+    if (!W6) return;
+    W6.forEach((w, u) => {
+      let sum = 0; for (const v of w) sum += v;
+      const sign = sum >= 0 ? 1 : -1;    // PC1 差一个符号是定理：展示按符号归一
+      let mx = 1e-9; for (const v of w) mx = Math.max(mx, Math.abs(v));
+      [...unitMaps[u].children].forEach((c, i) => {
+        const v = clamp(sign * w[i] / mx, -1, 1);
+        c.style.background = v >= 0
+          ? 'rgb(' + Math.round(26 + v * 165) + ',' + Math.round(32 + v * 131) + ',' + Math.round(48 + v * 191) + ')'
+          : 'rgb(' + Math.round(26 + -v * 69) + ',' + Math.round(32 + -v * 127) + ',' + Math.round(48 + -v * 168) + ')';
+      });
+      unitLbls[u].textContent = 'u' + (u + 1) + ' L=' + structL(w).toFixed(2);
+    });
+  }
+  // 画视网膜
+  let curState = null;
+  function drawRetina() {
+    const { ctx, w, h } = fitCanvas(cv);
+    ctx.fillStyle = RIG.bg; ctx.fillRect(0, 0, w, h);
+    const u = Math.min(w, h) / N;
+    const ox = (w - u * N) / 2, oy = (h - u * N) / 2;
+    for (let i = 0; i < NN; i++) {
+      const r = Math.floor(i / N), c = i % N;
+      const s = curState ? curState[i] : 0;
+      ctx.fillStyle = s > 0 ? '#E8A050' : s < 0 ? '#2A3550' : '#232B3B';
+      ctx.beginPath();
+      ctx.arc(ox + (c + 0.5) * u, oy + (r + 0.5) * u, u * 0.34, 0, 7);
+      ctx.fill();
+    }
+    // 投射野方框
+    ctx.strokeStyle = 'rgba(191,163,239,0.35)'; ctx.lineWidth = 1.2;
+    wins.forEach((_, k) => {
+      const cx = WV.centersX[k];
+      ctx.strokeRect(ox + (cx - WV.fieldR) * u, oy + (WV.centerY - WV.fieldR) * u, u * 9, u * 9);
+    });
+    // 电极
+    [[el1, 'e1'], [el2, 'e2']].forEach(([e, name]) => {
+      const x = ox + (e.c + 0.5) * u, y = oy + (e.r + 0.5) * u;
+      ctx.strokeStyle = '#7BE3A5'; ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(x - u * 0.7, y); ctx.lineTo(x + u * 0.7, y);
+      ctx.moveTo(x, y - u * 0.7); ctx.lineTo(x, y + u * 0.7);
+      ctx.stroke();
+      ctx.fillStyle = '#7BE3A5'; ctx.font = '11px "IBM Plex Mono", monospace';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+      ctx.fillText(name, x + u * 0.5, y - u * 0.4);
+    });
+  }
+  function drawChart() {
+    const { ctx, w, h } = fitCanvas(chart);
+    const { X, Y } = rigAxes(ctx, w, h, { l: 46, r: 12, t: 12, b: 30 }, [0, 20], [-0.1, 1],
+      '电极间距 (格)', 'r', [0, 5, 10, 15, 20], [0, 0.5, 1]);
+    [[0.6, RIG.good], [0.2, RIG.text]].forEach(([yy, col]) => {
+      ctx.strokeStyle = col; ctx.setLineDash([4, 4]); ctx.globalAlpha = 0.5;
+      ctx.beginPath(); ctx.moveTo(X(0), Y(yy)); ctx.lineTo(X(20), Y(yy)); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
+    });
+    ctx.fillStyle = RIG.v;
+    pairs.forEach(p => { ctx.beginPath(); ctx.arc(X(clamp(p.d, 0, 20)), Y(clamp(p.r, -0.1, 1)), 3.6, 0, 7); ctx.fill(); });
+    if (!pairs.length) {
+      ctx.fillStyle = RIG.text; ctx.font = '12px "IBM Plex Sans", sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('拖开电极、按「记录这一对」，曲线自己长出来', w / 2, h / 2 - 8);
+    }
+  }
+  // 环境波动画
+  let ambient = waveGen(makeRng(seedOf()));
+  const vis = visibilityFlag(cv);
+  let busy = false;
+  if (REDUCED) {
+    for (let i = 0; i < 260; i++) curState = ambient().state;
+    drawRetina();
+  } else {
+    let lastT = 0;
+    (function loop(now) {
+      requestAnimationFrame(loop);
+      if (busy || !vis.visible) return;
+      if (now - lastT < 66) return;   // ~15 fps
+      lastT = now;
+      curState = ambient().state;   // 单帧推进
+      drawRetina();
+    })(0);
+  }
+  // 电极拖拽
+  let dragEl = null;
+  const toCell = e => {
+    const rct = cv.getBoundingClientRect();
+    const u = Math.min(rct.width, rct.height) / N;
+    const ox = (rct.width - u * N) / 2, oy = (rct.height - u * N) / 2;
+    return {
+      c: clamp(Math.floor((e.clientX - rct.left - ox) / u), 0, N - 1),
+      r: clamp(Math.floor((e.clientY - rct.top - oy) / u), 0, N - 1),
+    };
+  };
+  cv.addEventListener('pointerdown', e => {
+    const p = toCell(e);
+    const d1 = Math.hypot(p.c - el1.c, p.r - el1.r), d2 = Math.hypot(p.c - el2.c, p.r - el2.r);
+    dragEl = d1 <= d2 ? el1 : el2;
+    dragEl.c = p.c; dragEl.r = p.r;
+    cv.setPointerCapture(e.pointerId);
+    updatePairNote(); drawRetina();
+  });
+  cv.addEventListener('pointermove', e => { if (dragEl) { const p = toCell(e); dragEl.c = p.c; dragEl.r = p.r; updatePairNote(); drawRetina(); } });
+  cv.addEventListener('pointerup', () => { dragEl = null; });
+  const dist = () => Math.hypot(el1.c - el2.c, el1.r - el2.r);
+  function updatePairNote() {
+    $('#wave-pair-note').textContent = '当前间距 ' + dist().toFixed(1) + ' 格。按「记录这一对」测相关。';
+  }
+  function measurePair() {
+    // 独立生成器同步跑 3600 帧；活动按爆发时间窗（±2 帧滑窗）平滑后算零延迟相关
+    // ——确定性：只取决于种子与电极位置
+    const g = waveGen(makeRng(seedOf() + 33));
+    const a = [], b = [];
+    const i1 = el1.r * N + el1.c, i2 = el2.r * N + el2.c;
+    for (let t = 0; t < 3600; t++) { const f = g().frame; a.push(f[i1]); b.push(f[i2]); }
+    const sm = arr => arr.map((_, i) => {
+      let s = 0, n = 0;
+      for (let k = -2; k <= 2; k++) { const j = i + k; if (j >= 0 && j < arr.length) { s += arr[j]; n++; } }
+      return s / n;
+    });
+    const A = sm(a), B = sm(b);
+    const mean = arr => arr.reduce((x, y) => x + y, 0) / arr.length;
+    const ma = mean(A), mb = mean(B);
+    let cov = 0, va = 0, vb = 0;
+    for (let t = 0; t < A.length; t++) { cov += (A[t] - ma) * (B[t] - mb); va += (A[t] - ma) ** 2; vb += (B[t] - mb) ** 2; }
+    return cov / Math.sqrt(Math.max(1e-12, va * vb));
+  }
+  $('#wave-pair').addEventListener('click', () => {
+    const r = measurePair();
+    const d = dist();
+    pairs.push({ d, r });
+    const el = $('#wave-r');
+    el.textContent = 'e1–e2：r = ' + r.toFixed(2) + '（隔 ' + d.toFixed(1) + ' 格）';
+    el.className = 'outcome ' + (r >= 0.6 ? 'spike' : 'idle');
+    drawChart();
+    if (!flags.corr) {
+      const near = pairs.some(p => p.d <= 1.5 && p.r >= 0.6);
+      const far = pairs.some(p => p.d >= 14 && p.r <= 0.2);
+      if (pairs.length >= 4 && near && far) {
+        flags.corr = true;
+        $('#wave-story').innerHTML = '<b>波的身份证到手：相关随距离衰减。</b>相邻一起烧，远处各烧各的——这正是 Hebb 要的「谁和谁总一起亮」。现在按「喂波训练」。';
+      } else {
+        $('#wave-story').innerHTML = '已记 ' + pairs.length + ' 对。还要：紧挨的一对（≤1.5 格）r≥0.6、远端一对（≥14 格）r≤0.2、总数 ≥4。';
+      }
+      judge();
+    }
+  });
+  // 训练
+  function runTrain(shuffle) {
+    if (busy) return;
+    busy = true;
+    $('#wave-led').classList.add('on');
+    const rng = makeRng(seedOf());
+    const gen = waveGen(rng);
+    initW(rng);
+    paintUnits();
+    const perm = new Int32Array(NN);
+    let t = 0;
+    const CHUNK = 150;
+    function chunk() {
+      const end = Math.min(WV.trainFrames, t + CHUNK);
+      for (; t < end; t++) {
+        let f = gen().frame;
+        if (shuffle) {
+          for (let i = 0; i < NN; i++) perm[i] = i;
+          for (let i = NN - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); const tmp = perm[i]; perm[i] = perm[j]; perm[j] = tmp; }
+          const g2 = new Float64Array(NN);
+          for (let i = 0; i < NN; i++) g2[perm[i]] = f[i];
+          f = g2;
+        }
+        const eta = WV.etaOja + (WV.etaOjaEnd - WV.etaOja) * t / WV.trainFrames;
+        for (let u = 0; u < wins.length; u++) {
+          const idx = wins[u], w = W6[u];
+          let y = 0;
+          for (let i = 0; i < 81; i++) y += w[i] * f[idx[i]];
+          if (y === 0) continue;
+          for (let i = 0; i < 81; i++) w[i] += eta * y * (f[idx[i]] - y * w[i]);
+        }
+        if (t % 40 === 0) curState = null;   // 训练期间不重绘视网膜主图（快进）
+      }
+      $('#wave-prog').style.width = (t / WV.trainFrames * 100).toFixed(1) + '%';
+      paintUnits();
+      if (t < WV.trainFrames) {
+        if (REDUCED) chunk(); else setTimeout(chunk, 0);
+      } else {
+        finishTrain(shuffle);
+      }
+    }
+    $('#wave-story').innerHTML = shuffle
+      ? '对照在跑：<b>每帧总放电量原封不动，只把「谁在哪」洗掉。</b>同样的规则、同样的步数。'
+      : '波一场一场喂进去，六个单元各自用 Oja 规则改自己的 81 个权重——彼此之间没有任何通信。';
+    chunk();
+  }
+  function finishTrain(shuffle) {
+    busy = false;
+    $('#wave-led').classList.remove('on');
+    trainedKind = shuffle ? 'shuffle' : 'wave';
+    const Ls = W6.map(structL);
+    const meanL = Ls.reduce((a, b) => a + b, 0) / Ls.length;
+    const S = simFn(W6);
+    const elL = $('#wave-L'), elS = $('#wave-S');
+    elL.textContent = '结构 L = ' + meanL.toFixed(2);
+    elS.textContent = '相似 S = ' + S.toFixed(2);
+    if (shuffle) {
+      elL.className = 'outcome ' + (meanL < 0.25 ? 'fail' : 'idle');
+      elS.className = 'outcome idle';
+      if (meanL < 0.25) { flags.shuf = true; $('#wave-story').innerHTML = '<b>学不出来。</b>放电总量一点没少，结构一洗就全完——起作用的是波的时空结构，不是活动量。'; }
+    } else {
+      elL.className = 'outcome ' + (meanL >= 0.45 ? 'spike' : 'idle');
+      elS.className = 'outcome ' + (S >= 0.8 ? 'spike' : 'idle');
+      if (meanL >= 0.45 && S >= 0.8) { flags.wave = true; $('#wave-story').innerHTML = '<b>六份独立的突触长成了同一款平滑接线</b>（L ≥ 0.45，S ≥ 0.8）。最后一步：按「打乱重训」，看结构被洗掉之后还剩什么。'; }
+    }
+    paintUnits(); judge();
+  }
+  function judge() {
+    if (flags.done) return;
+    if (flags.corr && flags.wave && flags.shuf) {
+      flags.done = true;
+      $('#wave-led').classList.add('on');
+      $('#wave-payoff').hidden = false;
+      $('#wave-story').innerHTML = '<b>三步验证完毕。</b>结论与边界都在下面——波不是噪声，是自带结构的训练数据。';
+    }
+  }
+  $('#wave-train').addEventListener('click', () => runTrain(false));
+  $('#wave-shuffle').addEventListener('click', () => runTrain(true));
+  $('#wave-reset').addEventListener('click', () => {
+    pairs.length = 0; flags.corr = flags.wave = flags.shuf = false;
+    W6 = null; trainedKind = null;
+    unitMaps.forEach(m => [...m.children].forEach(c => { c.style.background = '#1A2030'; }));
+    unitLbls.forEach((lb, u) => { lb.textContent = 'u' + (u + 1); });
+    $('#wave-L').textContent = '结构 L = —'; $('#wave-L').className = 'outcome idle';
+    $('#wave-S').textContent = '相似 S = —'; $('#wave-S').className = 'outcome idle';
+    $('#wave-prog').style.width = '0%';
+    $('#wave-r').textContent = 'e1–e2：—'; $('#wave-r').className = 'outcome idle';
+    drawChart();
+    ambient = waveGen(makeRng(seedOf()));
+    $('#wave-story').textContent = '已重置。波在黑暗里一场一场地来。';
+  });
+  $('#wave-seed').addEventListener('change', () => { $('#wave-reset').click(); });
+  $('#wave-seed').addEventListener('focus', e => e.target.select());
+  redraws.add(() => { drawRetina(); drawChart(); });
+  updatePairNote(); drawRetina(); drawChart();
+})();
+</script>
