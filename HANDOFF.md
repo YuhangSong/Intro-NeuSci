@@ -1,7 +1,7 @@
 # 工作交接（换工作空间后从这里接着做）
 
 > 新会话请先读这份文件，再读 `CLAUDE.md`（行文铁律与技术要点，具有约束力）。
-> 分支：`claude/neuroscience-intro-course-kys46t`（所有开发与推送都在这条分支上）
+> 分支：第三讲起开发与推送在 `claude/neuroscience-intro-course-kys46t-h33jpx`（`claude/neuroscience-intro-course-kys46t` 停在第二讲，两条分支同根；如需并线由老师定夺）
 > 线上：https://intro-neusci.hypergrid.workers.dev/
 
 ## 1. 当前状态
@@ -10,22 +10,24 @@
 |------|------|
 | 第一讲 `lectures/lec01-neuron/` 神经元如何计算 | 完成、已上线 |
 | 第二讲 `lectures/lec02-synapse/` 大脑如何学习 | 完成、已审校修订、已上线 |
-| 第三讲 `lectures/lec03-cortex/` 视觉皮层：大脑的卷积网络 | **完成、已五维审校修订**（数值验证 + 全交互测试全绿），待发布 |
+| 第三讲 `lectures/lec03-cortex/` 视觉皮层：大脑的卷积网络 | 完成、已五维审校修订、**已上线** |
 | 课程首页 `site/home.html` | 完成（三讲卡片、成绩构成） |
 | 课堂控制台 `site/admin.html` | 完成（三讲 17 道题清零） |
-| 发布流水线 `.github/workflows/release.yml` | 完成（smoke 已含 lec03 断言） |
-| `.deploy/request.json` | `nonce = 8`（下次发布填 9） |
+| 发布流水线 `.github/workflows/release.yml` | 完成，最近一次 run #10 全绿（smoke 含 lec03 断言；reset 已纳入轮询重试） |
+| `.deploy/request.json` | `nonce = 10`（下次发布填 11） |
 
-工作树干净、已与远端同步。恢复现场只需 `git clone` + `git checkout claude/neuroscience-intro-course-kys46t`，
+工作树干净、已与远端同步。恢复现场只需 `git clone` + `git checkout claude/neuroscience-intro-course-kys46t-h33jpx`，
 无需任何本地凭据（Cloudflare 部署全部在 GitHub Actions 里完成）。
 
 ## 2. 发布仪式（每次改了讲义/首页都要走）
 
 1. `node scripts/build.mjs` 本地验证构建通过（产物 `worker/dist/`，已 gitignore）
 2. 改 `.deploy/request.json` 的 `nonce` +1
-3. commit + `git push -u origin claude/neuroscience-intro-course-kys46t`
+3. commit + `git push -u origin claude/neuroscience-intro-course-kys46t-h33jpx`
 4. 等 GitHub Actions `release` 跑完并**全绿**（含线上冒烟测试），才可以对用户说「已上线」
 5. 失败时把 Actions 的真实报错原样报给用户，不要猜
+6. 已知瞬态：部署刚完成的几秒内 Durable Object 会因代码更新而重启，撞上的请求
+   返回 `error code: 1101`（非 JSON）——冒烟测试的 reset 已因此纳入 poll 重试（run #9 实录）
 
 唯一的人工配置是仓库 secret `CLOUDFLARE_API_TOKEN`（已配好）。管理密钥自动生成并存在
 Cloudflare KV `INTRO_NEUSCI_CFG` 的 `cfg:admin_key`，**日志中永不打印**（本仓库公开）。
