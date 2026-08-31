@@ -155,8 +155,12 @@ jobs:
             -d '{"qid":"smoke-test"}' "$WORKER_URL/api/reset")
           [ "$CODE" = "403" ] && echo "✓ 错误密钥被拒 (403)" || { echo "::error::错误密钥未被拒（HTTP $CODE）"; exit 1; }
 
-          curl -s -X POST -H "authorization: Bearer $ADMIN_KEY" -H 'content-type: application/json' \
-            -d '{"qid":"smoke-test"}' "$WORKER_URL/api/reset" | jq -e '.ok' >/dev/null && echo "✓ 正确密钥可清零"
+          # 部署刚完成时 DO 可能因代码更新而重启（error 1101），reset 也要轮询重试
+          reset_ok() {
+            curl -s -X POST -H "authorization: Bearer $ADMIN_KEY" -H 'content-type: application/json' \
+              -d '{"qid":"smoke-test"}' "$WORKER_URL/api/reset" | jq -e '.ok' >/dev/null
+          }
+          poll "正确密钥可清零" reset_ok
           zero_ok() { curl -s "$WORKER_URL/api/votes?qid=smoke-test" | jq -e '(.counts | add) == 0' >/dev/null; }
           poll "清零已生效" zero_ok
 
