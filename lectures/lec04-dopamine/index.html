@@ -814,3 +814,104 @@ function makeDwell(ms, fn) {
 }
 
 </script>
+<script>
+'use strict';
+/* ================= 共享模型（与 scripts/verify-lec04.mjs 同一份常量表与引擎，改动必须两边同步并重跑验证） ================= */
+const sig = z => 1 / (1 + Math.exp(-z));
+const C4 = {
+  // 时间线（TD 与多巴胺记录共用）：0.1 s/步
+  dt: 0.1, T: 26, tCue: 5, tRew: 20,           // 线索 0.5 s，果汁 2.0 s（间隔 1.5 s）
+  gamma: 0.98, alphaTD: 0.15, lambdaHi: 0.9,   // TD(λ)；λ=0 为「一站站爬」对照
+  // 多巴胺放电映射
+  daBase: 5, daGain: 25,                        // Hz；δ=1 → +25 Hz；负 δ 压到 0（暂停）
+  psthTrials: 20, psthPeakX: 2.5, psthQuietX: 2, psthDipX: 0.4,   // 页面判定：峰 ≥2.5× 基线、安静 ≤2×、下陷 ≤0.4×
+  // 资格迹形状（Yagishita 2014 窗口）：双指数，峰 ≈0.43 s，20% 点 ≈2.1 s
+  traceTauD: 0.85, traceTauR: 0.25,
+  // 三因子农场
+  farmTrials: 150, farmEta: 0.8, farmBeta: 3, farmRbarRate: 0.05,
+  distGain: 0.6, pDist: 0.5,                   // 无关活动（抢功劳）
+  criticAlpha: 0.2, criticDelayTrace: 0.5,     // 评论家 δ 在动作后 0.5 s 到达（痕迹接近峰）
+  delayLearn: 1, delayMarginal: 3, delayFail: 4, // 页面滑杆 0.5–5 s，步 0.5
+  lockX: 0.85,                                  // D=+1「锁死」判定：一侧动作概率 ≥85%
+  // Rescorla–Wagner / 阻断（Waelti 2001 设计）
+  rwAlpha: 0.15, rwPre: 100, rwCompound: 200,
+};
+
+/* ===================== 资格迹形状 ===================== */
+const traceRaw = t => t <= 0 ? 0 : Math.exp(-t / C4.traceTauD) - Math.exp(-t / C4.traceTauR);
+let TRACE_PK = 0, TRACE_TPK = 0;
+for (let t = 0; t <= 6; t += 0.005) { const v = traceRaw(t); if (v > TRACE_PK) { TRACE_PK = v; TRACE_TPK = t; } }
+const trace = t => traceRaw(t) / TRACE_PK;
+let TRACE_T20 = null;
+for (let t = TRACE_TPK; t <= 6; t += 0.005) if (trace(t) < 0.2) { TRACE_T20 = t; break; }
+
+
+/* ===================== TD(λ) 时间线（多巴胺记录 + TD 学习台共用） ===================== */
+function tdRun({ trials, lambda = 0, omitAt = null, gamma = C4.gamma, alpha = C4.alphaTD, noCue = false } = {}) {
+  const T = C4.T, tCue = C4.tCue, tRew = C4.tRew;
+  const w = new Float64Array(T);
+  const V = t => (!noCue && t >= tCue) ? w[t - tCue] : 0;
+  const hist = [];
+  for (let n = 0; n < trials; n++) {
+    const e = new Float64Array(T), delta = new Float64Array(T);
+    for (let t = 1; t < T; t++) {
+      const rew = (t === tRew && omitAt !== n) ? 1 : 0;
+      const d = rew + gamma * V(t) - V(t - 1);
+      delta[t] = d;
+      for (let k = 0; k < T; k++) e[k] *= gamma * lambda;
+      if (!noCue && t - 1 >= tCue) e[t - 1 - tCue] += 1;
+      if (omitAt !== n) for (let k = 0; k < T; k++) w[k] += alpha * d * e[k];
+    }
+    hist.push(delta);
+  }
+  return hist;
+}
+const daRate = d => Math.max(0, C4.daBase + C4.daGain * d);
+
+
+/* ===================== 多巴胺 PSTH（泊松放电，10 ms bin） ===================== */
+function psth(deltaRows, rng) {
+  const bins = new Float64Array(C4.T * 10);
+  for (const d of deltaRows) for (let t = 0; t < C4.T; t++) { const r = daRate(d[t]); for (let b = 0; b < 10; b++) bins[t * 10 + b] += (rng() < r * 0.01) ? 1 : 0; }
+  return bins.map(c => c / deltaRows.length / 0.01);
+}
+const binAt = (p, t) => { let s = 0; for (let b = 0; b < 10; b++) s += p[t * 10 + b]; return s / 10; };
+
+/* ===================== 三因子农场（两情境 × 两动作，资格迹 + 无关活动 + 评论家） ===================== */
+function farm({ seed, delay = 1, trials = C4.farmTrials, D = 'r' } = {}) {
+  const rng = makeRng(seed);
+  const z = [0.05 * (rng() - 0.5), 0.05 * (rng() - 0.5)];
+  let zd = 0, rbar = 0.5;
+  const Vc = [0, 0], Va = [[0, 0], [0, 0]];
+  const acc = [], dAct = [];
+  for (let n = 0; n < trials; n++) {
+    const ctx = rng() < 0.5 ? 0 : 1;
+    const dist = rng() < 0.5 ? 1 : 0;
+    const p1 = sig(C4.farmBeta * (z[ctx] + C4.distGain * zd * dist));
+    const a = rng() < p1 ? 1 : 0;
+    const correct = (ctx === 0 && a === 1) || (ctx === 1 && a === 0);
+    const r = correct ? 1 : 0;
+    acc.push(correct ? 1 : 0);
+    const eSel = a - p1;
+    let eDist = 0;
+    if (dist && delay > 0.3 && rng() < C4.pDist) { const td = rng() * delay; eDist = trace(delay - td); }
+    if (D === 'r') {
+      const Dsig = r - rbar;
+      z[ctx] += C4.farmEta * eSel * trace(delay) * Dsig;
+      zd += C4.farmEta * eSel * eDist * Dsig;
+    } else if (D === 'one') {
+      z[ctx] += C4.farmEta * eSel * trace(delay) * 1;
+    } else {
+      const deltaAct = C4.gamma * Va[ctx][a] - Vc[ctx];
+      const deltaRew = r - Va[ctx][a];
+      z[ctx] += C4.farmEta * eSel * (trace(C4.criticDelayTrace) * deltaAct + trace(delay) * deltaRew);
+      zd += C4.farmEta * eSel * eDist * deltaRew;
+      Vc[ctx] += C4.criticAlpha * deltaAct; Va[ctx][a] += C4.criticAlpha * deltaRew;
+      dAct.push({ n, correct, deltaAct });
+    }
+    rbar += C4.farmRbarRate * (r - rbar);
+  }
+  const last = acc.slice(-50).reduce((a, b) => a + b, 0) / 50;
+  return { last, z, dAct };
+}
+</script>
