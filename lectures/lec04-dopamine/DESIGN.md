@@ -74,6 +74,8 @@ node scripts/verify-lec04.mjs       # 阈值还成立？（必须 ALL PASS）
 
 （这一段在 C4 里没有分配 rig id，是做成一台小仪器还是一张图 + 一个开关，**未定**。）
 
+真实实验的细节已经核过，写正文时照 [`CITATIONS.md`](CITATIONS.md) 的说法来——注意两个易错点：对照线索 B 在预训练阶段是**不给**奖励；猴子对被阻断线索 X 的行为证据是舔嘴中位时长 0 ms（对照 Y 是 323 ms）。
+
 ### 3.4 `rig-spine` · 单棘窗口（Yagishita 2014）
 
 窗口函数 `W(t) = (t/τ)·e^(1−t/τ)`，τ=0.5 s：峰在 **0.5 s**、峰值 1；W(0.3)≥0.8；**W(2)=0.20**；W(3)≤0.05；W(5)≤0.002；t≤0 时为 0。
@@ -139,3 +141,8 @@ node scripts/test-lec04.cjs         # 交互回归（还没写，照 test-lec03.
 再加接线四处：`scripts/build.mjs` 加 lec04 条目、`site/home.html` 加卡片、`site/admin.html` 加 `p4-*`、
 `.github/workflows/release.yml` 的 smoke 加两行断言（本次构建版本 + 标题关键词）。
 **这些接线要等正文写完再做**——现在就接会让冒烟测试对着一个空页面断言，反而把发布卡住。
+
+## 7. 文献
+
+写正文之前先看 [`CITATIONS.md`](CITATIONS.md)：Schultz 三个签名与阻断实验这两组已经核过（含要改的说法与出处），
+其余六组是待核清单，落页前必须逐条查证。
